@@ -1,7 +1,11 @@
 package nl.rug.ds.bpm.pnml.ptnet.jaxb.annotation;
 
 
+import nl.rug.ds.bpm.pnml.ptnet.jaxb.Graphics;
+import nl.rug.ds.bpm.pnml.ptnet.jaxb.ToolSpecific;
+
 import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 import java.util.ArrayList;
@@ -14,12 +18,13 @@ import java.util.List;
 @XmlRootElement(name = "text")
 public class Text {
 	private String text;
-	private List<Object> any;
+	private Graphics graphics;
+	private List<ToolSpecific> toolSpecifics;
 	
 	public Text() {
-		any = new ArrayList<>();
+		toolSpecifics = new ArrayList<>();
 	}
-	
+
 	public Text(String text) {
 		this();
 		this.text = text;
@@ -33,13 +38,22 @@ public class Text {
 	public void setText(String text) {
 		this.text = text;
 	}
-	
-	@XmlAnyElement(lax = false)
-	public List<Object> getAny() {
-		return any;
+
+	@XmlElement(name = "graphics")
+	public Graphics getGraphics() {
+		return graphics;
 	}
-	
-	public void setAny(List<Object> any) {
-		this.any = any;
+
+	public void setGraphics(Graphics graphics) {
+		this.graphics = graphics;
+	}
+
+	@XmlElement(name = "toolspecific")
+	public List<ToolSpecific> getToolSpecifics() {
+		return toolSpecifics;
+	}
+
+	public void setToolSpecifics(List<ToolSpecific> toolSpecifics) {
+		this.toolSpecifics = toolSpecifics;
 	}
 }

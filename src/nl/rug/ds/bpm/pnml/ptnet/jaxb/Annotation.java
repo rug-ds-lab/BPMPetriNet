@@ -10,9 +10,9 @@ import java.util.List;
  * Created by Heerko Groefsema on 23-Apr-18.
  */
 
-public class Annotation {
+public abstract class Annotation {
 	private Text text;
-	private List<Object> any;
+	private Graphics graphics;
 	
 	public Annotation() {}
 	
@@ -28,13 +28,13 @@ public class Annotation {
 	public void setText(Text text) {
 		this.text = text;
 	}
-	
-	@XmlAnyElement(lax = false)
-	public List<Object> getAny() {
-		return any;
+
+	@XmlElement(name = "graphics")
+	public Graphics getGraphics() {
+		return graphics;
 	}
-	
-	public void setAny(List<Object> any) {
-		this.any = any;
+
+	public void setGraphics(Graphics graphics) {
+		this.graphics = graphics;
 	}
 }

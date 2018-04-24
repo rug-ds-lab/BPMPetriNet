@@ -9,7 +9,9 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.node.transition.Transition;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -25,6 +27,8 @@ public class Page {
 	private Set<Transition> transitions;
 	private Set<RefTransition> refTransitions;
 	private Set<Arc> arcs;
+	private Graphics graphics;
+	private List<ToolSpecific> toolSpecifics;
 	
 	
 	public Page() {
@@ -33,6 +37,7 @@ public class Page {
 		transitions = new HashSet<>();
 		refTransitions = new HashSet<>();
 		arcs = new HashSet<>();
+		toolSpecifics = new ArrayList<>();
 	}
 	
 	public Page(String id) {
@@ -87,7 +92,8 @@ public class Page {
 		return transitions;
 	}
 	
-	public void setTransitions(Set<Transition> transitions) {
+	public void setTransitions(Set<Transition> transitions)
+	{
 		this.transitions = transitions;
 	}
 	
@@ -107,5 +113,23 @@ public class Page {
 	
 	public void setArcs(Set<Arc> arcs) {
 		this.arcs = arcs;
+	}
+
+	@XmlElement(name = "graphics")
+	public Graphics getGraphics() {
+		return graphics;
+	}
+
+	public void setGraphics(Graphics graphics) {
+		this.graphics = graphics;
+	}
+
+	@XmlElement(name = "toolspecific")
+	public List<ToolSpecific> getToolSpecifics() {
+		return toolSpecifics;
+	}
+
+	public void setToolSpecifics(List<ToolSpecific> toolSpecifics) {
+		this.toolSpecifics = toolSpecifics;
 	}
 }
