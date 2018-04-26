@@ -15,6 +15,7 @@ public class Task {
 	private String actor;
 	private String unitsoftime;
 	private String guard;
+	private String isTau;
 	private Script script;
 
 	public Task() {}
@@ -62,5 +63,14 @@ public class Task {
 
 	public void setScript(Script script) {
 		this.script = script;
+	}
+
+	@XmlElement(name = "isTau")
+	public String getIsTau() {
+		return isTau;
+	}
+
+	public void setIsTau(String isTau) {
+		this.isTau = isTau;
 	}
 }

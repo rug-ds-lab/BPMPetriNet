@@ -17,13 +17,14 @@ public class Arc {
 	private String target;
 	private Inscription weight;
 
-	public Arc(String source, String target) {
-		this(source, target, 1);
-	}
-
-	public Arc(String source, String target, int weight) {
+	public Arc(String id, String source, String target) {
+		this.id = id;
 		this.source = source;
 		this.target = target;
+	}
+
+	public Arc(String id, String source, String target, int weight) {
+		this(id, source, target);
 		this.weight = new Inscription("" + weight);
 	}
 

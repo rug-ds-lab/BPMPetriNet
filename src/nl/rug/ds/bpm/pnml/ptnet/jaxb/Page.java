@@ -27,6 +27,7 @@ public class Page {
 	private Set<Transition> transitions;
 	private Set<RefTransition> refTransitions;
 	private Set<Arc> arcs;
+	private Set<Page> pages;
 	private Graphics graphics;
 	private List<ToolSpecific> toolSpecifics;
 	
@@ -37,6 +38,7 @@ public class Page {
 		transitions = new HashSet<>();
 		refTransitions = new HashSet<>();
 		arcs = new HashSet<>();
+		pages = new HashSet<>();
 		toolSpecifics = new ArrayList<>();
 	}
 	
@@ -107,12 +109,19 @@ public class Page {
 	}
 	
 	@XmlElement(name = "arc")
-	public Set<Arc> getArcs() {
-		return arcs;
-	}
+	public Set<Arc> getArcs() {	return arcs; }
 	
 	public void setArcs(Set<Arc> arcs) {
 		this.arcs = arcs;
+	}
+
+	@XmlElement(name = "page")
+	public Set<Page> getPages() {
+		return pages;
+	}
+
+	public void setPages(Set<Page> pages) {
+		this.pages = pages;
 	}
 
 	@XmlElement(name = "graphics")
