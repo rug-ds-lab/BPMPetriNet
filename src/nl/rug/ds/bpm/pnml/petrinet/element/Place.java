@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.petrinet.node;
+package nl.rug.ds.bpm.pnml.petrinet.element;
 
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.InitialMarking;
 
@@ -12,7 +12,7 @@ public class Place extends Node {
 		xmlElement = new nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Place(id, name);
 	}
 
-	public Place(nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Place xmlElement) {
+	public Place(nl.rug.ds.bpm.pnml.jaxb.core.node.place.PlaceNode xmlElement) {
 		super(xmlElement);
 
 	}
@@ -23,12 +23,15 @@ public class Place extends Node {
 		try {
 			tokens = Integer.parseInt(((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Place)xmlElement).getInitialMarking().getText().getText());
 		}
-		catch (NullPointerException e) {}
+		catch (Exception e) {}
 		
 		return tokens;
 	}
 
 	public void setTokens(int tokens) {
-		((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Place) xmlElement).setInitialMarking(new InitialMarking("" + tokens));
+		try {
+			((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Place) xmlElement).setInitialMarking(new InitialMarking("" + tokens));
+		}
+		catch (Exception e) {}
 	}
 }

@@ -1,17 +1,13 @@
 package nl.rug.ds.bpm.pnml.jaxb.core;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
 import nl.rug.ds.bpm.pnml.jaxb.core.node.place.Place;
 import nl.rug.ds.bpm.pnml.jaxb.core.node.place.RefPlace;
 import nl.rug.ds.bpm.pnml.jaxb.core.node.transition.RefTransition;
 import nl.rug.ds.bpm.pnml.jaxb.core.node.transition.Transition;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,7 +15,7 @@ import java.util.Set;
  */
 
 @XmlRootElement(name = "page")
-public class Page extends PNObject {
+public class Page extends NetObject implements NetContainer {
 	private Set<Place> places;
 	private Set<RefPlace> refPlaces;
 	private Set<Transition> transitions;

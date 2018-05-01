@@ -5,27 +5,29 @@ import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Heerko Groefsema on 30-Apr-18.
  */
-public abstract class PNObject {
+public abstract class NetObject {
 	private String id;
 	private Name name;
 	private Graphics graphics;
-	private List<ToolSpecific> toolSpecifics;
+	private Set<ToolSpecific> toolSpecifics;
 	
-	public PNObject() {
-		toolSpecifics = new ArrayList<>();
+	public NetObject() {
+		toolSpecifics = new HashSet<>();
 	}
 	
-	public PNObject(String id) {
+	public NetObject(String id) {
 		this();
 		this.id = id;
 	}
 	
-	public PNObject(String id, String name) {
+	public NetObject(String id, String name) {
 		this();
 		this.id = id;
 		this.name = new Name(name);
@@ -59,11 +61,11 @@ public abstract class PNObject {
 	}
 	
 	@XmlElement(name = "toolspecific")
-	public List<ToolSpecific> getToolSpecifics() {
+	public Set<ToolSpecific> getToolSpecifics() {
 		return toolSpecifics;
 	}
 	
-	public void setToolSpecifics(List<ToolSpecific> toolSpecifics) {
+	public void setToolSpecifics(Set<ToolSpecific> toolSpecifics) {
 		this.toolSpecifics = toolSpecifics;
 	}
 }

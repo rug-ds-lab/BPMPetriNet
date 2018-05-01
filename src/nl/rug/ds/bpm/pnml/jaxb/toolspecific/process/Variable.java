@@ -17,10 +17,12 @@ public class Variable {
 	public Variable(String name, String type) {
 		this.name = name;
 		this.type = type;
+		value = "";
 	}
 
 	public Variable(String name, String type, String value) {
-		this(name, type);
+		this.name = name;
+		this.type = type;
 		this.value = value;
 	}
 

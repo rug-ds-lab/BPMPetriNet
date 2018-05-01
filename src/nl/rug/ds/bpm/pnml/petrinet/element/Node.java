@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.petrinet.node;
+package nl.rug.ds.bpm.pnml.petrinet.element;
 
 import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
 
@@ -39,5 +39,9 @@ public abstract class Node {
 
 	public void setId(String id) {
 		xmlElement.setId(id);
+	}
+
+	public nl.rug.ds.bpm.pnml.jaxb.core.node.Node getXmlElement() {
+		return xmlElement;
 	}
 }

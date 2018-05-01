@@ -1,7 +1,8 @@
-package nl.rug.ds.bpm.pnml.petrinet;
+package nl.rug.ds.bpm.pnml.petrinet.element;
 
+import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Inscription;
-import nl.rug.ds.bpm.pnml.petrinet.node.Node;
+import nl.rug.ds.bpm.pnml.petrinet.element.Node;
 
 /**
  * Created by Heerko Groefsema on 30-Apr-18.
@@ -55,5 +56,35 @@ public class Arc {
 	
 	public void setWeight(int weight) {
 		xmlElement.setWeight(new Inscription("" + weight));
+	}
+
+	public String getName() {
+		String name = "";
+
+		try {
+			name = xmlElement.getName().getText().getText();
+		}
+		catch (NullPointerException e) {}
+
+		return name;
+	}
+
+	public void setName(String name) {
+		xmlElement.setName(new Name(name));
+	}
+
+	public String getId() {
+		String id = "";
+
+		try {
+			id = xmlElement.getId();
+		}
+		catch (NullPointerException e) {}
+
+		return id;
+	}
+
+	public void setId(String id) {
+		xmlElement.setId(id);
 	}
 }

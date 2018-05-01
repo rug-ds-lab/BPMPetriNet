@@ -1,9 +1,6 @@
 package nl.rug.ds.bpm.pnml.jaxb.core;
 
-import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Inscription;
-
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -11,7 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 
 @XmlRootElement(name = "arc")
-public class Arc extends PNObject {
+public class Arc extends NetObject {
 	private String source;
 	private String target;
 
