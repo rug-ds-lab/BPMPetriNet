@@ -24,7 +24,7 @@ public class ToolSpecific {
 
 	public ToolSpecific() {
 		other = new ArrayList<>();
-		tool = "nl.rug.ds.bpm.pnml.petrinet";
+		tool = "nl.rug.ds.bpm.petrinet";
 		version = "1.0";
 	}
 

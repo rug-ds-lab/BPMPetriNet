@@ -2,8 +2,8 @@ package nl.rug.ds.bpm.pnml.jaxb.core;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Heerko Groefsema on 20-Apr-18.
@@ -11,18 +11,18 @@ import java.util.List;
 
 @XmlRootElement(name = "PetriNetDoc")
 public class Pnml {
-	private List<Net> nets;
+	private Set<Net> nets;
 
 	public Pnml() {
-		nets = new ArrayList<>();
+		nets = new HashSet<>();
 	}
 	
 	@XmlElement(name = "net", required = true)
-	public List<Net> getNets() {
+	public Set<Net> getNets() {
 		return nets;
 	}
 	
-	public void setNets(List<Net> nets) {
+	public void setNets(Set<Net> nets) {
 		this.nets = nets;
 	}
 }

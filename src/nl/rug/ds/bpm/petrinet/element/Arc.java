@@ -1,8 +1,7 @@
-package nl.rug.ds.bpm.pnml.petrinet.element;
+package nl.rug.ds.bpm.petrinet.element;
 
 import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Inscription;
-import nl.rug.ds.bpm.pnml.petrinet.element.Node;
 
 /**
  * Created by Heerko Groefsema on 30-Apr-18.

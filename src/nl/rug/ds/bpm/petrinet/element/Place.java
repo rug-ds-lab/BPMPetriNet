@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.petrinet.element;
+package nl.rug.ds.bpm.petrinet.element;
 
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.InitialMarking;
 

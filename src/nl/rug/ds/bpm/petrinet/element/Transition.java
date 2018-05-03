@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.petrinet.element;
+package nl.rug.ds.bpm.petrinet.element;
 
 import nl.rug.ds.bpm.pnml.jaxb.core.ToolSpecific;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Task;
@@ -18,7 +18,7 @@ public class Transition extends Node {
 	public Transition(nl.rug.ds.bpm.pnml.jaxb.core.node.transition.TransitionNode xmlElement) {
 		super(xmlElement);
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
-			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.pnml.petrinet"))
+			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.petrinet"))
 				task = toolSpecific.getTask();
 	}
 

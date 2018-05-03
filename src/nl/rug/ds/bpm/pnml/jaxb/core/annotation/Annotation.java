@@ -1,9 +1,10 @@
 package nl.rug.ds.bpm.pnml.jaxb.core.annotation;
 
 import nl.rug.ds.bpm.pnml.jaxb.core.Graphics;
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Text;
+import nl.rug.ds.bpm.pnml.jaxb.core.ToolSpecific;
 
 import javax.xml.bind.annotation.XmlElement;
+import java.util.Set;
 
 /**
  * Created by Heerko Groefsema on 23-Apr-18.
@@ -12,6 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 public abstract class Annotation {
 	private Text text;
 	private Graphics graphics;
+	private Set<ToolSpecific> toolSpecifics;
 	
 	public Annotation() {}
 	
@@ -35,5 +37,14 @@ public abstract class Annotation {
 
 	public void setGraphics(Graphics graphics) {
 		this.graphics = graphics;
+	}
+
+	@XmlElement(name = "toolspecific")
+	public Set<ToolSpecific> getToolSpecifics() {
+		return toolSpecifics;
+	}
+
+	public void setToolSpecifics(Set<ToolSpecific> toolSpecifics) {
+		this.toolSpecifics = toolSpecifics;
 	}
 }
