@@ -14,14 +14,7 @@ import nl.rug.ds.bpm.pnml.marshaller.PTNetUnmarshaller;
 public class PetriNetTest {
 
 	public static void main(String[] args) {
-		String user = 
-				"/home/nick/"
-				;
-		
-		String folder = "D:\\Dropbox\\Papers\\Process Variability Specification\\Test models\\";
-		String pnml = "basic1.pnml";
-		
-		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(folder + pnml));
+		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(args[0]));
 
 		Set<PetriNet> pnset = pnu.getNets();
 		
