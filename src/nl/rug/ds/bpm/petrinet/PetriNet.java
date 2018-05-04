@@ -590,7 +590,7 @@ public class PetriNet {
 						var = var + " = " + v.getValue();
 					engine.eval(var);
 				}
-				satisfied = Boolean.parseBoolean((String)engine.eval(t.getGuard()));
+				satisfied = (boolean) engine.eval(t.getGuard());
 			} catch (ScriptException e) {
 				e.printStackTrace();
 			}

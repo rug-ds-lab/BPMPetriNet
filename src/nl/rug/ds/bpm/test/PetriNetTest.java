@@ -38,6 +38,7 @@ public class PetriNetTest {
 			Arc a = pn.addArc("x0", "y0", 2);
 			
 			t.setScript("i++;", "JavaScript");
+			t.setGuard("i>=0");
 			
 			DataMarking m = pn.getInitialDataMarking();
 			m.addVariableTracking("i");
