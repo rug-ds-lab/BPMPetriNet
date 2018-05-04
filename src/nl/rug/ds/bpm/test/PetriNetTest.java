@@ -14,7 +14,11 @@ import nl.rug.ds.bpm.pnml.marshaller.PTNetUnmarshaller;
 public class PetriNetTest {
 
 	public static void main(String[] args) {
-		String folder = "/home/nick/Dropbox/Process Rule Mining/Test models/simplemodels/";
+		String user = 
+				"/home/nick/"
+				;
+		
+		String folder = user + "Dropbox/Process Rule Mining/Test models/simplemodels/";
 		String pnml = "basic1.pnml";
 		
 		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(folder + pnml));
