@@ -23,11 +23,13 @@ public class PTNetUnmarshaller {
 		try {
 			JAXBContext context = JAXBContext.newInstance(Pnml.class);
 			Unmarshaller unmarshaller = context.createUnmarshaller();
-
+			
 			for (Net net: ((Pnml) unmarshaller.unmarshal(file)).getNets())
 				nets.add(new PetriNet(net));
 		}
-		catch (Exception e) { }
+		catch (Exception e) { 
+			e.printStackTrace();
+		}
 	}
 
 	public PTNetUnmarshaller(InputStream is) {
