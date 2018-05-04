@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.jaxb.core.annotation;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

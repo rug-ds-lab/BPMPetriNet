@@ -13,6 +13,8 @@ public class Variable {
 	private String value;
 	private String type;
 	private String name;
+	
+	public Variable() { }
 
 	public Variable(String name, String type) {
 		this.name = name;

@@ -12,6 +12,8 @@ import javax.xml.bind.annotation.XmlValue;
 public class Role {
 	private String id;
 	private String name;
+	
+	public Role() { }
 
 	public Role(String id, String name) {
 		this.id = id;

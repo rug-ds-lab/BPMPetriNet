@@ -9,6 +9,8 @@ public class Script {
 	private String type;
 	private String script;
 
+	public Script() { }
+	
 	public Script(String script, String type) {
 		this.script = script;
 		this.type = type;

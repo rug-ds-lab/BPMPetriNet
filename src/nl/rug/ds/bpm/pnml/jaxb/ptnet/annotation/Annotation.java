@@ -1,7 +1,7 @@
-package nl.rug.ds.bpm.pnml.jaxb.core.annotation;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.Graphics;
-import nl.rug.ds.bpm.pnml.jaxb.core.ToolSpecific;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.Graphics;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.ToolSpecific;
 
 import javax.xml.bind.annotation.XmlElement;
 import java.util.Set;

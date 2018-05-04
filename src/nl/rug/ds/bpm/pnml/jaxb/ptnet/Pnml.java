@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.jaxb.core;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -9,7 +9,7 @@ import java.util.Set;
  * Created by Heerko Groefsema on 20-Apr-18.
  */
 
-@XmlRootElement(name = "PetriNetDoc")
+@XmlRootElement(name = "pnml")
 public class Pnml {
 	private Set<Net> nets;
 

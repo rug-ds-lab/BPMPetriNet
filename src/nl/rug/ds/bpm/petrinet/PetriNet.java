@@ -4,20 +4,17 @@ import nl.rug.ds.bpm.petrinet.element.Arc;
 import nl.rug.ds.bpm.petrinet.element.Node;
 import nl.rug.ds.bpm.petrinet.element.Place;
 import nl.rug.ds.bpm.petrinet.element.Transition;
-import nl.rug.ds.bpm.pnml.jaxb.core.Net;
-import nl.rug.ds.bpm.pnml.jaxb.core.NetContainer;
-import nl.rug.ds.bpm.pnml.jaxb.core.Page;
-import nl.rug.ds.bpm.pnml.jaxb.core.ToolSpecific;
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.ToolSpecific;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Process;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Group;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Role;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class PetriNet {
 	private HashMap<String, Node> nodes;
@@ -87,7 +84,7 @@ public class PetriNet {
 
 		this.xmlElement = xmlElement;
 
-		for (nl.rug.ds.bpm.pnml.jaxb.core.node.place.Place place: xmlElement.getPlaces()) {
+		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place place: xmlElement.getPlaces()) {
 			Place p = new Place(place);
 			places.put(place.getId(), p);
 			nodes.put(place.getId(), p);
@@ -96,7 +93,7 @@ public class PetriNet {
 			incoming.put(place.getId(), in);
 			outgoing.put(place.getId(), out);
 		}
-		for (nl.rug.ds.bpm.pnml.jaxb.core.node.place.RefPlace place: xmlElement.getRefPlaces()) {
+		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.RefPlace place: xmlElement.getRefPlaces()) {
 			Place p = new Place(place);
 			places.put(place.getId(), p);
 			nodes.put(place.getId(), p);
@@ -106,7 +103,7 @@ public class PetriNet {
 			outgoing.put(place.getId(), out);
 		}
 
-		for (nl.rug.ds.bpm.pnml.jaxb.core.node.transition.Transition transition: xmlElement.getTransitions()) {
+		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition transition: xmlElement.getTransitions()) {
 			Transition t = new Transition(transition);
 			transitions.put(transition.getId(), t);
 			nodes.put(transition.getId(), t);
@@ -115,7 +112,7 @@ public class PetriNet {
 			incoming.put(transition.getId(), in);
 			outgoing.put(transition.getId(), out);
 		}
-		for (nl.rug.ds.bpm.pnml.jaxb.core.node.transition.RefTransition transition: xmlElement.getRefTransitions()){
+		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.RefTransition transition: xmlElement.getRefTransitions()){
 			Transition t = new Transition(transition);
 			transitions.put(transition.getId(), t);
 			nodes.put(transition.getId(), t);
@@ -125,8 +122,8 @@ public class PetriNet {
 			outgoing.put(transition.getId(), out);
 		}
 
-		for (nl.rug.ds.bpm.pnml.jaxb.core.Arc arc: xmlElement.getArcs()) {
-			Arc a = new Arc((nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc)arc);
+		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc arc: xmlElement.getArcs()) {
+			Arc a = new Arc(arc);
 			a.setSource(nodes.get(arc.getSource()));
 			a.setTarget(nodes.get(arc.getTarget()));
 			arcs.put(arc.getId(), a);
@@ -184,7 +181,7 @@ public class PetriNet {
 		incoming.put(t.getId(), in);
 		outgoing.put(t.getId(), out);
 
-		xmlElement.getTransitions().add((nl.rug.ds.bpm.pnml.jaxb.core.node.transition.Transition) t.getXmlElement());
+		xmlElement.getTransitions().add((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition) t.getXmlElement());
 	}
 
 	public Transition addTransition(String id) {
@@ -218,8 +215,8 @@ public class PetriNet {
 		return transitions.get(id);
 	}
 
-	public Set<Transition> getTransitions() {
-		return (Set<Transition>) transitions.values();
+	public Collection<Transition> getTransitions() {
+		return transitions.values();
 	}
 
 	//Place methods
@@ -232,7 +229,7 @@ public class PetriNet {
 		incoming.put(p.getId(), in);
 		outgoing.put(p.getId(), out);
 
-		xmlElement.getPlaces().add((nl.rug.ds.bpm.pnml.jaxb.core.node.place.Place) p.getXmlElement());
+		xmlElement.getPlaces().add((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place) p.getXmlElement());
 	}
 
 	public Place addPlace(String id) {
@@ -280,8 +277,8 @@ public class PetriNet {
 		return places.get(id);
 	}
 
-	public Set<Place> getPlaces() {
-		return (Set<Place>) places.values();
+	public Collection<Place> getPlaces() {
+		return places.values();
 	}
 
 	//Arc methods
@@ -336,8 +333,8 @@ public class PetriNet {
 		return arcs.get(id);
 	}
 
-	public Set<Arc> getArcs() {
-		return (Set<Arc>) arcs.values();
+	public Collection<Arc> getArcs() {
+		return arcs.values();
 	}
 
 	private void removeArcs(Node n) {
@@ -379,8 +376,8 @@ public class PetriNet {
 		return pages.get(id);
 	}
 
-	public Set<PetriNet> getPages() {
-		return (Set<PetriNet>) pages.values();
+	public Collection<PetriNet> getPages() {
+		return pages.values();
 	}
 
 	//Variable methods
@@ -415,7 +412,7 @@ public class PetriNet {
 		return variables.get(name);
 	}
 
-	public Set<Variable> getVariables() {
+	public Collection<Variable> getVariables() {
 		return process.getVariables();
 	}
 
@@ -445,7 +442,7 @@ public class PetriNet {
 		return groups.get(id);
 	}
 
-	public Set<Group> getGroups() {
+	public Collection<Group> getGroups() {
 		return process.getGroups();
 	}
 
@@ -475,7 +472,7 @@ public class PetriNet {
 		return roles.get(id);
 	}
 
-	public Set<Role> getRoles() {
+	public Collection<Role> getRoles() {
 		return process.getRoles();
 	}
 
@@ -504,7 +501,7 @@ public class PetriNet {
 		return places.containsKey(id) && incoming.get(id).isEmpty();
 	}
 
-	public Set<Place> getSources() {
+	public Collection<Place> getSources() {
 		Set<Place> sources = new HashSet<>();
 		for (Place p: places.values())
 			if (isSource(p))
@@ -512,14 +509,14 @@ public class PetriNet {
 		return sources;
 	}
 
-	public Set<Node> getPreSet(Node n) {
+	public Collection<Node> getPreSet(Node n) {
 		Set<Node> pre = new HashSet<>();
 		for (Arc a: incoming.get(n.getId()))
 			pre.add(a.getSource());
 		return pre;
 	}
 
-	public Set<Node> getPostSet(Node n) {
+	public Collection<Node> getPostSet(Node n) {
 		Set<Node> post = new HashSet<>();
 		for (Arc a: outgoing.get(n.getId()))
 			post.add(a.getTarget());

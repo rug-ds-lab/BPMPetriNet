@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.jaxb.core;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet;
 
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Process;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Task;

@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.pnml.jaxb.core.node.transition;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -7,11 +7,13 @@ import javax.xml.bind.annotation.XmlRootElement;
  * Created by Heerko Groefsema on 20-Apr-18.
  */
 
-@XmlRootElement(name = "referenceTransition")
-public class RefTransition extends TransitionNode {
+@XmlRootElement(name = "referencePlace")
+public class RefPlace extends PlaceNode {
 	private String ref;
-
-	public RefTransition(String id, String ref) {
+	
+	public RefPlace() { super(); }
+	
+	public RefPlace(String id, String ref) {
 		super(id);
 		this.ref = ref;
 	}

@@ -1,6 +1,6 @@
-package nl.rug.ds.bpm.pnml.jaxb.core.node;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet.node;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.NetObject;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetObject;
 
 /**
  * Created by Heerko Groefsema on 20-Apr-18.

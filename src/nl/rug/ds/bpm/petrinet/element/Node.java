@@ -1,13 +1,13 @@
 package nl.rug.ds.bpm.petrinet.element;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
 
 public abstract class Node {
-	protected nl.rug.ds.bpm.pnml.jaxb.core.node.Node xmlElement;
+	protected nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Node xmlElement;
 
 	public Node() {}
 	
-	public Node(nl.rug.ds.bpm.pnml.jaxb.core.node.Node xmlElement) {
+	public Node(nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Node xmlElement) {
 		this.xmlElement = xmlElement;
 	}
 
@@ -41,7 +41,7 @@ public abstract class Node {
 		xmlElement.setId(id);
 	}
 
-	public nl.rug.ds.bpm.pnml.jaxb.core.node.Node getXmlElement() {
+	public nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Node getXmlElement() {
 		return xmlElement;
 	}
 }

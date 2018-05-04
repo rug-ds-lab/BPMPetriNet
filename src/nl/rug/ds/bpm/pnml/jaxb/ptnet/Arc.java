@@ -11,32 +11,58 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 
 @XmlRootElement(name = "arc")
-public class Arc extends nl.rug.ds.bpm.pnml.jaxb.core.Arc {
+public class Arc extends NetObject {
+	private String source;
+	private String target;
 	private Inscription weight;
 	
+	public Arc() {}
+
 	public Arc(String id, String source, String target) {
-		super(id, source, target);
+		super(id);
+		this.source = source;
+		this.target = target;
 	}
 	
 	public Arc(String id, String name, String source, String target) {
-		super(id, name, source, target);
+		super(id, name);
+		this.source = source;
+		this.target = target;
 	}
-
+	
 	public Arc(String id, String source, String target, int weight) {
-		super(id, source, target);
+		this(id, source, target);
 		this.weight = new Inscription("" + weight);
 	}
 	
 	public Arc(String id, String name, String source, String target, int weight) {
-		super(id, name, source, target);
+		this(id, name, source, target);
 		this.weight = new Inscription("" + weight);
 	}
 
+	@XmlAttribute(name = "source", required = true)
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	@XmlAttribute(name = "target", required = true)
+	public String getTarget() {
+		return target;
+	}
+
+	public void setTarget(String target) {
+		this.target = target;
+	}
+	
 	@XmlElement(name = "inscription")
 	public Inscription getWeight() {
 		return weight;
 	}
-
+	
 	public void setWeight(Inscription weight) {
 		this.weight = weight;
 	}

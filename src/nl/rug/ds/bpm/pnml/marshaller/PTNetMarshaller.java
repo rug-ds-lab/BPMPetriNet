@@ -1,8 +1,8 @@
 package nl.rug.ds.bpm.pnml.marshaller;
 
 import nl.rug.ds.bpm.petrinet.PetriNet;
-import nl.rug.ds.bpm.pnml.jaxb.core.Net;
-import nl.rug.ds.bpm.pnml.jaxb.core.Pnml;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.Pnml;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

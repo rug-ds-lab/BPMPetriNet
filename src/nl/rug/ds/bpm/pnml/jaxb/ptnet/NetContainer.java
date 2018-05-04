@@ -1,10 +1,10 @@
-package nl.rug.ds.bpm.pnml.jaxb.core;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
-import nl.rug.ds.bpm.pnml.jaxb.core.node.place.Place;
-import nl.rug.ds.bpm.pnml.jaxb.core.node.place.RefPlace;
-import nl.rug.ds.bpm.pnml.jaxb.core.node.transition.RefTransition;
-import nl.rug.ds.bpm.pnml.jaxb.core.node.transition.Transition;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.RefPlace;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.RefTransition;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition;
 
 import java.util.Set;
 

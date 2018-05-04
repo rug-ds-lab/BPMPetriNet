@@ -12,6 +12,8 @@ import javax.xml.bind.annotation.XmlValue;
 public class Group {
 	private String id;
 	private String name;
+	
+	public Group() { }
 
 	public Group(String id, String name) {
 		this.id = id;

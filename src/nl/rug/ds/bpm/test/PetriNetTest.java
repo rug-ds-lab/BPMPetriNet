@@ -18,12 +18,15 @@ public class PetriNetTest {
 				"/home/nick/"
 				;
 		
-		String folder = user + "Dropbox/Process Rule Mining/Test models/simplemodels/";
+		String folder = "D:\\Dropbox\\Papers\\Process Variability Specification\\Test models\\";
 		String pnml = "basic1.pnml";
 		
 		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(folder + pnml));
 
 		Set<PetriNet> pnset = pnu.getNets();
+		
+		if (pnset.isEmpty())
+			System.out.println("empty");
 		
 		for (PetriNet pn: pnset) {
 			for (Transition t: pn.getTransitions()) {

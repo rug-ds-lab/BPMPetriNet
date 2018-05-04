@@ -1,12 +1,10 @@
-package nl.rug.ds.bpm.pnml.jaxb.core;
+package nl.rug.ds.bpm.pnml.jaxb.ptnet;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**

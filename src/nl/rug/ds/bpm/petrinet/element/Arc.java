@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.petrinet.element;
 
-import nl.rug.ds.bpm.pnml.jaxb.core.annotation.Name;
+import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Inscription;
 
 /**
@@ -54,7 +54,7 @@ public class Arc {
 	}
 	
 	public void setWeight(int weight) {
-		xmlElement.setWeight(new Inscription("" + weight));
+			xmlElement.setWeight(new Inscription("" + weight));
 	}
 
 	public String getName() {
