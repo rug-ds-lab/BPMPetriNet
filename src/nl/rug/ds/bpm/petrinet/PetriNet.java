@@ -4,6 +4,8 @@ import nl.rug.ds.bpm.petrinet.element.Arc;
 import nl.rug.ds.bpm.petrinet.element.Node;
 import nl.rug.ds.bpm.petrinet.element.Place;
 import nl.rug.ds.bpm.petrinet.element.Transition;
+import nl.rug.ds.bpm.petrinet.marking.DataMarking;
+import nl.rug.ds.bpm.petrinet.marking.Marking;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
@@ -14,6 +16,9 @@ import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Group;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Role;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.util.*;
 
 public class PetriNet {
@@ -33,7 +38,9 @@ public class PetriNet {
 
 	private Process process;
 	private NetContainer xmlElement;
-
+	
+	ScriptEngineManager manager = new ScriptEngineManager();
+	
 	public PetriNet() {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
@@ -552,11 +559,73 @@ public class PetriNet {
 		return marking;
 	}
 
-	public Marking getInitial() {
+	public Marking getInitialMarking() {
 		Marking m = new Marking();
 		for (Place p: places.values())
 			if (p.getTokens() > 0)
 				m.addTokens(p.getId(), p.getTokens());
 		return m;
+	}
+	
+	//Execution methods
+	public DataMarking getInitialDataMarking() {
+		DataMarking m = new DataMarking();
+		for (Place p: places.values())
+			if (p.getTokens() > 0)
+				m.addTokens(p.getId(), p.getTokens());
+		m.addVariables(getVariables());
+		return m;
+	}
+	
+	public boolean satisfiesGuard(Transition t, DataMarking m) {
+		boolean satisfied = t.getGuard() == null || t.getGuard().isEmpty();
+		
+		if (!satisfied) {
+			ScriptEngine engine = manager.getEngineByName("JavaScript");
+			
+			try {
+				for (Variable v : m.getVariables()) {
+					String var = "var " + v.getName();
+					if (!v.getValue().isEmpty())
+						var = var + " = " + v.getValue();
+					engine.eval(var);
+				}
+				satisfied = Boolean.parseBoolean((String)engine.eval(t.getGuard()));
+			} catch (ScriptException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return satisfied;
+	}
+	
+	public DataMarking execute(Transition t, DataMarking m) {
+		DataMarking marking;
+		
+		if(enabled(t, m) && satisfiesGuard(t, m)) {
+			marking = (DataMarking) fire(t, m);
+			
+			if (!t.getScript().isEmpty()) {
+				ScriptEngine engine = manager.getEngineByName(t.getScriptType());
+				
+				try {
+					for (Variable v : marking.getVariables()) {
+						String var = "var " + v.getName();
+						if (!v.getValue().isEmpty())
+							var = var + " = " + v.getValue();
+						engine.eval(var);
+					}
+					engine.eval(t.getScript());
+				} catch (ScriptException e) {
+					e.printStackTrace();
+				}
+				
+				for (Variable v : m.getVariables())
+					marking.setVariableValue(v.getName(), "" + engine.get(v.getName()));
+			}
+		}
+		else marking = m;
+		
+		return marking;
 	}
 }

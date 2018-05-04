@@ -3,7 +3,8 @@ package nl.rug.ds.bpm.test;
 import java.io.File;
 import java.util.Set;
 
-import nl.rug.ds.bpm.petrinet.Marking;
+import nl.rug.ds.bpm.petrinet.marking.DataMarking;
+import nl.rug.ds.bpm.petrinet.marking.Marking;
 import nl.rug.ds.bpm.petrinet.PetriNet;
 import nl.rug.ds.bpm.petrinet.element.Arc;
 import nl.rug.ds.bpm.petrinet.element.Place;
@@ -30,23 +31,23 @@ public class PetriNetTest {
 				System.out.println(t.getName());
 			}
 			
+			pn.addVariable("i", "int", "0.0");
+			
 			Place p = pn.addPlace("x0", "test_x0", 2);
 			Transition t = pn.addTransition("y0");
 			Arc a = pn.addArc("x0", "y0", 2);
 			
-			Marking m = pn.getInitial();
+			t.setScript("i++;", "JavaScript");
+			
+			DataMarking m = pn.getInitialDataMarking();
+			m.addVariableTracking("i");
 			
 			System.out.println("x0 is source: " + pn.isSource("x0"));
 			System.out.println("Initial marking: " + m.toString());
 			System.out.println("y0 is enabled: " + pn.enabled(pn.getTransition("y0"), m));
+			System.out.println("y0 guard satisfied: " + pn.satisfiesGuard(pn.getTransition("y0"), m));
 			
-			System.out.println("fired: " + pn.fire(pn.getTransition("y0"), m).toString());
-			
-			pn.removeArc(a);
-			pn.removePlace(p);
-			pn.removeTransition(t);
-			
-			pn.addRole("r1", "role");
+			System.out.println("fired: " + pn.execute(pn.getTransition("y0"), m).toString());
 		}
 		PTNetMarshaller pnm = new PTNetMarshaller(pnset, new File(args[0]+".out"));
 	}

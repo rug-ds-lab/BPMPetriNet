@@ -27,9 +27,7 @@ public class PTNetUnmarshaller {
 			for (Net net: ((Pnml) unmarshaller.unmarshal(file)).getNets())
 				nets.add(new PetriNet(net));
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		catch (Exception e) { }
 	}
 
 	public PTNetUnmarshaller(InputStream is) {
