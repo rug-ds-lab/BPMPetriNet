@@ -138,8 +138,12 @@ public class PetriNet {
 			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.petrinet"))
 				process = toolSpecific.getProcess();
 
-		if (process == null)
+		if (process == null) {
 			process = new Process();
+			ToolSpecific toolSpecific = new ToolSpecific();
+			toolSpecific.setProcess(process);
+			xmlElement.getToolSpecifics().add(toolSpecific);
+		}
 
 		for (Group group: process.getGroups())
 			groups.put(group.getId(), group);
