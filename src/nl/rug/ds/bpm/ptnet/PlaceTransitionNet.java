@@ -1,11 +1,11 @@
-package nl.rug.ds.bpm.petrinet;
+package nl.rug.ds.bpm.ptnet;
 
-import nl.rug.ds.bpm.petrinet.element.Arc;
-import nl.rug.ds.bpm.petrinet.element.Node;
-import nl.rug.ds.bpm.petrinet.element.Place;
-import nl.rug.ds.bpm.petrinet.element.Transition;
-import nl.rug.ds.bpm.petrinet.marking.DataMarking;
-import nl.rug.ds.bpm.petrinet.marking.Marking;
+import nl.rug.ds.bpm.ptnet.element.Arc;
+import nl.rug.ds.bpm.ptnet.element.Node;
+import nl.rug.ds.bpm.ptnet.element.Place;
+import nl.rug.ds.bpm.ptnet.element.Transition;
+import nl.rug.ds.bpm.ptnet.marking.DataMarking;
+import nl.rug.ds.bpm.ptnet.marking.Marking;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
@@ -16,12 +16,11 @@ import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Group;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Role;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
+import javax.script.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class PetriNet {
+public class PlaceTransitionNet {
 	private HashMap<String, Node> nodes;
 	private HashMap<String, Place> places;
 	private HashMap<String, Transition> transitions;
@@ -30,7 +29,7 @@ public class PetriNet {
 	private HashMap<String, Set<Arc>> incoming;
 	private HashMap<String, Set<Arc>> outgoing;
 
-	private HashMap<String, PetriNet> pages;
+	private HashMap<String, PlaceTransitionNet> pages;
 
 	private HashMap<String, Group> groups;
 	private HashMap<String, Variable> variables;
@@ -41,7 +40,7 @@ public class PetriNet {
 	
 	ScriptEngineManager manager = new ScriptEngineManager();
 	
-	public PetriNet() {
+	public PlaceTransitionNet() {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -63,18 +62,18 @@ public class PetriNet {
 		xmlElement.getToolSpecifics().add(toolSpecific);
 	}
 
-	public PetriNet(String id) {
+	public PlaceTransitionNet(String id) {
 		this();
 		xmlElement.setId(id);
 	}
 
-	public PetriNet(String id, String name) {
+	public PlaceTransitionNet(String id, String name) {
 		this();
 		xmlElement.setId(id);
 		xmlElement.setName(new Name(name));
 	}
 
-	public PetriNet(NetContainer xmlElement) {
+	public PlaceTransitionNet(NetContainer xmlElement) {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -139,10 +138,10 @@ public class PetriNet {
 		}
 
 		for (NetContainer page: xmlElement.getPages())
-			pages.put(page.getId(), new PetriNet(page));
+			pages.put(page.getId(), new PlaceTransitionNet(page));
 
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
-			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.petrinet"))
+			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.ptnet"))
 				process = toolSpecific.getProcess();
 
 		if (process == null) {
@@ -357,23 +356,23 @@ public class PetriNet {
 	}
 
 	//Page methods
-	public PetriNet addPage(String id) {
+	public PlaceTransitionNet addPage(String id) {
 		Page page = new Page(id);
 		xmlElement.getPages().add(page);
 
-		PetriNet net = new PetriNet(page);
+		PlaceTransitionNet net = new PlaceTransitionNet(page);
 		pages.put(id, net);
 
 		return net;
 	}
 
-	public PetriNet addPage(String id, String name) {
-		PetriNet net = addPage(id);
+	public PlaceTransitionNet addPage(String id, String name) {
+		PlaceTransitionNet net = addPage(id);
 		net.setName(name);
 		return net;
 	}
 
-	public void removePage(PetriNet p) {
+	public void removePage(PlaceTransitionNet p) {
 		pages.remove(p.getId());
 		xmlElement.getPages().remove(p.getXmlElement());
 	}
@@ -383,11 +382,11 @@ public class PetriNet {
 			removePage(pages.get(id));
 	}
 
-	public PetriNet getPage(String id) {
+	public PlaceTransitionNet getPage(String id) {
 		return pages.get(id);
 	}
 
-	public Collection<PetriNet> getPages() {
+	public Collection<PlaceTransitionNet> getPages() {
 		return pages.values();
 	}
 
@@ -533,8 +532,39 @@ public class PetriNet {
 			post.add(a.getTarget());
 		return post;
 	}
+	
+	public Marking getInitialMarking() {
+		Marking m = new Marking();
+		for (Place p: places.values())
+			if (p.getTokens() > 0)
+				m.addTokens(p.getId(), p.getTokens());
+		return m;
+	}
+	
+	public DataMarking getInitialDataMarking() {
+		DataMarking m = new DataMarking();
+		for (Place p: places.values())
+			if (p.getTokens() > 0)
+				m.addTokens(p.getId(), p.getTokens());
+		
+		ScriptEngine engine = manager.getEngineByName("JavaScript");
+		try {
+			for (Variable v : getVariables()) {
+				String var = "var " + v.getName();
+				if (!v.getValue().isEmpty())
+					var = var + " = " + v.getValue() + ";";
+				engine.eval(var);
+			}
+			m.setBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE));
+		} catch (ScriptException e) {
+			e.printStackTrace();
+		}
+		
+		return m;
+	}
 
-	public boolean enabled(Transition t, Marking m) {
+	public boolean isEnabled(Transition t, Marking m) {
+		//Marking without data, disregards guards
 		boolean enabled = true;
 		Iterator<Arc> iterator = incoming.get(t.getId()).iterator();
 
@@ -545,11 +575,27 @@ public class PetriNet {
 
 		return enabled;
 	}
+	
+	public boolean isEnabled(Transition t, DataMarking m) {
+		//Marking with data, evaluates guards
+		return isEnabled(t, (Marking) m) && evaluateGuard(t, m);
+	}
+	
+	public Collection<Transition> getEnabled(Marking m) {
+		//Marking without data, disregards guards
+		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
+	}
+	
+	public Collection<Transition> getEnabled(DataMarking m) {
+		//Marking with data, evaluates guards
+		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
+	}
 
 	public Marking fire(Transition t, Marking m) {
+		//Marking without data, disregards guards and script
 		Marking marking = m.clone();
 
-		if(enabled(t, m)) {
+		if(isEnabled(t, m)) {
 			for (Arc in: incoming.get(t.getId()))
 				marking.consumeTokens(in.getSource().getId(), in.getWeight());
 			for (Arc out: outgoing.get(t.getId()))
@@ -558,74 +604,49 @@ public class PetriNet {
 
 		return marking;
 	}
-
-	public Marking getInitialMarking() {
-		Marking m = new Marking();
-		for (Place p: places.values())
-			if (p.getTokens() > 0)
-				m.addTokens(p.getId(), p.getTokens());
-		return m;
+	
+	public DataMarking fire(Transition t, DataMarking m) {
+		//Marking with data, evaluates guards and script
+		DataMarking marking;
+		
+		if(isEnabled(t, m)) {
+			marking = (DataMarking) fire(t, (Marking) m);
+			
+			if (!t.getScript().isEmpty()) {
+				ScriptEngine engine = manager.getEngineByName(t.getScriptType());
+				
+				//Bindings only update when using createBindings, so create and clone manually
+				Bindings bindings = engine.createBindings();
+				bindings.putAll(m.getBindings());
+				
+				marking.setBindings(bindings);
+				engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+				
+				try {
+					engine.eval(t.getScript());
+				} catch (ScriptException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		else marking = m;
+		
+		return marking;
 	}
 	
-	//Execution methods
-	public DataMarking getInitialDataMarking() {
-		DataMarking m = new DataMarking();
-		for (Place p: places.values())
-			if (p.getTokens() > 0)
-				m.addTokens(p.getId(), p.getTokens());
-		m.addVariables(getVariables());
-		return m;
-	}
-	
-	public boolean satisfiesGuard(Transition t, DataMarking m) {
+	public boolean evaluateGuard(Transition t, DataMarking m) {
 		boolean satisfied = t.getGuard() == null || t.getGuard().isEmpty();
 		
 		if (!satisfied) {
 			ScriptEngine engine = manager.getEngineByName("JavaScript");
 			
 			try {
-				for (Variable v : m.getVariables()) {
-					String var = "var " + v.getName();
-					if (!v.getValue().isEmpty())
-						var = var + " = " + v.getValue();
-					engine.eval(var);
-				}
-				satisfied = (boolean) engine.eval(t.getGuard());
+				satisfied = (boolean) engine.eval(t.getGuard(), m.getBindings());
 			} catch (ScriptException e) {
 				e.printStackTrace();
 			}
 		}
 		
 		return satisfied;
-	}
-	
-	public DataMarking execute(Transition t, DataMarking m) {
-		DataMarking marking;
-		
-		if(enabled(t, m) && satisfiesGuard(t, m)) {
-			marking = (DataMarking) fire(t, m);
-			
-			if (!t.getScript().isEmpty()) {
-				ScriptEngine engine = manager.getEngineByName(t.getScriptType());
-				
-				try {
-					for (Variable v : marking.getVariables()) {
-						String var = "var " + v.getName();
-						if (!v.getValue().isEmpty())
-							var = var + " = " + v.getValue();
-						engine.eval(var);
-					}
-					engine.eval(t.getScript());
-				} catch (ScriptException e) {
-					e.printStackTrace();
-				}
-				
-				for (Variable v : m.getVariables())
-					marking.setVariableValue(v.getName(), "" + engine.get(v.getName()));
-			}
-		}
-		else marking = m;
-		
-		return marking;
 	}
 }

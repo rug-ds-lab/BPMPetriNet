@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.pnml.marshaller;
 
-import nl.rug.ds.bpm.petrinet.PetriNet;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Pnml;
 
@@ -15,7 +15,7 @@ import java.util.Set;
  * Created by Heerko Groefsema on 30-Apr-18.
  */
 public class PTNetUnmarshaller {
-	private Set<PetriNet> nets;
+	private Set<PlaceTransitionNet> nets;
 
 	public PTNetUnmarshaller(File file) {
 		nets = new HashSet<>();
@@ -25,7 +25,7 @@ public class PTNetUnmarshaller {
 			Unmarshaller unmarshaller = context.createUnmarshaller();
 
 			for (Net net: ((Pnml) unmarshaller.unmarshal(file)).getNets())
-				nets.add(new PetriNet(net));
+				nets.add(new PlaceTransitionNet(net));
 		}
 		catch (Exception e) { }
 	}
@@ -38,12 +38,12 @@ public class PTNetUnmarshaller {
 			Unmarshaller unmarshaller = context.createUnmarshaller();
 
 			for (Net net: ((Pnml) unmarshaller.unmarshal(is)).getNets())
-				nets.add(new PetriNet(net));
+				nets.add(new PlaceTransitionNet(net));
 		}
 		catch (Exception e) { }
 	}
 
-	public Set<PetriNet> getNets() {
+	public Set<PlaceTransitionNet> getNets() {
 		return nets;
 	}
 }

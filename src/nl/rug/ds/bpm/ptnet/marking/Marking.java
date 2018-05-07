@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.petrinet.marking;
+package nl.rug.ds.bpm.ptnet.marking;
 
 import nl.rug.ds.bpm.comparator.StringComparator;
 

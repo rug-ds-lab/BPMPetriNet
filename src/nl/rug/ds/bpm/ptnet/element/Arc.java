@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.petrinet.element;
+package nl.rug.ds.bpm.ptnet.element;
 
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Inscription;
