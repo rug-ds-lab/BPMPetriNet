@@ -20,7 +20,7 @@ import java.util.Set;
 public class Net implements NetContainer {
 	private String id;
 	private Name name;
-	private String type = "http://www.pnml.org/version-2009/grammar/ptnet";
+	private String type = "http://www.pnml.org/version-2009/grammar/petrinet";
 	private Graphics graphics;
 	private Set<ToolSpecific> toolSpecifics;
 	private Set<Place> places;
