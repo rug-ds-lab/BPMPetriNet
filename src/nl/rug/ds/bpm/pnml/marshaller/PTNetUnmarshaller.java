@@ -1,8 +1,8 @@
 package nl.rug.ds.bpm.pnml.marshaller;
 
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Pnml;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -27,7 +27,7 @@ public class PTNetUnmarshaller {
 			for (Net net: ((Pnml) unmarshaller.unmarshal(file)).getNets())
 				nets.add(new PlaceTransitionNet(net));
 		}
-		catch (Exception e) { }
+		catch (Exception e) { e.printStackTrace(); }
 	}
 
 	public PTNetUnmarshaller(InputStream is) {
@@ -40,7 +40,7 @@ public class PTNetUnmarshaller {
 			for (Net net: ((Pnml) unmarshaller.unmarshal(is)).getNets())
 				nets.add(new PlaceTransitionNet(net));
 		}
-		catch (Exception e) { }
+		catch (Exception e) { e.printStackTrace(); }
 	}
 
 	public Set<PlaceTransitionNet> getNets() {

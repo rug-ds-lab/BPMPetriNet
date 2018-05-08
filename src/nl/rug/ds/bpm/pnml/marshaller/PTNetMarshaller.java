@@ -1,8 +1,8 @@
 package nl.rug.ds.bpm.pnml.marshaller;
 
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Pnml;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -33,7 +33,7 @@ public class PTNetMarshaller {
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			marshaller.marshal(pnml, file);
 
-		} catch (JAXBException e) {	}
+		} catch (JAXBException e) { e.printStackTrace(); }
 	}
 
 	public PTNetMarshaller(Set<PlaceTransitionNet> nets, OutputStream stream) {
@@ -52,6 +52,6 @@ public class PTNetMarshaller {
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			marshaller.marshal(pnml, stream);
 
-		} catch (JAXBException e) {	}
+		} catch (JAXBException e) { e.printStackTrace(); }
 	}
 }

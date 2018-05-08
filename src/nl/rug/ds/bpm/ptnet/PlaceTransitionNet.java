@@ -38,7 +38,7 @@ public class PlaceTransitionNet {
 	private Process process;
 	private NetContainer xmlElement;
 	
-	ScriptEngineManager manager = new ScriptEngineManager();
+	ScriptEngineManager manager;
 	
 	public PlaceTransitionNet() {
 		nodes = new HashMap<>();
@@ -60,6 +60,8 @@ public class PlaceTransitionNet {
 		toolSpecific.setProcess(process);
 		xmlElement = new Net();
 		xmlElement.getToolSpecifics().add(toolSpecific);
+
+		manager = new ScriptEngineManager();
 	}
 
 	public PlaceTransitionNet(String id) {
@@ -159,6 +161,8 @@ public class PlaceTransitionNet {
 
 		for (Role role: process.getRoles())
 			roles.put(role.getId(), role);
+
+		manager = new ScriptEngineManager();
 	}
 
 	//Net methods
@@ -170,8 +174,14 @@ public class PlaceTransitionNet {
 		xmlElement.setId(id);
 	}
 
-	public Name getName() {
-		return xmlElement.getName();
+	public String getName() {
+		String n = "";
+		Name name = xmlElement.getName();
+
+		if(name != null)
+			n = name.getText().getText();
+
+		return n;
 	}
 
 	public void setName(String name) {
