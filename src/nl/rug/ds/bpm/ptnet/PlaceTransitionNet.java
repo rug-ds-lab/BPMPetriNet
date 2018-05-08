@@ -38,7 +38,7 @@ public class PlaceTransitionNet {
 	private Process process;
 	private NetContainer xmlElement;
 	
-	ScriptEngineManager manager;
+	private ScriptEngineManager manager;
 	
 	public PlaceTransitionNet() {
 		nodes = new HashMap<>();
