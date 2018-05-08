@@ -4,7 +4,6 @@ import nl.rug.ds.bpm.comparator.StringComparator;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 
 import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import java.util.*;
 
 public class DataMarking extends Marking {
