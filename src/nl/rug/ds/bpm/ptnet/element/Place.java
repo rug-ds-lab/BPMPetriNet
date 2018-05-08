@@ -30,7 +30,10 @@ public class Place extends Node {
 
 	public void setTokens(int tokens) {
 		try {
-			((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place) xmlElement).setInitialMarking(new InitialMarking("" + tokens));
+			if (tokens <= 0)
+				((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place) xmlElement).setInitialMarking(null);
+			else
+				((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place) xmlElement).setInitialMarking(new InitialMarking("" + tokens));
 		}
 		catch (Exception e) {}
 	}

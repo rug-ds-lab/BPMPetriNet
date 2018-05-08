@@ -4,7 +4,10 @@ import nl.rug.ds.bpm.comparator.StringComparator;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 
 import javax.script.Bindings;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class DataMarking extends Marking {
 	private Bindings bindings;
@@ -24,6 +27,10 @@ public class DataMarking extends Marking {
 	}
 	
 	public Collection<String> getTrackedBindings() {
+		return tracked;
+	}
+
+	public Collection<String> trackedToString() {
 		Set<String> bind = new HashSet<>();
 		
 		for(String b: tracked)

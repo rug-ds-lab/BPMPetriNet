@@ -1,11 +1,5 @@
 package nl.rug.ds.bpm.ptnet;
 
-import nl.rug.ds.bpm.ptnet.element.Arc;
-import nl.rug.ds.bpm.ptnet.element.Node;
-import nl.rug.ds.bpm.ptnet.element.Place;
-import nl.rug.ds.bpm.ptnet.element.Transition;
-import nl.rug.ds.bpm.ptnet.marking.DataMarking;
-import nl.rug.ds.bpm.ptnet.marking.Marking;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
@@ -15,6 +9,12 @@ import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Process;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Group;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Role;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
+import nl.rug.ds.bpm.ptnet.element.Arc;
+import nl.rug.ds.bpm.ptnet.element.Node;
+import nl.rug.ds.bpm.ptnet.element.Place;
+import nl.rug.ds.bpm.ptnet.element.Transition;
+import nl.rug.ds.bpm.ptnet.marking.DataMarking;
+import nl.rug.ds.bpm.ptnet.marking.Marking;
 
 import javax.script.*;
 import java.util.*;
@@ -495,12 +495,8 @@ public class PlaceTransitionNet {
 		return places.containsKey(id) && outgoing.get(id).isEmpty();
 	}
 
-	public Set<Place> getSinks() {
-		Set<Place> sinks = new HashSet<>();
-		for (Place p: places.values())
-			if (isSink(p))
-				sinks.add(p);
-		return sinks;
+	public Collection<Place> getSinks() {
+		return places.values().stream().filter(p -> isSink(p)).collect(Collectors.toSet());
 	}
 
 	public boolean isSource(Place p) {
@@ -512,11 +508,7 @@ public class PlaceTransitionNet {
 	}
 
 	public Collection<Place> getSources() {
-		Set<Place> sources = new HashSet<>();
-		for (Place p: places.values())
-			if (isSource(p))
-				sources.add(p);
-		return sources;
+		return places.values().stream().filter(p -> isSource(p)).collect(Collectors.toSet());
 	}
 
 	public Collection<Node> getPreSet(Node n) {
@@ -561,6 +553,34 @@ public class PlaceTransitionNet {
 		}
 		
 		return m;
+	}
+
+	public void setInitialMarking(Marking marking) {
+		Marking old = getInitialMarking();
+		for (String p: old.getMarkedPlaces()) {
+			Place place = getPlace(p);
+			if(place != null)
+				place.setTokens(0);
+		}
+
+		for (String p: marking.getMarkedPlaces()) {
+			Place place = getPlace(p);
+			if(place != null)
+				place.setTokens(marking.getTokensAtPlace(p));
+		}
+	}
+
+	public void setInitialDataMarking(DataMarking marking) {
+		setInitialMarking((Marking) marking);
+		for (String v: variables.keySet())
+			removeVariable(v);
+
+		for (String b: marking.getTrackedBindings()) {
+			Object val = marking.getBindings().get(b);
+			if (val instanceof String)
+				val = (Object) "'" + (String)val + "'";
+			addVariable(b, "var", "" + val);
+		}
 	}
 
 	public boolean isEnabled(Transition t, Marking m) {
@@ -648,5 +668,19 @@ public class PlaceTransitionNet {
 		}
 		
 		return satisfied;
+	}
+
+	public boolean isNSafe(int n) {
+		boolean nSafe = true;
+
+		Iterator<Place> placeIterator = places.values().iterator();
+		while (nSafe && placeIterator.hasNext())
+			nSafe = placeIterator.next().getTokens() <= n;
+
+		Iterator<Arc> arcIterator = arcs.values().iterator();
+		while (nSafe && arcIterator.hasNext())
+			nSafe = arcIterator.next().getWeight() <= n;
+
+		return nSafe;
 	}
 }
