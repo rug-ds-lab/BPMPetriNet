@@ -679,18 +679,4 @@ public class PlaceTransitionNet {
 		
 		return satisfied;
 	}
-
-	public boolean isNSafe(int n) {
-		boolean nSafe = true;
-
-		Iterator<Place> placeIterator = places.values().iterator();
-		while (nSafe && placeIterator.hasNext())
-			nSafe = placeIterator.next().getTokens() <= n;
-
-		Iterator<Arc> arcIterator = arcs.values().iterator();
-		while (nSafe && arcIterator.hasNext())
-			nSafe = arcIterator.next().getWeight() <= n;
-
-		return nSafe;
-	}
 }
