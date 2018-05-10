@@ -523,15 +523,17 @@ public class PlaceTransitionNet {
 
 	public Collection<Place> getPreSet(Transition n) {
 		Set<Place> pre = new HashSet<>();
-		for (Arc a: incoming.get(n.getId()))
-			pre.add((Place)a.getSource());
+		for (Arc a: incoming.get(n.getId())) {
+			if (a.getSource() instanceof Place) pre.add((Place)a.getSource());
+		}
 		return pre;
 	}
 	
 	public Collection<Transition> getPreSet(Place n) {
 		Set<Transition> pre = new HashSet<>();
-		for (Arc a: incoming.get(n.getId()))
-			pre.add((Transition)a.getSource());
+		for (Arc a: incoming.get(n.getId())) {
+			if (a.getSource() instanceof Transition) pre.add((Transition)a.getSource());
+		}
 		return pre;
 	}
 	
@@ -543,15 +545,17 @@ public class PlaceTransitionNet {
 	
 	public Collection<Place> getPostSet(Transition n) {
 		Set<Place> post = new HashSet<>();
-		for (Arc a: outgoing.get(n.getId()))
-			post.add((Place)a.getTarget());
+		for (Arc a: outgoing.get(n.getId())) {
+			if (a.getTarget() instanceof Place) post.add((Place)a.getTarget());
+		}
 		return post;
 	}
 	
 	public Collection<Transition> getPostSet(Place n) {
 		Set<Transition> post = new HashSet<>();
-		for (Arc a: outgoing.get(n.getId()))
-			post.add((Transition)a.getTarget());
+		for (Arc a: outgoing.get(n.getId())) {
+			if (a.getTarget() instanceof Transition) post.add((Transition)a.getTarget());
+		}
 		return post;
 	}
 	

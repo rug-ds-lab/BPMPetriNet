@@ -44,4 +44,23 @@ public abstract class Node {
 	public nl.rug.ds.bpm.pnml.jaxb.ptnet.node.Node getXmlElement() {
 		return xmlElement;
 	}
+
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+	    if (obj == null) return false;
+	    if (getClass() != obj.getClass()) return false;
+	    
+	    return (this.hashCode() == obj.hashCode());
+	}
+	
+	@Override
+	public String toString() {
+		return getId() + "_" + getName();
+	}
 }
