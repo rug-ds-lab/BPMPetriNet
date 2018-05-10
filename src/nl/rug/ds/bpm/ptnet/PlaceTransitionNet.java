@@ -521,18 +521,44 @@ public class PlaceTransitionNet {
 		return places.values().stream().filter(p -> isSource(p)).collect(Collectors.toSet());
 	}
 
-	public Collection<Node> getPreSet(Node n) {
-		Set<Node> pre = new HashSet<>();
+	public Collection<Place> getPreSet(Transition n) {
+		Set<Place> pre = new HashSet<>();
 		for (Arc a: incoming.get(n.getId()))
-			pre.add(a.getSource());
+			pre.add((Place)a.getSource());
 		return pre;
 	}
-
-	public Collection<Node> getPostSet(Node n) {
-		Set<Node> post = new HashSet<>();
+	
+	public Collection<Transition> getPreSet(Place n) {
+		Set<Transition> pre = new HashSet<>();
+		for (Arc a: incoming.get(n.getId()))
+			pre.add((Transition)a.getSource());
+		return pre;
+	}
+	
+	public Collection<Arc> getIncoming(Node n) {
+		Set<Arc> iarcs = new HashSet<Arc>();
+		iarcs.addAll(incoming.get(n.getId()));
+		return iarcs;
+	}
+	
+	public Collection<Place> getPostSet(Transition n) {
+		Set<Place> post = new HashSet<>();
 		for (Arc a: outgoing.get(n.getId()))
-			post.add(a.getTarget());
+			post.add((Place)a.getTarget());
 		return post;
+	}
+	
+	public Collection<Transition> getPostSet(Place n) {
+		Set<Transition> post = new HashSet<>();
+		for (Arc a: outgoing.get(n.getId()))
+			post.add((Transition)a.getTarget());
+		return post;
+	}
+	
+	public Collection<Arc> getOutgoing(Node n) {
+		Set<Arc> oarcs = new HashSet<Arc>();
+		oarcs.addAll(outgoing.get(n.getId()));
+		return oarcs;
 	}
 	
 	public Marking getInitialMarking() {
