@@ -96,6 +96,20 @@ public class Marking {
 	}
 	
 	@Override
+	public int hashCode() {
+		return tokenmap.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+	    if (obj == null) return false;
+	    if (getClass() != obj.getClass()) return false;
+	    
+	    return (this.hashCode() == obj.hashCode());
+	}
+	
+	@Override
 	public String toString() {
 		String s = "";
 

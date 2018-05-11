@@ -340,5 +340,9 @@ public class PTNetStepper {
 		}
 		
 		return str;
-	}	
+	}
+	
+	public PlaceTransitionNet getPTNet() {
+		return ptnet;
+	}
 }
