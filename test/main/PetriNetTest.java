@@ -2,7 +2,7 @@ package main;
 
 import nl.rug.ds.bpm.pnml.marshaller.PTNetMarshaller;
 import nl.rug.ds.bpm.pnml.marshaller.PTNetUnmarshaller;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionGraph;
 import nl.rug.ds.bpm.ptnet.element.Arc;
 import nl.rug.ds.bpm.ptnet.element.Place;
 import nl.rug.ds.bpm.ptnet.element.Transition;
@@ -20,13 +20,13 @@ public class PetriNetTest {
 	public static void main(String[] args) {
 		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(args[0]));
 
-		Set<PlaceTransitionNet> pnset = pnu.getNets();
+		Set<PlaceTransitionGraph> pnset = pnu.getNets();
 		
 		if (pnset.isEmpty())
 			System.out.println("empty");
 		else {
 			//get first net
-			PlaceTransitionNet pn = pnset.iterator().next();
+			PlaceTransitionGraph pn = pnset.iterator().next();
 			
 			for (Transition t: pn.getTransitions()) {
 				System.out.println(t.getName());

@@ -2,7 +2,7 @@ package nl.rug.ds.bpm.pnml.marshaller;
 
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Pnml;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionGraph;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -15,7 +15,7 @@ import java.util.Set;
  * Created by Heerko Groefsema on 30-Apr-18.
  */
 public class PTNetUnmarshaller {
-	private Set<PlaceTransitionNet> nets;
+	private Set<PlaceTransitionGraph> nets;
 
 	public PTNetUnmarshaller(File file) {
 		nets = new HashSet<>();
@@ -25,7 +25,7 @@ public class PTNetUnmarshaller {
 			Unmarshaller unmarshaller = context.createUnmarshaller();
 
 			for (Net net: ((Pnml) unmarshaller.unmarshal(file)).getNets())
-				nets.add(new PlaceTransitionNet(net));
+				nets.add(new PlaceTransitionGraph(net));
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
@@ -38,12 +38,12 @@ public class PTNetUnmarshaller {
 			Unmarshaller unmarshaller = context.createUnmarshaller();
 
 			for (Net net: ((Pnml) unmarshaller.unmarshal(is)).getNets())
-				nets.add(new PlaceTransitionNet(net));
+				nets.add(new PlaceTransitionGraph(net));
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
 
-	public Set<PlaceTransitionNet> getNets() {
+	public Set<PlaceTransitionGraph> getNets() {
 		return nets;
 	}
 }

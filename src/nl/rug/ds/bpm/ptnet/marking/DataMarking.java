@@ -1,6 +1,7 @@
 package nl.rug.ds.bpm.ptnet.marking;
 
 import nl.rug.ds.bpm.comparator.StringComparator;
+import nl.rug.ds.bpm.net.marking.DataM;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 
 import javax.script.Bindings;
@@ -9,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class DataMarking extends Marking {
+public class DataMarking extends Marking implements DataM {
 	private Bindings bindings;
 	private Set<String> tracked;
 

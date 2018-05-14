@@ -1,22 +1,20 @@
 package nl.rug.ds.bpm.ptnet.marking;
 
 import nl.rug.ds.bpm.comparator.StringComparator;
+import nl.rug.ds.bpm.net.marking.ConditionalM;
 
-import java.util.Iterator;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by Nick van Beest 26-Apr-17.
  */
-public class Marking {
-	private static int maximumTokensAtPlaces = 3;
-	
+public class Marking implements ConditionalM {
 	private SortedMap<String, Integer> tokenmap;
+	private Set<String> conditions;
 	
 	public Marking() {
 		tokenmap = new TreeMap<String, Integer>(new StringComparator());
+		conditions = new HashSet<>();
 	}
 	
 	public void addTokens(String placeId, int tokens) {
@@ -109,6 +107,23 @@ public class Marking {
 	    return (this.hashCode() == obj.hashCode());
 	}
 	
+	public void addCondition(String condition) {
+		conditions.add(condition);
+	}
+	
+	public void removeCondition(String condition) {
+		conditions.remove(condition);
+	}
+	
+	public void setConditions(Set<String> conditions) {
+		this.conditions = conditions;
+	}
+	
+	@Override
+	public Collection<String> getConditions() {
+		return conditions;
+	}
+	
 	@Override
 	public String toString() {
 		String s = "";
@@ -122,18 +137,11 @@ public class Marking {
 		}
 		return (s.length() > 0 ? s.substring(1) : "");
 	}
-
+	
 	public Marking clone() {
 		Marking marking = new Marking();
 		marking.copyFromMarking(this);
+		marking.setConditions(new HashSet<>(conditions));
 		return marking;
-	}
-
-	public static void setMaximumTokensAtPlaces(int maximum) {
-		maximumTokensAtPlaces = maximum;
-	}
-	
-	public static int getMaximumTokensAtPlaces() {
-		return maximumTokensAtPlaces;
 	}
 }

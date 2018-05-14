@@ -1,5 +1,8 @@
 package nl.rug.ds.bpm.ptnet;
 
+import nl.rug.ds.bpm.net.marking.M;
+import nl.rug.ds.bpm.net.element.T;
+import nl.rug.ds.bpm.net.TransitionGraph;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
@@ -20,7 +23,7 @@ import javax.script.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PlaceTransitionNet {
+public class PlaceTransitionGraph implements TransitionGraph {
 	private HashMap<String, Node> nodes;
 	private HashMap<String, Place> places;
 	private HashMap<String, Transition> transitions;
@@ -29,7 +32,7 @@ public class PlaceTransitionNet {
 	private HashMap<String, Set<Arc>> incoming;
 	private HashMap<String, Set<Arc>> outgoing;
 
-	private HashMap<String, PlaceTransitionNet> pages;
+	private HashMap<String, PlaceTransitionGraph> pages;
 
 	private HashMap<String, Group> groups;
 	private HashMap<String, Variable> variables;
@@ -40,7 +43,7 @@ public class PlaceTransitionNet {
 	
 	private ScriptEngineManager manager;
 	
-	public PlaceTransitionNet() {
+	public PlaceTransitionGraph() {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -64,18 +67,18 @@ public class PlaceTransitionNet {
 		manager = new ScriptEngineManager();
 	}
 
-	public PlaceTransitionNet(String id) {
+	public PlaceTransitionGraph(String id) {
 		this();
 		xmlElement.setId(id);
 	}
 
-	public PlaceTransitionNet(String id, String name) {
+	public PlaceTransitionGraph(String id, String name) {
 		this();
 		xmlElement.setId(id);
 		xmlElement.setName(new Name(name));
 	}
 
-	public PlaceTransitionNet(NetContainer xmlElement) {
+	public PlaceTransitionGraph(NetContainer xmlElement) {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -140,7 +143,7 @@ public class PlaceTransitionNet {
 		}
 
 		for (NetContainer page: xmlElement.getPages())
-			pages.put(page.getId(), new PlaceTransitionNet(page));
+			pages.put(page.getId(), new PlaceTransitionGraph(page));
 
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
 			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.ptnet"))
@@ -234,7 +237,7 @@ public class PlaceTransitionNet {
 	public Transition getTransition(String id) {
 		return transitions.get(id);
 	}
-
+	
 	public Collection<Transition> getTransitions() {
 		return transitions.values();
 	}
@@ -366,23 +369,23 @@ public class PlaceTransitionNet {
 	}
 
 	//Page methods
-	public PlaceTransitionNet addPage(String id) {
+	public PlaceTransitionGraph addPage(String id) {
 		Page page = new Page(id);
 		xmlElement.getPages().add(page);
 
-		PlaceTransitionNet net = new PlaceTransitionNet(page);
+		PlaceTransitionGraph net = new PlaceTransitionGraph(page);
 		pages.put(id, net);
 
 		return net;
 	}
 
-	public PlaceTransitionNet addPage(String id, String name) {
-		PlaceTransitionNet net = addPage(id);
+	public PlaceTransitionGraph addPage(String id, String name) {
+		PlaceTransitionGraph net = addPage(id);
 		net.setName(name);
 		return net;
 	}
 
-	public void removePage(PlaceTransitionNet p) {
+	public void removePage(PlaceTransitionGraph p) {
 		pages.remove(p.getId());
 		xmlElement.getPages().remove(p.getXmlElement());
 	}
@@ -392,11 +395,11 @@ public class PlaceTransitionNet {
 			removePage(pages.get(id));
 	}
 
-	public PlaceTransitionNet getPage(String id) {
+	public PlaceTransitionGraph getPage(String id) {
 		return pages.get(id);
 	}
 
-	public Collection<PlaceTransitionNet> getPages() {
+	public Collection<PlaceTransitionGraph> getPages() {
 		return pages.values();
 	}
 
@@ -641,12 +644,12 @@ public class PlaceTransitionNet {
 		return isEnabled(t, (Marking) m) && evaluateGuard(t, m);
 	}
 	
-	public Collection<Transition> getEnabled(Marking m) {
+	public Collection<Transition> getEnabledTransitions(M m) {
 		//Marking without data, disregards guards
 		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
 	}
 	
-	public Collection<Transition> getEnabled(DataMarking m) {
+	public Collection<Transition> getEnabledTransitions(DataMarking m) {
 		//Marking with data, evaluates guards
 		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
 	}
@@ -694,6 +697,13 @@ public class PlaceTransitionNet {
 		return marking;
 	}
 	
+	@Override
+	public Set<Marking> fireTransition(T t, M m) {
+		Set<Marking> markings = new HashSet<>();
+		markings.add(fire((Transition) t, (Marking) m));
+		return markings;
+	}
+	
 	public boolean evaluateGuard(Transition t, DataMarking m) {
 		boolean satisfied = t.getGuard() == null || t.getGuard().isEmpty();
 		
@@ -708,5 +718,9 @@ public class PlaceTransitionNet {
 		}
 		
 		return satisfied;
+	}
+	
+	public Set<Set<Transition>> getParallelEnabledTransitions(M marking) {
+		return null;
 	}
 }

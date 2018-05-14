@@ -1,8 +1,9 @@
 package nl.rug.ds.bpm.ptnet.element;
 
+import nl.rug.ds.bpm.net.element.P;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.InitialMarking;
 
-public class Place extends Node {
+public class Place extends Node implements P {
 
 	public Place(String id) {
 		xmlElement = new nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place(id);

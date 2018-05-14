@@ -12,7 +12,7 @@ import java.util.TreeSet;
 import nl.rug.ds.bpm.comparator.MarkingComparator;
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.Expression;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionGraph;
 import nl.rug.ds.bpm.ptnet.element.Transition;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
 
@@ -39,11 +39,11 @@ public class PESPrefixUnfolding {
 	
 	private int initial, sink;
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet) {
+	public PESPrefixUnfolding(PlaceTransitionGraph ptnet) {
 		this(ptnet, new HashSet<Expression<?>>(), new HashMap<Transition, Set<Expression<?>>>());
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
+	public PESPrefixUnfolding(PlaceTransitionGraph ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		
@@ -63,7 +63,7 @@ public class PESPrefixUnfolding {
 		buildPES(ptnet, globalconditions, transitionguardmap);
 	}
 	
-	private void buildPES(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
+	private void buildPES(PlaceTransitionGraph ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
 		PTNetStepper stepper = new PTNetStepper(ptnet, globalconditions, transitionguardmap);
 		
 		Marking marking = stepper.getInitialMarking();

@@ -1,10 +1,11 @@
 package nl.rug.ds.bpm.ptnet.element;
 
+import nl.rug.ds.bpm.net.element.T;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.ToolSpecific;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Task;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.task.Script;
 
-public class Transition extends Node {
+public class Transition extends Node implements T {
 	private Task task;
 
 	public Transition(String id) {

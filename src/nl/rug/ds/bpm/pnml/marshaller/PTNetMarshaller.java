@@ -2,7 +2,7 @@ package nl.rug.ds.bpm.pnml.marshaller;
 
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Pnml;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionGraph;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -17,11 +17,11 @@ import java.util.Set;
  */
 public class PTNetMarshaller {
 
-	public PTNetMarshaller(Set<PlaceTransitionNet> nets, File file) {
+	public PTNetMarshaller(Set<PlaceTransitionGraph> nets, File file) {
 		Pnml pnml = new Pnml();
 		Set<Net> n = new HashSet<>();
 
-		for (PlaceTransitionNet placeTransitionNet : nets)
+		for (PlaceTransitionGraph placeTransitionNet : nets)
 			n.add((Net) placeTransitionNet.getXmlElement());
 
 		pnml.setNets(n);
@@ -36,11 +36,11 @@ public class PTNetMarshaller {
 		} catch (JAXBException e) { e.printStackTrace(); }
 	}
 
-	public PTNetMarshaller(Set<PlaceTransitionNet> nets, OutputStream stream) {
+	public PTNetMarshaller(Set<PlaceTransitionGraph> nets, OutputStream stream) {
 		Pnml pnml = new Pnml();
 		Set<Net> n = new HashSet<>();
 
-		for (PlaceTransitionNet placeTransitionNet : nets)
+		for (PlaceTransitionGraph placeTransitionNet : nets)
 			n.add((Net) placeTransitionNet.getXmlElement());
 
 		pnml.setNets(n);
