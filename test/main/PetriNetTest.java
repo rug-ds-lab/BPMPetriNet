@@ -46,8 +46,7 @@ public class PetriNetTest {
 			
 			DataMarking m = pn.getInitialDataMarking();
 			m.addBindingTracking("i");
-
-			System.out.println("Is 1-safe: " + pn.isNSafe(1));
+			
 			System.out.println("x0 is source: " + pn.isSource("x0"));
 			System.out.println("Initial marking: " + m.toString());
 			System.out.println("Binding i: " + m.trackedToString().iterator().next());
