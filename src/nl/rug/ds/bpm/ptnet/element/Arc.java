@@ -9,16 +9,24 @@ import nl.rug.ds.bpm.pnml.jaxb.ptnet.annotation.Name;
 public class Arc {
 	private Node source;
 	private Node target;
+	private int weight;
 	private nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc xmlElement;
 	
 	public Arc(String id, Node source, Node target) {
 		xmlElement = new nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc(id, source.getId(), target.getId());
 		this.source = source;
 		this.target = target;
+		weight = 1;
 	}
 	
 	public Arc(nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc xmlElement) {
 		this.xmlElement = xmlElement;
+		
+		try {
+			weight = Integer.parseInt(xmlElement.getWeight().getText().getText());
+		} catch (Exception e) {
+			weight = 1;
+		}
 	}
 	
 	public nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc getXmlElement() {
@@ -44,20 +52,18 @@ public class Arc {
 	}
 	
 	public int getWeight() {
-		int weight = 1;
-		
-		try {
-			weight = Integer.parseInt(xmlElement.getWeight().getText().getText());
-		} catch (Exception e) {}
-		
 		return weight;
 	}
 	
 	public void setWeight(int weight) {
-		if(weight <= 1)
+		if(weight <= 1) {
+			this.weight = 1;
 			xmlElement.setWeight(null);
-		else
+		}
+		else {
+			this.weight = weight;
 			xmlElement.setWeight(new Inscription("" + weight));
+		}
 	}
 
 	public String getName() {
