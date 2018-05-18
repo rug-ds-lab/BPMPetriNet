@@ -1,30 +1,22 @@
 package nl.rug.ds.bpm.eventstructure.stepper;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
 import nl.rug.ds.bpm.comparator.StringComparator;
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionGraph;
+import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.ptnet.element.Node;
 import nl.rug.ds.bpm.ptnet.element.Place;
 import nl.rug.ds.bpm.ptnet.element.Transition;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
 import nl.rug.ds.bpm.utils.sets.Sets;
 
+import java.util.*;
+
 /**
  * Created by Nick van Beest on 10-05-2018
  */
 public class PTNetStepper {
-	private PlaceTransitionGraph ptnet;
+	private PlaceTransitionNet ptnet;
 	private Map<String, Transition> transitionmap;
 	private Map<String, Place> placemap;
 	private Map<String, Set<String>> transitionIdmap;
@@ -35,11 +27,11 @@ public class PTNetStepper {
 	// these are the global conditions that hold for the ctl spec to be evaluated (and hence apply to the entire process)
 	private Set<Expression<?>> globalconditions; 
 	
-	public PTNetStepper(PlaceTransitionGraph ptnet) {
+	public PTNetStepper(PlaceTransitionNet ptnet) {
 		this(ptnet, new HashSet<Expression<?>>(), new HashMap<Transition, Set<Expression<?>>>());
 	}
 	
-	public PTNetStepper(PlaceTransitionGraph ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
+	public PTNetStepper(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
 		this.ptnet = ptnet;
 		initializeTransitionMaps();
 		initializePlaceMap();
@@ -342,7 +334,7 @@ public class PTNetStepper {
 		return str;
 	}
 	
-	public PlaceTransitionGraph getPTNet() {
+	public PlaceTransitionNet getPTNet() {
 		return ptnet;
 	}
 }

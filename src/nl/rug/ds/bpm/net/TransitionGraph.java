@@ -1,8 +1,7 @@
 package nl.rug.ds.bpm.net;
 
-import nl.rug.ds.bpm.net.marking.M;
-import nl.rug.ds.bpm.net.element.P;
 import nl.rug.ds.bpm.net.element.T;
+import nl.rug.ds.bpm.net.marking.M;
 
 import java.util.Collection;
 import java.util.Set;
@@ -13,6 +12,7 @@ import java.util.Set;
 public interface TransitionGraph {
 	M getInitialMarking();
 	
+	boolean isEnabled(T transition, M marking);
 	Collection<? extends T> getEnabledTransitions(M marking);
 	Set<? extends Set<? extends T>> getParallelEnabledTransitions(M marking);
 	

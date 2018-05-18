@@ -6,6 +6,9 @@ package nl.rug.ds.bpm.net.marking;
 public interface M {
 	int maximumTokensAtPlaces = 3;
 	
+	int getTokensAtPlace(String placeId);
+	
+	int compareTo(M o);
 	String toString();
 	M clone();
 }

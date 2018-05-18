@@ -1,5 +1,7 @@
 package nl.rug.ds.bpm.ptnet.element;
 
+import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.net.element.T;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.ToolSpecific;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.Task;
@@ -7,6 +9,7 @@ import nl.rug.ds.bpm.pnml.jaxb.toolspecific.task.Script;
 
 public class Transition extends Node implements T {
 	private Task task;
+	private Expression<?> guard;
 
 	public Transition(String id) {
 		xmlElement = new nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition(id);
@@ -21,20 +24,21 @@ public class Transition extends Node implements T {
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
 			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.ptnet"))
 				task = toolSpecific.getTask();
+		
+		try {
+			guard = ExpressionBuilder.parseExpression(task.getGuard());
+		} catch (NullPointerException e) {}
 	}
 
 	public void setGuard(String guard) {
 		checkTask();
 		task.setGuard(guard);
+		try {
+			this.guard = ExpressionBuilder.parseExpression(guard);
+		} catch (NullPointerException e) {}
 	}
 
-	public String getGuard() {
-		String guard = "";
-		
-		try {
-			guard = task.getGuard();
-		} catch (NullPointerException e) {}
-		
+	public Expression<?> getGuard() {
 		return guard;
 	}
 

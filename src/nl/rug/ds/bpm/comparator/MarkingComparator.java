@@ -1,13 +1,13 @@
 package nl.rug.ds.bpm.comparator;
 
-import java.util.Comparator;
-
 import nl.rug.ds.bpm.net.marking.M;
+
+import java.util.Comparator;
 
 public class MarkingComparator implements Comparator<M>
 {
 	@Override
 	public int compare(M a, M b) {
-		return a.toString().compareTo(b.toString());
+		return a.compareTo(b);
 	}
 }

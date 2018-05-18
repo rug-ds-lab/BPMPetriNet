@@ -1,8 +1,10 @@
 package nl.rug.ds.bpm.ptnet;
 
-import nl.rug.ds.bpm.net.marking.M;
-import nl.rug.ds.bpm.net.element.T;
+import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.net.TransitionGraph;
+import nl.rug.ds.bpm.net.element.T;
+import nl.rug.ds.bpm.net.marking.ConditionalM;
+import nl.rug.ds.bpm.net.marking.M;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
@@ -16,14 +18,13 @@ import nl.rug.ds.bpm.ptnet.element.Arc;
 import nl.rug.ds.bpm.ptnet.element.Node;
 import nl.rug.ds.bpm.ptnet.element.Place;
 import nl.rug.ds.bpm.ptnet.element.Transition;
-import nl.rug.ds.bpm.ptnet.marking.DataMarking;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
+import nl.rug.ds.bpm.utils.sets.Sets;
 
-import javax.script.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PlaceTransitionGraph implements TransitionGraph {
+public class PlaceTransitionNet implements TransitionGraph {
 	private HashMap<String, Node> nodes;
 	private HashMap<String, Place> places;
 	private HashMap<String, Transition> transitions;
@@ -32,7 +33,7 @@ public class PlaceTransitionGraph implements TransitionGraph {
 	private HashMap<String, Set<Arc>> incoming;
 	private HashMap<String, Set<Arc>> outgoing;
 
-	private HashMap<String, PlaceTransitionGraph> pages;
+	private HashMap<String, PlaceTransitionNet> pages;
 
 	private HashMap<String, Group> groups;
 	private HashMap<String, Variable> variables;
@@ -41,9 +42,7 @@ public class PlaceTransitionGraph implements TransitionGraph {
 	private Process process;
 	private NetContainer xmlElement;
 	
-	private ScriptEngineManager manager;
-	
-	public PlaceTransitionGraph() {
+	public PlaceTransitionNet() {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -63,22 +62,20 @@ public class PlaceTransitionGraph implements TransitionGraph {
 		toolSpecific.setProcess(process);
 		xmlElement = new Net();
 		xmlElement.getToolSpecifics().add(toolSpecific);
-
-		manager = new ScriptEngineManager();
 	}
 
-	public PlaceTransitionGraph(String id) {
+	public PlaceTransitionNet(String id) {
 		this();
 		xmlElement.setId(id);
 	}
 
-	public PlaceTransitionGraph(String id, String name) {
+	public PlaceTransitionNet(String id, String name) {
 		this();
 		xmlElement.setId(id);
 		xmlElement.setName(new Name(name));
 	}
 
-	public PlaceTransitionGraph(NetContainer xmlElement) {
+	public PlaceTransitionNet(NetContainer xmlElement) {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -143,7 +140,7 @@ public class PlaceTransitionGraph implements TransitionGraph {
 		}
 
 		for (NetContainer page: xmlElement.getPages())
-			pages.put(page.getId(), new PlaceTransitionGraph(page));
+			pages.put(page.getId(), new PlaceTransitionNet(page));
 
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
 			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.ptnet"))
@@ -164,8 +161,6 @@ public class PlaceTransitionGraph implements TransitionGraph {
 
 		for (Role role: process.getRoles())
 			roles.put(role.getId(), role);
-
-		manager = new ScriptEngineManager();
 	}
 
 	//Net methods
@@ -369,23 +364,23 @@ public class PlaceTransitionGraph implements TransitionGraph {
 	}
 
 	//Page methods
-	public PlaceTransitionGraph addPage(String id) {
+	public PlaceTransitionNet addPage(String id) {
 		Page page = new Page(id);
 		xmlElement.getPages().add(page);
 
-		PlaceTransitionGraph net = new PlaceTransitionGraph(page);
+		PlaceTransitionNet net = new PlaceTransitionNet(page);
 		pages.put(id, net);
 
 		return net;
 	}
 
-	public PlaceTransitionGraph addPage(String id, String name) {
-		PlaceTransitionGraph net = addPage(id);
+	public PlaceTransitionNet addPage(String id, String name) {
+		PlaceTransitionNet net = addPage(id);
 		net.setName(name);
 		return net;
 	}
 
-	public void removePage(PlaceTransitionGraph p) {
+	public void removePage(PlaceTransitionNet p) {
 		pages.remove(p.getId());
 		xmlElement.getPages().remove(p.getXmlElement());
 	}
@@ -395,11 +390,11 @@ public class PlaceTransitionGraph implements TransitionGraph {
 			removePage(pages.get(id));
 	}
 
-	public PlaceTransitionGraph getPage(String id) {
+	public PlaceTransitionNet getPage(String id) {
 		return pages.get(id);
 	}
 
-	public Collection<PlaceTransitionGraph> getPages() {
+	public Collection<PlaceTransitionNet> getPages() {
 		return pages.values();
 	}
 
@@ -575,28 +570,6 @@ public class PlaceTransitionGraph implements TransitionGraph {
 				m.addTokens(p.getId(), p.getTokens());
 		return m;
 	}
-	
-	public DataMarking getInitialDataMarking() {
-		DataMarking m = new DataMarking();
-		for (Place p: places.values())
-			if (p.getTokens() > 0)
-				m.addTokens(p.getId(), p.getTokens());
-		
-		ScriptEngine engine = manager.getEngineByName("JavaScript");
-		try {
-			for (Variable v : getVariables()) {
-				String var = "var " + v.getName();
-				if (!v.getValue().isEmpty())
-					var = var + " = " + v.getValue() + ";";
-				engine.eval(var);
-			}
-			m.setBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE));
-		} catch (ScriptException e) {
-			e.printStackTrace();
-		}
-		
-		return m;
-	}
 
 	public void setInitialMarking(Marking marking) {
 		Marking old = getInitialMarking();
@@ -613,21 +586,7 @@ public class PlaceTransitionGraph implements TransitionGraph {
 		}
 	}
 
-	public void setInitialDataMarking(DataMarking marking) {
-		setInitialMarking((Marking) marking);
-		for (String v: variables.keySet())
-			removeVariable(v);
-
-		for (String b: marking.getTrackedBindings()) {
-			Object val = marking.getBindings().get(b);
-			if (val instanceof String)
-				val = (Object) "'" + (String)val + "'";
-			addVariable(b, "var", "" + val);
-		}
-	}
-
-	public boolean isEnabled(Transition t, Marking m) {
-		//Marking without data, disregards guards
+	public boolean isEnabled(T t, M m) {
 		boolean enabled = true;
 		Iterator<Arc> iterator = incoming.get(t.getId()).iterator();
 
@@ -635,28 +594,23 @@ public class PlaceTransitionGraph implements TransitionGraph {
 			Arc in = iterator.next();
 			enabled = in.getWeight() <= m.getTokensAtPlace(in.getSource().getId());
 		}
-
+		
+		if(enabled && t.getGuard() != null && m instanceof ConditionalM) {
+			Iterator<Expression<?>> guardIterator = ((ConditionalM) m).getConditions().iterator();
+			
+			while (enabled && guardIterator.hasNext())
+				enabled = !t.getGuard().contradicts(guardIterator.next());
+		}
+		
 		return enabled;
 	}
 	
-	public boolean isEnabled(Transition t, DataMarking m) {
-		//Marking with data, evaluates guards
-		return isEnabled(t, (Marking) m) && evaluateGuard(t, m);
-	}
-	
 	public Collection<Transition> getEnabledTransitions(M m) {
-		//Marking without data, disregards guards
-		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
-	}
-	
-	public Collection<Transition> getEnabledTransitions(DataMarking m) {
-		//Marking with data, evaluates guards
 		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
 	}
 
-	public Marking fire(Transition t, Marking m) {
-		//Marking without data, disregards guards and script
-		Marking marking = m.clone();
+	public Marking fire(T t, M m) {
+		Marking marking = (Marking) m.clone();
 
 		if(isEnabled(t, m)) {
 			for (Arc in: incoming.get(t.getId()))
@@ -668,59 +622,75 @@ public class PlaceTransitionGraph implements TransitionGraph {
 		return marking;
 	}
 	
-	public DataMarking fire(Transition t, DataMarking m) {
-		//Marking with data, evaluates guards and script
-		DataMarking marking;
-		
-		if(isEnabled(t, m)) {
-			marking = (DataMarking) fire(t, (Marking) m);
-			
-			if (!t.getScript().isEmpty()) {
-				ScriptEngine engine = manager.getEngineByName(t.getScriptType());
-				
-				//Bindings only update when using createBindings, so create and clone manually
-				Bindings bindings = engine.createBindings();
-				bindings.putAll(m.getBindings());
-				
-				marking.setBindings(bindings);
-				engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-				
-				try {
-					engine.eval(t.getScript());
-				} catch (ScriptException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		else marking = m;
-		
-		return marking;
-	}
-	
-	@Override
 	public Set<Marking> fireTransition(T t, M m) {
 		Set<Marking> markings = new HashSet<>();
-		markings.add(fire((Transition) t, (Marking) m));
+		markings.add(fire(t, m));
 		return markings;
 	}
 	
-	public boolean evaluateGuard(Transition t, DataMarking m) {
-		boolean satisfied = t.getGuard() == null || t.getGuard().isEmpty();
+	public Set<Set<Transition>> getParallelEnabledTransitions(M marking) {
+		Set<Transition> enabled = (Set<Transition>) getEnabledTransitions(marking);
+		Set<Set<Transition>> ypar = new HashSet<>();
+		ypar.addAll(Sets.powerSet(enabled));
 		
-		if (!satisfied) {
-			ScriptEngine engine = manager.getEngineByName("JavaScript");
+		Set<Set<Transition>> pruned = new HashSet<>();
+		for (Set<Transition> parSet: ypar) {
+			//check if guards contradict
+			boolean isParSet = !areContradictory(parSet);
 			
-			try {
-				satisfied = (boolean) engine.eval(t.getGuard(), m.getBindings());
-			} catch (ScriptException e) {
-				e.printStackTrace();
+			//check if enough tokens exist
+			if (isParSet) {
+				Marking required = new Marking();
+				for(Transition t: parSet)
+					for (Arc in: getIncoming(t))
+						required.addTokens(in.getSource().getId(), in.getWeight());
+				
+				Iterator<String> placesWithRequiredTokens = required.getMarkedPlaces().iterator();
+				while (isParSet && placesWithRequiredTokens.hasNext()) {
+					String place = placesWithRequiredTokens.next();
+					isParSet = required.getTokensAtPlace(place) <= marking.getTokensAtPlace(place);
+				}
+				
+				//check if an other transition exists that don't contradict and are enabled in par
+				if (isParSet) {
+					Set<Transition> otherEnabled = new HashSet<>(enabled);
+					otherEnabled.removeAll(ypar);
+					
+					Iterator<Transition> otherIterator = otherEnabled.iterator();
+					while (isParSet && otherIterator.hasNext()) {
+						Transition t = otherIterator.next();
+						
+						Iterator<Transition> parIterator = parSet.iterator();
+						while (isParSet && parIterator.hasNext())
+							isParSet = !areContradictory(t, parIterator.next());
+						
+						Iterator<Arc> in = getIncoming(t).iterator();
+						while (isParSet && in.hasNext()) {
+							Arc a = in.next();
+							isParSet = marking.getTokensAtPlace(a.getSource().getId()) >= required.getTokensAtPlace(a.getSource().getId()) + a.getWeight();
+						}
+					}
+				}
 			}
+			if(!isParSet)
+				pruned.add(parSet);
 		}
 		
-		return satisfied;
+		ypar.removeAll(pruned);
+		return ypar;
 	}
 	
-	public Set<Set<Transition>> getParallelEnabledTransitions(M marking) {
-		return null;
+	private boolean areContradictory(Transition t1, Transition t2) {
+		return t1.getGuard() != null && t2.getGuard() != null && t1.getGuard().contradicts(t2.getGuard());
+	}
+	
+	private Boolean areContradictory(Set<Transition> tset) {
+		for (Transition t1: tset)
+			for (Transition t2: tset)
+				if(t1 != t2)
+					if (areContradictory(t1, t2))
+						return true;
+		
+		return false;
 	}
 }

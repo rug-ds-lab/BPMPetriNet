@@ -1,20 +1,23 @@
 package nl.rug.ds.bpm.ptnet.marking;
 
 import nl.rug.ds.bpm.comparator.StringComparator;
+import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.net.marking.ConditionalM;
+import nl.rug.ds.bpm.net.marking.M;
 
 import java.util.*;
 
 /**
  * Created by Nick van Beest 26-Apr-17.
  */
-public class Marking implements ConditionalM {
+public class Marking implements ConditionalM, Comparable<M> {
 	private SortedMap<String, Integer> tokenmap;
-	private Set<String> conditions;
+	private HashMap<String, Expression<?>> conditions;
 	
 	public Marking() {
 		tokenmap = new TreeMap<String, Integer>(new StringComparator());
-		conditions = new HashSet<>();
+		conditions = new HashMap<>();
 	}
 	
 	public void addTokens(String placeId, int tokens) {
@@ -93,35 +96,21 @@ public class Marking implements ConditionalM {
 		}
 	}
 	
-	@Override
-	public int hashCode() {
-		return tokenmap.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-	    if (obj == null) return false;
-	    if (getClass() != obj.getClass()) return false;
-	    
-	    return (this.hashCode() == obj.hashCode());
-	}
-	
 	public void addCondition(String condition) {
-		conditions.add(condition);
+		conditions.put(condition, ExpressionBuilder.parseExpression(condition));
 	}
 	
 	public void removeCondition(String condition) {
 		conditions.remove(condition);
 	}
 	
-	public void setConditions(Set<String> conditions) {
+	public void setConditions(HashMap<String, Expression<?>> conditions) {
 		this.conditions = conditions;
 	}
 	
 	@Override
-	public Collection<String> getConditions() {
-		return conditions;
+	public Collection<Expression<?>> getConditions() {
+		return conditions.values();
 	}
 	
 	@Override
@@ -141,7 +130,14 @@ public class Marking implements ConditionalM {
 	public Marking clone() {
 		Marking marking = new Marking();
 		marking.copyFromMarking(this);
-		marking.setConditions(new HashSet<>(conditions));
+		HashMap<String, Expression<?>> c = new HashMap<>();
+		c.putAll(conditions);
+		marking.setConditions(c);
 		return marking;
+	}
+	
+	@Override
+	public int compareTo(M o) {
+		return this.toString().compareTo(o.toString());
 	}
 }
