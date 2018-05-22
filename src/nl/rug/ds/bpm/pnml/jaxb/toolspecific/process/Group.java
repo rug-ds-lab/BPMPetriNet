@@ -2,7 +2,6 @@ package nl.rug.ds.bpm.pnml.jaxb.toolspecific.process;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
 
 /**
  * Created by Heerko Groefsema on 23-Apr-18.
@@ -29,7 +28,7 @@ public class Group {
 		this.id = id;
 	}
 
-	@XmlValue
+	@XmlAttribute
 	public String getName() {
 		return name;
 	}

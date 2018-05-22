@@ -25,22 +25,22 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class PlaceTransitionNet implements TransitionGraph {
-	private HashMap<String, Node> nodes;
-	private HashMap<String, Place> places;
-	private HashMap<String, Transition> transitions;
+	protected HashMap<String, Node> nodes;
+	protected HashMap<String, Place> places;
+	protected HashMap<String, Transition> transitions;
 
-	private HashMap<String, Arc> arcs;
-	private HashMap<String, Set<Arc>> incoming;
-	private HashMap<String, Set<Arc>> outgoing;
+	protected HashMap<String, Arc> arcs;
+	protected HashMap<String, Set<Arc>> incoming;
+	protected HashMap<String, Set<Arc>> outgoing;
 
-	private HashMap<String, PlaceTransitionNet> pages;
+	protected HashMap<String, PlaceTransitionNet> pages;
 
-	private HashMap<String, Group> groups;
-	private HashMap<String, Variable> variables;
-	private HashMap<String, Role> roles;
+	protected HashMap<String, Group> groups;
+	protected HashMap<String, Variable> variables;
+	protected HashMap<String, Role> roles;
 
-	private Process process;
-	private NetContainer xmlElement;
+	protected Process process;
+	protected NetContainer xmlElement;
 	
 	public PlaceTransitionNet() {
 		nodes = new HashMap<>();
@@ -595,14 +595,46 @@ public class PlaceTransitionNet implements TransitionGraph {
 			enabled = in.getWeight() <= m.getTokensAtPlace(in.getSource().getId());
 		}
 		
-		if(enabled && t.getGuard() != null && m instanceof ConditionalM) {
-			Iterator<Expression<?>> guardIterator = ((ConditionalM) m).getConditions().iterator();
-			
+		return (m instanceof ConditionalM ? enabled && contradictsConditions(t, (ConditionalM) m) : enabled);
+	}
+
+	private boolean contradictsConditions(T t, ConditionalM m) {
+		boolean enabled = true;
+		if(t.getGuard() != null) {
+			Iterator<Expression<?>> guardIterator = m.getConditions().iterator();
+
 			while (enabled && guardIterator.hasNext())
 				enabled = !t.getGuard().contradicts(guardIterator.next());
 		}
-		
+
 		return enabled;
+	}
+
+	public boolean isParallelEnabled(Set<? extends T> ts, M m) {
+		//check if guards contradict
+		boolean isParSet = !areContradictory(ts);
+
+		//check if enough tokens exist and check if guards contradict conditions
+		Iterator<? extends T> transitions = ts.iterator();
+		Marking required = new Marking();
+
+		while (isParSet && transitions.hasNext()) {
+			T t = transitions.next();
+
+			if(m instanceof ConditionalM)
+				isParSet = contradictsConditions(t, (ConditionalM) m);
+
+			for (Arc in : getIncoming((Node) t))
+				required.addTokens(in.getSource().getId(), in.getWeight());
+		}
+
+		Iterator<String> placesWithRequiredTokens = required.getMarkedPlaces().iterator();
+		while (isParSet && placesWithRequiredTokens.hasNext()) {
+			String place = placesWithRequiredTokens.next();
+			isParSet = required.getTokensAtPlace(place) <= m.getTokensAtPlace(place);
+		}
+
+		return isParSet;
 	}
 	
 	public Collection<Transition> getEnabledTransitions(M m) {
@@ -630,46 +662,21 @@ public class PlaceTransitionNet implements TransitionGraph {
 	
 	public Set<Set<Transition>> getParallelEnabledTransitions(M marking) {
 		Set<Transition> enabled = (Set<Transition>) getEnabledTransitions(marking);
-		Set<Set<Transition>> ypar = new HashSet<>();
-		ypar.addAll(Sets.powerSet(enabled));
+		Set<Set<Transition>> ypar = new HashSet<>(Sets.powerSet(enabled));
 		
 		Set<Set<Transition>> pruned = new HashSet<>();
 		for (Set<Transition> parSet: ypar) {
-			//check if guards contradict
-			boolean isParSet = !areContradictory(parSet);
-			
-			//check if enough tokens exist
+			boolean isParSet = isParallelEnabled(parSet, marking);
+			//check if other transitions exists that don't contradict and are enabled in par
 			if (isParSet) {
-				Marking required = new Marking();
-				for(Transition t: parSet)
-					for (Arc in: getIncoming(t))
-						required.addTokens(in.getSource().getId(), in.getWeight());
-				
-				Iterator<String> placesWithRequiredTokens = required.getMarkedPlaces().iterator();
-				while (isParSet && placesWithRequiredTokens.hasNext()) {
-					String place = placesWithRequiredTokens.next();
-					isParSet = required.getTokensAtPlace(place) <= marking.getTokensAtPlace(place);
-				}
-				
-				//check if an other transition exists that don't contradict and are enabled in par
-				if (isParSet) {
-					Set<Transition> otherEnabled = new HashSet<>(enabled);
-					otherEnabled.removeAll(ypar);
-					
-					Iterator<Transition> otherIterator = otherEnabled.iterator();
-					while (isParSet && otherIterator.hasNext()) {
-						Transition t = otherIterator.next();
-						
-						Iterator<Transition> parIterator = parSet.iterator();
-						while (isParSet && parIterator.hasNext())
-							isParSet = !areContradictory(t, parIterator.next());
-						
-						Iterator<Arc> in = getIncoming(t).iterator();
-						while (isParSet && in.hasNext()) {
-							Arc a = in.next();
-							isParSet = marking.getTokensAtPlace(a.getSource().getId()) >= required.getTokensAtPlace(a.getSource().getId()) + a.getWeight();
-						}
-					}
+				Set<Transition> otherEnabled = new HashSet<>(enabled);
+				otherEnabled.removeAll(ypar);
+
+				Iterator<Transition> otherIterator = otherEnabled.iterator();
+				while (isParSet && otherIterator.hasNext()) {
+					Set<Transition> parSetPlus = new HashSet<>(parSet);
+					parSetPlus.add(otherIterator.next());
+					isParSet = canHaveContradiction(parSetPlus, parSet) || !isParallelEnabled(parSetPlus, marking);
 				}
 			}
 			if(!isParSet)
@@ -679,14 +686,19 @@ public class PlaceTransitionNet implements TransitionGraph {
 		ypar.removeAll(pruned);
 		return ypar;
 	}
-	
-	private boolean areContradictory(Transition t1, Transition t2) {
-		return t1.getGuard() != null && t2.getGuard() != null && t1.getGuard().contradicts(t2.getGuard());
+
+	protected boolean canHaveContradiction(Set<Transition> parSetPlus, Set<Transition> parSet) {
+		//TODO awaiting Expression
+		return true;
 	}
 	
-	private Boolean areContradictory(Set<Transition> tset) {
-		for (Transition t1: tset)
-			for (Transition t2: tset)
+	private boolean areContradictory(T t1, T t2) {
+		return t1.getGuard() != null && t2.getGuard() != null && t1.getGuard().contradicts(t2.getGuard());
+	}
+
+	private boolean areContradictory(Set<? extends  T> tset) {
+		for (T t1: tset)
+			for (T t2: tset)
 				if(t1 != t2)
 					if (areContradictory(t1, t2))
 						return true;

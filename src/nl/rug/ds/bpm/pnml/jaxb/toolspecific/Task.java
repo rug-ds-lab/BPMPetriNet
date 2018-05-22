@@ -2,6 +2,7 @@ package nl.rug.ds.bpm.pnml.jaxb.toolspecific;
 
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.task.Script;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -15,13 +16,13 @@ public class Task {
 	private String actor;
 	private String unitsoftime;
 	private String guard;
-	private String isTau;
+	private String isTau = "false";
 	private String subProcess;
 	private Script script;
 
 	public Task() {}
 
-	@XmlElement(name = "parent")
+	@XmlAttribute(name = "parent")
 	public String getParent() {
 		return parent;
 	}
@@ -30,7 +31,7 @@ public class Task {
 		this.parent = parent;
 	}
 
-	@XmlElement(name = "actor")
+	@XmlAttribute(name = "actor")
 	public String getActor() {
 		return actor;
 	}
@@ -39,7 +40,7 @@ public class Task {
 		this.actor = actor;
 	}
 
-	@XmlElement(name = "unitsoftime")
+	@XmlAttribute(name = "unitsoftime")
 	public String getUnitsoftime() {
 		return unitsoftime;
 	}
@@ -66,7 +67,7 @@ public class Task {
 		this.script = script;
 	}
 
-	@XmlElement(name = "isTau")
+	@XmlAttribute(name = "isTau", required = true)
 	public String getIsTau() {
 		return isTau;
 	}
@@ -75,7 +76,7 @@ public class Task {
 		this.isTau = isTau;
 	}
 	
-	@XmlElement(name = "subprocess")
+	@XmlAttribute(name = "subprocess")
 	public String getSubProcess() {
 		return subProcess;
 	}

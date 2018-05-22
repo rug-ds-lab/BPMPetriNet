@@ -13,6 +13,8 @@ public interface DataDrivenGraph {
 	DataM getInitialMarking();
 	
 	boolean isEnabled(T transition, DataM marking);
+	boolean isParallelEnabled(Set<? extends T> ts, DataM marking);
+
 	Collection<? extends T> getEnabledTransitions(DataM marking);
 	Set<? extends Set<? extends T>> getParallelEnabledTransitions(DataM marking);
 	

@@ -13,6 +13,8 @@ public interface TransitionGraph {
 	M getInitialMarking();
 	
 	boolean isEnabled(T transition, M marking);
+	boolean isParallelEnabled(Set<? extends T> ts, M m);
+
 	Collection<? extends T> getEnabledTransitions(M marking);
 	Set<? extends Set<? extends T>> getParallelEnabledTransitions(M marking);
 	
