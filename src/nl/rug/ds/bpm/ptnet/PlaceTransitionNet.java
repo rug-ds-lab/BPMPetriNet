@@ -33,7 +33,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 	protected HashMap<String, Set<Arc>> incoming;
 	protected HashMap<String, Set<Arc>> outgoing;
 
-	protected HashMap<String, PlaceTransitionNet> pages;
+	protected HashMap<String, NetContainer> pages;
 
 	protected HashMap<String, Group> groups;
 	protected HashMap<String, Variable> variables;
@@ -140,7 +140,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		}
 
 		for (NetContainer page: xmlElement.getPages())
-			pages.put(page.getId(), new PlaceTransitionNet(page));
+			pages.put(page.getId(), page);
 
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
 			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.ptnet"))
@@ -364,25 +364,22 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Page methods
-	public PlaceTransitionNet addPage(String id) {
+	public NetContainer addPage(String id) {
 		Page page = new Page(id);
 		xmlElement.getPages().add(page);
+		pages.put(id, page);
+		return page;
+	}
 
-		PlaceTransitionNet net = new PlaceTransitionNet(page);
-		pages.put(id, net);
-
+	public NetContainer addPage(String id, String name) {
+		NetContainer net = addPage(id);
+		net.setName(new Name(name));
 		return net;
 	}
 
-	public PlaceTransitionNet addPage(String id, String name) {
-		PlaceTransitionNet net = addPage(id);
-		net.setName(name);
-		return net;
-	}
-
-	public void removePage(PlaceTransitionNet p) {
+	public void removePage(NetContainer p) {
 		pages.remove(p.getId());
-		xmlElement.getPages().remove(p.getXmlElement());
+		xmlElement.getPages().remove(p);
 	}
 
 	public void removePage(String id) {
@@ -390,11 +387,11 @@ public class PlaceTransitionNet implements TransitionGraph {
 			removePage(pages.get(id));
 	}
 
-	public PlaceTransitionNet getPage(String id) {
+	public NetContainer getPage(String id) {
 		return pages.get(id);
 	}
 
-	public Collection<PlaceTransitionNet> getPages() {
+	public Collection<NetContainer> getPages() {
 		return pages.values();
 	}
 

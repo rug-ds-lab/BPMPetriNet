@@ -23,7 +23,7 @@ public class PTNetUnmarshaller {
 			JAXBContext context = JAXBContext.newInstance(Pnml.class);
 			Unmarshaller unmarshaller = context.createUnmarshaller();
 
-			nets = ((Pnml) unmarshaller.unmarshal(file)).getNets();
+			nets.addAll(((Pnml) unmarshaller.unmarshal(file)).getNets());
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
@@ -35,7 +35,7 @@ public class PTNetUnmarshaller {
 			JAXBContext context = JAXBContext.newInstance(Pnml.class);
 			Unmarshaller unmarshaller = context.createUnmarshaller();
 
-			nets = ((Pnml) unmarshaller.unmarshal(is)).getNets();
+			nets.addAll(((Pnml) unmarshaller.unmarshal(is)).getNets());
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
