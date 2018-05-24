@@ -568,7 +568,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return m;
 	}
 
-	public void setInitialMarking(Marking marking) {
+	public void setInitialMarking(M marking) {
 		Marking old = getInitialMarking();
 		for (String p: old.getMarkedPlaces()) {
 			Place place = getPlace(p);
@@ -607,6 +607,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return enabled;
 	}
 
+	@Override
 	public boolean isParallelEnabled(Set<? extends T> ts, M m) {
 		//check if guards contradict
 		boolean isParSet = !areContradictory(ts);
@@ -638,7 +639,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
 	}
 
-	public Marking fire(T t, M m) {
+	public M fire(T t, M m) {
 		Marking marking = (Marking) m.clone();
 
 		if(isEnabled(t, m)) {
@@ -651,8 +652,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return marking;
 	}
 	
-	public Set<Marking> fireTransition(T t, M m) {
-		Set<Marking> markings = new HashSet<>();
+	public Set<? extends M> fireTransition(T t, M m) {
+		Set<M> markings = new HashSet<>();
 		markings.add(fire(t, m));
 		return markings;
 	}

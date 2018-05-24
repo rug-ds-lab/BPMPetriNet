@@ -1,5 +1,6 @@
 package main;
 
+import nl.rug.ds.bpm.net.marking.M;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.marshaller.PTNetMarshaller;
 import nl.rug.ds.bpm.pnml.marshaller.PTNetUnmarshaller;
@@ -56,7 +57,7 @@ public class PlaceTransitionNetTest {
 			
 			System.out.println("y0 is enabled: " + pn.isEnabled(pn.getTransition("y0"), m));
 			
-			Marking m2 = pn.fire(pn.getTransition("y0"), m);
+			M m2 = pn.fire(pn.getTransition("y0"), m);
 			System.out.println("fired y0: " + m2.toString());
 
 			pn.setInitialMarking(m2);

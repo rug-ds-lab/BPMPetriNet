@@ -3,6 +3,7 @@ package nl.rug.ds.bpm.ptnet;
 import nl.rug.ds.bpm.net.DataDrivenGraph;
 import nl.rug.ds.bpm.net.element.T;
 import nl.rug.ds.bpm.net.marking.DataM;
+import nl.rug.ds.bpm.net.marking.M;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.ptnet.element.Arc;
@@ -13,11 +14,9 @@ import nl.rug.ds.bpm.ptnet.marking.DataMarking;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
 
 import javax.script.*;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Created by Heerko Groefsema on 18-May-18.
@@ -45,7 +44,8 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 		super(xmlElement);
 		manager = new ScriptEngineManager();
 	}
-	
+
+	@Override
 	public DataMarking getInitialMarking() {
 		DataMarking m = new DataMarking();
 		for (Place p: places.values())
@@ -67,28 +67,33 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 		
 		return m;
 	}
-	
-	public void setInitialMarking(DataM marking) {
-		setInitialMarking((Marking) marking);
+
+	@Override
+	public void setInitialMarking(M marking) {
+		super.setInitialMarking(marking);
 		for (String v: variables.keySet())
 			removeVariable(v);
-		
-		for (String b: marking.getBindings().keySet())
-			if (!b.equalsIgnoreCase("nashorn.global")) {
-				Object val = marking.getBindings().get(b);
-				if (val instanceof String)
-					val = (Object) "'" + (String)val + "'";
-				addVariable(b, "var", "" + val);
-			}
-	}
-	
-	public boolean isEnabled(T t, DataM m) {
-		//Marking with data, evaluates guards
-		return isEnabled(t, (Marking) m) && evaluateGuard(t, m);
+
+		if(marking instanceof DataM) {
+			DataM m = (DataM) marking;
+
+			for (String b : m.getBindings().keySet())
+				if (!b.equalsIgnoreCase("nashorn.global")) {
+					Object val = m.getBindings().get(b);
+					if (val instanceof String)
+						val = (Object) "'" + (String) val + "'";
+					addVariable(b, "var", "" + val);
+				}
+		}
 	}
 
 	@Override
-	public boolean isParallelEnabled(Set<? extends T> ts, DataM marking) {
+	public boolean isEnabled(T t, M m) {
+		return super.isEnabled(t, m) && (!(m instanceof DataM) || evaluateGuard(t, (DataM) m));
+	}
+
+	@Override
+	public boolean isParallelEnabled(Set<? extends T> ts, M marking) {
 		boolean isParSet = true;
 
 		//check if enough tokens exist and check if guards contradict conditions
@@ -97,7 +102,7 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 
 		while (isParSet && transitions.hasNext()) {
 			T t = transitions.next();
-			isParSet = evaluateGuard(t, marking);
+			isParSet = (!(marking instanceof DataM) || evaluateGuard(t, (DataM) marking));
 
 			for (Arc in : getIncoming((Node) t))
 				required.addTokens(in.getSource().getId(), in.getWeight());
@@ -112,38 +117,29 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 		return isParSet;
 	}
 
-	public Collection<Transition> getEnabledTransitions(DataM m) {
-		//Marking with data, evaluates guards
-		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
-	}
-
 	@Override
-	public Set<? extends Set<? extends T>> getParallelEnabledTransitions(DataM marking) {
-		return super.getParallelEnabledTransitions(marking);
-	}
-
-	@Override
-	public Set<? extends DataM> fireTransition(T t, DataM m) {
-		Set<DataMarking> markings = new HashSet<>();
+	public Set<? extends DataM> fireTransition(T t, M m) {
+		Set<DataM> markings = new HashSet<>();
 		markings.add(fire(t, m));
 		return markings;
 	}
 
-	public DataMarking fire(T t, DataM m) {
+	@Override
+	public DataM fire(T t, M m) {
 		//Marking with data, evaluates guards and script
-		DataMarking marking;
+		DataM marking;
 		
 		if(isEnabled(t, m)) {
-			marking = (DataMarking) fire(t, (Marking) m);
+			marking = (DataM) super.fire(t, m);
 
-			if(t instanceof Transition) {
+			if(m instanceof DataM && t instanceof Transition) {
 				Transition transition = (Transition) t;
 				if (!transition.getScript().isEmpty()) {
 					ScriptEngine engine = manager.getEngineByName(transition.getScriptType());
 
 					//Bindings only update when using createBindings, so create and clone manually
 					Bindings bindings = engine.createBindings();
-					bindings.putAll(m.getBindings());
+					bindings.putAll(((DataM)m).getBindings());
 
 					marking.setBindings(bindings);
 					engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
@@ -156,7 +152,7 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 				}
 			}
 		}
-		else marking = (DataMarking) m;
+		else marking = (DataM) m;
 		
 		return marking;
 	}
