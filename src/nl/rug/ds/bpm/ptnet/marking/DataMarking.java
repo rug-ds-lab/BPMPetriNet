@@ -19,17 +19,6 @@ public class DataMarking extends Marking implements DataM {
 		this.bindings = bindings;
 	}
 
-
-	public String toString() {
-		String s = super.toString();
-
-		for(String b: bindings.keySet())
-			if (!b.equalsIgnoreCase("nashorn.global"))
-				s = s + "|" + b + "=" + bindings.get(b).toString();
-		
-		return s;
-	}
-
 	public boolean containsBinding(String variable) {
 		return bindings.containsKey(variable);
 	}
