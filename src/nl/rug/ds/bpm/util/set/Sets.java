@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.utils.sets;
+package nl.rug.ds.bpm.util.set;
 
 import java.util.ArrayList;
 import java.util.HashSet;

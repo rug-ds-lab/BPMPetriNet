@@ -1,10 +1,10 @@
 package nl.rug.ds.bpm.ptnet.marking;
 
-import nl.rug.ds.bpm.comparator.StringComparator;
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
-import nl.rug.ds.bpm.net.marking.ConditionalM;
-import nl.rug.ds.bpm.net.marking.M;
+import nl.rug.ds.bpm.util.comparator.StringComparator;
+import nl.rug.ds.bpm.util.interfaces.marking.ConditionalM;
+import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import java.util.*;
 

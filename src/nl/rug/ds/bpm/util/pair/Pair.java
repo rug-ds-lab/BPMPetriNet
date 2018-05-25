@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.utils.pair;
+package nl.rug.ds.bpm.util.pair;
 
 /**
  * Created by Nick van Beest on 10 May 2018

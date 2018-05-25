@@ -1,11 +1,11 @@
 package nl.rug.ds.bpm.eventstructure;
 
-import nl.rug.ds.bpm.comparator.MarkingComparator;
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.ptnet.element.Transition;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
+import nl.rug.ds.bpm.util.comparator.MarkingComparator;
 
 import java.util.*;
 

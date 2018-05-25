@@ -1,10 +1,6 @@
 package nl.rug.ds.bpm.ptnet;
 
 import nl.rug.ds.bpm.expression.Expression;
-import nl.rug.ds.bpm.net.TransitionGraph;
-import nl.rug.ds.bpm.net.element.T;
-import nl.rug.ds.bpm.net.marking.ConditionalM;
-import nl.rug.ds.bpm.net.marking.M;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.Page;
@@ -19,7 +15,12 @@ import nl.rug.ds.bpm.ptnet.element.Node;
 import nl.rug.ds.bpm.ptnet.element.Place;
 import nl.rug.ds.bpm.ptnet.element.Transition;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
-import nl.rug.ds.bpm.utils.sets.Sets;
+import nl.rug.ds.bpm.util.exception.MalformedNetException;
+import nl.rug.ds.bpm.util.interfaces.TransitionGraph;
+import nl.rug.ds.bpm.util.interfaces.element.T;
+import nl.rug.ds.bpm.util.interfaces.marking.ConditionalM;
+import nl.rug.ds.bpm.util.interfaces.marking.M;
+import nl.rug.ds.bpm.util.set.Sets;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -75,7 +76,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		xmlElement.setName(new Name(name));
 	}
 
-	public PlaceTransitionNet(NetContainer xmlElement) {
+	public PlaceTransitionNet(NetContainer xmlElement) throws MalformedNetException {
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -94,6 +95,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 
 		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place place: xmlElement.getPlaces()) {
 			Place p = new Place(place);
+			if (nodes.containsKey(place.getId()))
+				throw new MalformedNetException("Duplicate node i.d.: " + place.getId() + ".");
 			places.put(place.getId(), p);
 			nodes.put(place.getId(), p);
 			Set<Arc> in = new HashSet<>();
@@ -103,6 +106,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 		}
 		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.RefPlace place: xmlElement.getRefPlaces()) {
 			Place p = new Place(place);
+			if (nodes.containsKey(place.getId()))
+				throw new MalformedNetException("Duplicate node i.d.: " + place.getId() + ".");
 			places.put(place.getId(), p);
 			nodes.put(place.getId(), p);
 			Set<Arc> in = new HashSet<>();
@@ -113,6 +118,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 
 		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition transition: xmlElement.getTransitions()) {
 			Transition t = new Transition(transition);
+			if (nodes.containsKey(transition.getId()))
+				throw new MalformedNetException("Duplicate node i.d.: " + transition.getId() + ".");
 			transitions.put(transition.getId(), t);
 			nodes.put(transition.getId(), t);
 			Set<Arc> in = new HashSet<>();
@@ -122,6 +129,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 		}
 		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.RefTransition transition: xmlElement.getRefTransitions()){
 			Transition t = new Transition(transition);
+			if (nodes.containsKey(transition.getId()))
+				throw new MalformedNetException("Duplicate node i.d.: " + transition.getId() + ".");
 			transitions.put(transition.getId(), t);
 			nodes.put(transition.getId(), t);
 			Set<Arc> in = new HashSet<>();
@@ -132,6 +141,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 
 		for (nl.rug.ds.bpm.pnml.jaxb.ptnet.Arc arc: xmlElement.getArcs()) {
 			Arc a = new Arc(arc);
+			if (arcs.containsKey(arc.getId()))
+				throw new MalformedNetException("Duplicate arc i.d.: " + arc.getId() + ".");
 			a.setSource(nodes.get(arc.getSource()));
 			a.setTarget(nodes.get(arc.getTarget()));
 			arcs.put(arc.getId(), a);
@@ -139,8 +150,11 @@ public class PlaceTransitionNet implements TransitionGraph {
 			outgoing.get(arc.getSource()).add(a);
 		}
 
-		for (NetContainer page: xmlElement.getPages())
+		for (NetContainer page: xmlElement.getPages()) {
+			if (pages.containsKey(page.getId()))
+				throw new MalformedNetException("Duplicate page i.d.: " + page.getId() + ".");
 			pages.put(page.getId(), page);
+		}
 
 		for (ToolSpecific toolSpecific: xmlElement.getToolSpecifics())
 			if(toolSpecific.getTool().equals("nl.rug.ds.bpm.ptnet"))
@@ -153,14 +167,23 @@ public class PlaceTransitionNet implements TransitionGraph {
 			xmlElement.getToolSpecifics().add(toolSpecific);
 		}
 
-		for (Group group: process.getGroups())
+		for (Group group: process.getGroups()) {
+			if (groups.containsKey(group.getId()))
+				throw new MalformedNetException("Duplicate group i.d.: " + group.getId() + ".");
 			groups.put(group.getId(), group);
+		}
 
-		for (Variable variable: process.getVariables())
+		for (Variable variable: process.getVariables()) {
+			if (variables.containsKey(variable.getName()))
+				throw new MalformedNetException("Duplicate variable name.: " + variable.getName() + ".");
 			variables.put(variable.getName(), variable);
+		}
 
-		for (Role role: process.getRoles())
+		for (Role role: process.getRoles()) {
+			if (roles.containsKey(role.getId()))
+				throw new MalformedNetException("Duplicate role i.d.: " + role.getId() + ".");
 			roles.put(role.getId(), role);
+		}
 	}
 
 	//Net methods
@@ -191,24 +214,28 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Transition methods
-	public void addTransition(Transition t) {
-		transitions.put(t.getId(), t);
-		nodes.put(t.getId(), t);
-		Set<Arc> in = new HashSet<>();
-		Set<Arc> out = new HashSet<>();
-		incoming.put(t.getId(), in);
-		outgoing.put(t.getId(), out);
-
-		xmlElement.getTransitions().add((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition) t.getXmlElement());
+	public void addTransition(Transition t) throws MalformedNetException {
+		if (nodes.containsKey(t.getId()))
+			throw new MalformedNetException("Duplicate node i.d.: " + t.getId() + ".");
+		else {
+			transitions.put(t.getId(), t);
+			nodes.put(t.getId(), t);
+			Set<Arc> in = new HashSet<>();
+			Set<Arc> out = new HashSet<>();
+			incoming.put(t.getId(), in);
+			outgoing.put(t.getId(), out);
+			
+			xmlElement.getTransitions().add((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.transition.Transition) t.getXmlElement());
+		}
 	}
 
-	public Transition addTransition(String id) {
+	public Transition addTransition(String id) throws MalformedNetException {
 		Transition t = new Transition(id);
 		addTransition(t);
 		return t;
 	}
 
-	public Transition addTransition(String id, String name) {
+	public Transition addTransition(String id, String name) throws MalformedNetException {
 		Transition t = new Transition(id, name);
 		addTransition(t);
 		return t;
@@ -238,38 +265,42 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Place methods
-	public void addPlace(Place p) {
-		places.put(p.getId(), p);
-		nodes.put(p.getId(), p);
-
-		Set<Arc> in = new HashSet<>();
-		Set<Arc> out = new HashSet<>();
-		incoming.put(p.getId(), in);
-		outgoing.put(p.getId(), out);
-
-		xmlElement.getPlaces().add((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place) p.getXmlElement());
+	public void addPlace(Place p) throws MalformedNetException {
+		if (nodes.containsKey(p.getId()))
+			throw new MalformedNetException("Duplicate node i.d.: " + p.getId() + ".");
+		else {
+			places.put(p.getId(), p);
+			nodes.put(p.getId(), p);
+			
+			Set<Arc> in = new HashSet<>();
+			Set<Arc> out = new HashSet<>();
+			incoming.put(p.getId(), in);
+			outgoing.put(p.getId(), out);
+			
+			xmlElement.getPlaces().add((nl.rug.ds.bpm.pnml.jaxb.ptnet.node.place.Place) p.getXmlElement());
+		}
 	}
 
-	public Place addPlace(String id) {
+	public Place addPlace(String id) throws MalformedNetException {
 		Place p = new Place(id);
 		addPlace(p);
 		return p;
 	}
 
-	public Place addPlace(String id, int tokens) {
+	public Place addPlace(String id, int tokens) throws MalformedNetException {
 		Place p = new Place(id);
 		p.setTokens(tokens);
 		addPlace(p);
 		return p;
 	}
 
-	public Place addPlace(String id, String name) {
+	public Place addPlace(String id, String name) throws MalformedNetException {
 		Place p = new Place(id, name);
 		addPlace(p);
 		return p;
 	}
 
-	public Place addPlace(String id, String name, int tokens) {
+	public Place addPlace(String id, String name, int tokens) throws MalformedNetException {
 		Place p = new Place(id, name);
 		p.setTokens(tokens);
 		addPlace(p);
@@ -300,34 +331,38 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Arc methods
-	public void addArc(Arc a) {
-		arcs.put(a.getId(), a);
-		incoming.get(a.getTarget().getId()).add(a);
-		outgoing.get(a.getSource().getId()).add(a);
-
-		xmlElement.getArcs().add(a.getXmlElement());
+	public void addArc(Arc a) throws MalformedNetException {
+		if (arcs.containsKey(a.getId()))
+			throw new MalformedNetException("Duplicate arc i.d.: " + a.getId() + ".");
+		else {
+			arcs.put(a.getId(), a);
+			incoming.get(a.getTarget().getId()).add(a);
+			outgoing.get(a.getSource().getId()).add(a);
+			
+			xmlElement.getArcs().add(a.getXmlElement());
+		}
 	}
 
-	public Arc addArc(Node source, Node target) {
+	public Arc addArc(Node source, Node target) throws MalformedNetException {
 		Arc a = new Arc(source.getId() + "-" + target.getId(), source, target);
 		addArc(a);
 		return a;
 	}
 
-	public Arc addArc(Node source, Node target, int weight) {
+	public Arc addArc(Node source, Node target, int weight) throws MalformedNetException {
 		Arc a = new Arc(source.getId() + "-" + target.getId(), source, target);
 		a.setWeight(weight);
 		addArc(a);
 		return a;
 	}
 
-	public Arc addArc(String sourceId, String targetId) {
+	public Arc addArc(String sourceId, String targetId) throws MalformedNetException {
 		if (!nodes.containsKey(sourceId) || !nodes.containsKey(targetId))
 			return null;
 		return addArc(nodes.get(sourceId), nodes.get(targetId));
 	}
 
-	public Arc addArc(String sourceId, String targetId, int weight) {
+	public Arc addArc(String sourceId, String targetId, int weight) throws MalformedNetException {
 		if (!nodes.containsKey(sourceId) || !nodes.containsKey(targetId))
 			return null;
 		Arc a = addArc(nodes.get(sourceId), nodes.get(targetId));
@@ -364,14 +399,18 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Page methods
-	public NetContainer addPage(String id) {
+	public NetContainer addPage(String id) throws MalformedNetException {
 		Page page = new Page(id);
-		xmlElement.getPages().add(page);
-		pages.put(id, page);
+		if (pages.containsKey(id))
+			throw new MalformedNetException("Duplicate page i.d.: " + id + ".");
+		else {
+			xmlElement.getPages().add(page);
+			pages.put(id, page);
+		}
 		return page;
 	}
 
-	public NetContainer addPage(String id, String name) {
+	public NetContainer addPage(String id, String name) throws MalformedNetException {
 		NetContainer net = addPage(id);
 		net.setName(new Name(name));
 		return net;
@@ -396,18 +435,22 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Variable methods
-	public void addVariable(Variable v) {
-		variables.put(v.getName(), v);
-		process.getVariables().add(v);
+	public void addVariable(Variable v) throws MalformedNetException {
+		if (variables.containsKey(v.getName()))
+			throw new MalformedNetException("Duplicate variable name: " + v.getName() + ".");
+		else {
+			variables.put(v.getName(), v);
+			process.getVariables().add(v);
+		}
 	}
 
-	public Variable addVariable(String name, String type, String value) {
+	public Variable addVariable(String name, String type, String value) throws MalformedNetException {
 		Variable v = new Variable(name, type, value);
 		addVariable(v);
 		return v;
 	}
 
-	public Variable addVariable(String name, String type) {
+	public Variable addVariable(String name, String type) throws MalformedNetException {
 		Variable v = new Variable(name, type);
 		addVariable(v);
 		return v;
@@ -432,12 +475,16 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Group methods
-	public void addGroup(Group g) {
-		groups.put(g.getId(), g);
-		process.getGroups().add(g);
+	public void addGroup(Group g) throws MalformedNetException {
+		if (groups.containsKey(g.getId()))
+			throw new MalformedNetException("Duplicate group i.d.: " + g.getId() + ".");
+		else {
+			groups.put(g.getId(), g);
+			process.getGroups().add(g);
+		}
 	}
 
-	public Group addGroup(String id, String name) {
+	public Group addGroup(String id, String name) throws MalformedNetException {
 		Group g = new Group(id, name);
 		addGroup(g);
 		return g;
@@ -462,12 +509,16 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//Role methods
-	public void addRole(Role r) {
-		roles.put(r.getId(), r);
-		process.getRoles().add(r);
+	public void addRole(Role r) throws MalformedNetException {
+		if (roles.containsKey(r.getId()))
+			throw new MalformedNetException("Duplicate role i.d.: " + r.getId() + ".");
+		else {
+			roles.put(r.getId(), r);
+			process.getRoles().add(r);
+		}
 	}
 
-	public Role addRole(String id, String name) {
+	public Role addRole(String id, String name) throws MalformedNetException {
 		Role r = new Role(id, name);
 		addRole(r);
 		return r;
@@ -568,7 +619,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return m;
 	}
 
-	public void setInitialMarking(M marking) {
+	public void setInitialMarking(M marking) throws MalformedNetException {
 		Marking old = getInitialMarking();
 		for (String p: old.getMarkedPlaces()) {
 			Place place = getPlace(p);
@@ -635,7 +686,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return isParSet;
 	}
 	
-	public Collection<Transition> getEnabledTransitions(M m) {
+	public Collection<? extends T> getEnabledTransitions(M m) {
 		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
 	}
 
@@ -658,7 +709,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return markings;
 	}
 	
-	public Set<Set<Transition>> getParallelEnabledTransitions(M marking) {
+	public Set<? extends Set<? extends T>> getParallelEnabledTransitions(M marking) {
 		Set<Transition> enabled = (Set<Transition>) getEnabledTransitions(marking);
 		Set<Set<Transition>> ypar = new HashSet<>(Sets.powerSet(enabled));
 		

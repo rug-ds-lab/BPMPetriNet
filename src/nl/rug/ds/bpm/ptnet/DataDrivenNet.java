@@ -1,9 +1,5 @@
 package nl.rug.ds.bpm.ptnet;
 
-import nl.rug.ds.bpm.net.DataDrivenGraph;
-import nl.rug.ds.bpm.net.element.T;
-import nl.rug.ds.bpm.net.marking.DataM;
-import nl.rug.ds.bpm.net.marking.M;
 import nl.rug.ds.bpm.pnml.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.ptnet.element.Arc;
@@ -12,6 +8,11 @@ import nl.rug.ds.bpm.ptnet.element.Place;
 import nl.rug.ds.bpm.ptnet.element.Transition;
 import nl.rug.ds.bpm.ptnet.marking.DataMarking;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
+import nl.rug.ds.bpm.util.exception.MalformedNetException;
+import nl.rug.ds.bpm.util.interfaces.DataDrivenGraph;
+import nl.rug.ds.bpm.util.interfaces.element.T;
+import nl.rug.ds.bpm.util.interfaces.marking.DataM;
+import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import javax.script.*;
 import java.util.HashSet;
@@ -40,7 +41,7 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 		manager = new ScriptEngineManager();
 	}
 	
-	public DataDrivenNet(NetContainer xmlElement) {
+	public DataDrivenNet(NetContainer xmlElement) throws MalformedNetException {
 		super(xmlElement);
 		manager = new ScriptEngineManager();
 	}
@@ -69,9 +70,9 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 	}
 
 	@Override
-	public void setInitialMarking(M marking) {
+	public void setInitialMarking(M marking) throws MalformedNetException {
 		super.setInitialMarking(marking);
-		for (String v: variables.keySet())
+		for (String v: new HashSet<>(variables.keySet()))
 			removeVariable(v);
 
 		if(marking instanceof DataM) {
@@ -127,21 +128,21 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 	@Override
 	public DataM fire(T t, M m) {
 		//Marking with data, evaluates guards and script
-		DataM marking;
+		DataMarking marking;
 		
 		if(isEnabled(t, m)) {
-			marking = (DataM) super.fire(t, m);
+			marking = (DataMarking) super.fire(t, m);
+			
+			ScriptEngine engine = manager.getEngineByName("JavaScript");
+			
+			//Bindings only update when using createBindings, so create and clone manually
+			Bindings bindings = engine.createBindings();
+			bindings.putAll(((DataM)m).getBindings());
+			marking.setBindings(bindings);
 
 			if(m instanceof DataM && t instanceof Transition) {
 				Transition transition = (Transition) t;
 				if (!transition.getScript().isEmpty()) {
-					ScriptEngine engine = manager.getEngineByName(transition.getScriptType());
-
-					//Bindings only update when using createBindings, so create and clone manually
-					Bindings bindings = engine.createBindings();
-					bindings.putAll(((DataM)m).getBindings());
-
-					marking.setBindings(bindings);
 					engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
 
 					try {
@@ -152,7 +153,7 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 				}
 			}
 		}
-		else marking = (DataM) m;
+		else marking = (DataMarking) m;
 		
 		return marking;
 	}
@@ -161,9 +162,10 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 		
 		if (!satisfied) {
 			ScriptEngine engine = manager.getEngineByName("JavaScript");
+			engine.setBindings(m.getBindings(), ScriptContext.ENGINE_SCOPE);
 			
 			try {
-				satisfied = (boolean) engine.eval(t.getGuard().toString(), m.getBindings());
+				satisfied = (boolean) engine.eval(t.getGuard().toString());
 			} catch (ScriptException e) {
 				e.printStackTrace();
 			}

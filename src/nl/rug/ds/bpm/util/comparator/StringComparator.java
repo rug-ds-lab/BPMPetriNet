@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.comparator;
+package nl.rug.ds.bpm.util.comparator;
 
 import java.util.Comparator;
 

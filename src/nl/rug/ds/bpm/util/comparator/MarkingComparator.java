@@ -1,6 +1,6 @@
-package nl.rug.ds.bpm.comparator;
+package nl.rug.ds.bpm.util.comparator;
 
-import nl.rug.ds.bpm.net.marking.M;
+import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import java.util.Comparator;
 

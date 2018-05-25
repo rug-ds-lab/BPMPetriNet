@@ -1,6 +1,5 @@
 package nl.rug.ds.bpm.eventstructure.stepper;
 
-import nl.rug.ds.bpm.comparator.StringComparator;
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
@@ -8,7 +7,8 @@ import nl.rug.ds.bpm.ptnet.element.Node;
 import nl.rug.ds.bpm.ptnet.element.Place;
 import nl.rug.ds.bpm.ptnet.element.Transition;
 import nl.rug.ds.bpm.ptnet.marking.Marking;
-import nl.rug.ds.bpm.utils.sets.Sets;
+import nl.rug.ds.bpm.util.comparator.StringComparator;
+import nl.rug.ds.bpm.util.set.Sets;
 
 import java.util.*;
 
@@ -277,7 +277,7 @@ public class PTNetStepper {
 
 			Set<Set<Transition>> subsets = new HashSet<Set<Transition>>();
 			Set<Transition> additional;
-			// remove subsets to obtain the largest sets
+			// remove subsets to obtain the largest set
 			for (Set<Transition> par1 : ypar) {
 				for (Set<Transition> par2 : ypar) {
 					if ((par1.containsAll(par2)) && (par1.size() != par2.size())) {

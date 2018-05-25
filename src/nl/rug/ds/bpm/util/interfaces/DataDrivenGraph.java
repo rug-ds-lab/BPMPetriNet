@@ -1,8 +1,8 @@
-package nl.rug.ds.bpm.net;
+package nl.rug.ds.bpm.util.interfaces;
 
-import nl.rug.ds.bpm.net.element.T;
-import nl.rug.ds.bpm.net.marking.DataM;
-import nl.rug.ds.bpm.net.marking.M;
+import nl.rug.ds.bpm.util.interfaces.element.T;
+import nl.rug.ds.bpm.util.interfaces.marking.DataM;
+import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import java.util.Set;
 

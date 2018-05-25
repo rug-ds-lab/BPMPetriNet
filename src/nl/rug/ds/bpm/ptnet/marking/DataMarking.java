@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.ptnet.marking;
 
-import nl.rug.ds.bpm.net.marking.DataM;
+import nl.rug.ds.bpm.util.interfaces.marking.DataM;
 
 import javax.script.Bindings;
 
