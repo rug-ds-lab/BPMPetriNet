@@ -1,5 +1,5 @@
 <project name="BPMPetriNet" basedir=".">
-	<property name="version">0.1</property>
+	<property name="version">1.0</property>
 	<property name="dir.src">src</property>
 	<property name="dir.build">out</property>
 	<property name="dir.build.production">${dir.build}/production/BPMPetriNet</property>

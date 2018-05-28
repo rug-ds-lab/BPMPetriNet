@@ -21,12 +21,13 @@ import nl.rug.ds.bpm.util.interfaces.element.T;
 import nl.rug.ds.bpm.util.interfaces.graph.TransitionGraph;
 import nl.rug.ds.bpm.util.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.util.interfaces.marking.M;
+import nl.rug.ds.bpm.util.interfaces.unfolding.unfolding;
 import nl.rug.ds.bpm.util.set.Sets;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PlaceTransitionNet implements TransitionGraph {
+public class PlaceTransitionNet implements TransitionGraph, unfolding {
 	protected HashMap<String, Node> nodes;
 	protected HashMap<String, Place> places;
 	protected HashMap<String, Transition> transitions;
