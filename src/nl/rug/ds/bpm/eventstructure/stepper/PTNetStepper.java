@@ -2,12 +2,13 @@ package nl.rug.ds.bpm.eventstructure.stepper;
 
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
-import nl.rug.ds.bpm.ptnet.element.Node;
-import nl.rug.ds.bpm.ptnet.element.Place;
-import nl.rug.ds.bpm.ptnet.element.Transition;
-import nl.rug.ds.bpm.ptnet.marking.Marking;
+import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
+import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 import nl.rug.ds.bpm.util.comparator.StringComparator;
+import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.set.Sets;
 
 import java.util.*;
@@ -152,7 +153,11 @@ public class PTNetStepper {
 		// add all places with no incoming arcs to initial marking
 		for (Place p: ptnet.getPlaces()) {
 			if (ptnet.getIncoming(p).size() == 0) {
-				initial.addTokens(p.getId(), 1);
+				try {
+					initial.addTokens(p.getId(), 1);
+				} catch (IllegalMarkingException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		
@@ -315,11 +320,19 @@ public class PTNetStepper {
 		
 		// fire
 		// remove 1 token from each incoming place
-		currentfire.consumeTokens(placeIds);
-			
+		try {
+			currentfire.consumeTokens(placeIds);
+		} catch (IllegalMarkingException e) {
+			e.printStackTrace();
+		}
+		
 		// place 1 token in each outgoing place
 		for (Place p: ptnet.getPostSet(selected)) {
-			currentfire.addTokens(p.getId(), 1);
+			try {
+				currentfire.addTokens(p.getId(), 1);
+			} catch (IllegalMarkingException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return currentfire;

@@ -1,13 +1,13 @@
 package main;
 
-import nl.rug.ds.bpm.pnml.jaxb.ptnet.Net;
-import nl.rug.ds.bpm.pnml.marshaller.PTNetMarshaller;
-import nl.rug.ds.bpm.pnml.marshaller.PTNetUnmarshaller;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
-import nl.rug.ds.bpm.ptnet.element.Arc;
-import nl.rug.ds.bpm.ptnet.element.Place;
-import nl.rug.ds.bpm.ptnet.element.Transition;
-import nl.rug.ds.bpm.ptnet.marking.Marking;
+import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
+import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
+import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Net;
+import nl.rug.ds.bpm.pnml.ptnet.marshaller.PTNetMarshaller;
+import nl.rug.ds.bpm.pnml.ptnet.marshaller.PTNetUnmarshaller;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.interfaces.element.T;
 import nl.rug.ds.bpm.util.interfaces.marking.M;
