@@ -45,7 +45,7 @@ public class DataDrivenNetTest {
 
 			pn.addVariable("i", "int", "0.0");
 
-			Place p = pn.addPlace("x0", "test_x0", 4);
+			Place p = pn.addPlace("x0", "test_x0", 2);
 			Transition t = pn.addTransition("y0", "ytest");
 			Place p1 = pn.addPlace("x1");
 
