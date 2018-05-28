@@ -1,20 +1,13 @@
 package nl.rug.ds.bpm.eventstructure;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import nl.rug.ds.bpm.comparator.MarkingComparator;
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.Expression;
-import nl.rug.ds.bpm.ptnet.PlaceTransitionNet;
-import nl.rug.ds.bpm.ptnet.element.Transition;
-import nl.rug.ds.bpm.ptnet.marking.Marking;
+import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
+import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
+import nl.rug.ds.bpm.util.comparator.MarkingComparator;
+
+import java.util.*;
 
 /**
  * Created by Nick van Beest on 10 May 2018
