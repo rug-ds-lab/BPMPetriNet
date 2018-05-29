@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.util.interfaces.marking;
+package nl.rug.ds.bpm.petrinet.interfaces.marking;
 
 import nl.rug.ds.bpm.expression.Expression;
 

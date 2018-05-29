@@ -1,5 +1,7 @@
 package main;
 
+import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -9,8 +11,6 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.ptnet.marshaller.PTNetMarshaller;
 import nl.rug.ds.bpm.pnml.ptnet.marshaller.PTNetUnmarshaller;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
-import nl.rug.ds.bpm.util.interfaces.element.T;
-import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import java.io.File;
 import java.util.Collection;

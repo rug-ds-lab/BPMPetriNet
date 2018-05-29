@@ -1,4 +1,4 @@
-package nl.rug.ds.bpm.util.interfaces.element;
+package nl.rug.ds.bpm.petrinet.interfaces.element;
 
 import nl.rug.ds.bpm.expression.Expression;
 

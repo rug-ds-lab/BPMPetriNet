@@ -1,7 +1,7 @@
-package nl.rug.ds.bpm.util.interfaces.graph;
+package nl.rug.ds.bpm.petrinet.interfaces.graph;
 
-import nl.rug.ds.bpm.util.interfaces.element.T;
-import nl.rug.ds.bpm.util.interfaces.marking.M;
+import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 
 import java.util.Collection;
 import java.util.Set;

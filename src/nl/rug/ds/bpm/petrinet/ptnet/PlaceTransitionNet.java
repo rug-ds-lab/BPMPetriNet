@@ -1,6 +1,11 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
 import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
+import nl.rug.ds.bpm.petrinet.interfaces.unfolding.unfolding;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -17,11 +22,6 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Role;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
-import nl.rug.ds.bpm.util.interfaces.element.T;
-import nl.rug.ds.bpm.util.interfaces.graph.TransitionGraph;
-import nl.rug.ds.bpm.util.interfaces.marking.ConditionalM;
-import nl.rug.ds.bpm.util.interfaces.marking.M;
-import nl.rug.ds.bpm.util.interfaces.unfolding.unfolding;
 import nl.rug.ds.bpm.util.set.Sets;
 
 import java.util.*;
@@ -673,7 +673,7 @@ public class PlaceTransitionNet implements TransitionGraph, unfolding {
 
 		//check if enough tokens exist and check if guards contradict conditions
 		Iterator<? extends T> transitions = ts.iterator();
-		Marking required = new Marking();
+		Marking required = (Marking) m.clone();
 
 		while (isParSet && transitions.hasNext()) {
 			T t = transitions.next();
@@ -683,17 +683,10 @@ public class PlaceTransitionNet implements TransitionGraph, unfolding {
 			
 			try {
 				for (Arc in : getIncoming((Node) t))
-						required.addTokens(in.getSource().getId(), in.getWeight());
+					required.consumeTokens(in.getSource().getId(), in.getWeight());
 			} catch (IllegalMarkingException e) {
 				isParSet = false;
-				e.printStackTrace();
 			}
-		}
-
-		Iterator<String> placesWithRequiredTokens = required.getMarkedPlaces().iterator();
-		while (isParSet && placesWithRequiredTokens.hasNext()) {
-			String place = placesWithRequiredTokens.next();
-			isParSet = required.getTokensAtPlace(place) <= m.getTokensAtPlace(place);
 		}
 
 		return isParSet;
@@ -734,15 +727,13 @@ public class PlaceTransitionNet implements TransitionGraph, unfolding {
 		for (Set<Transition> parSet: ypar) {
 			boolean isParSet = isParallelEnabled(parSet, marking);
 			//check if other transitions exists that don't contradict and are enabled in par
-			if (isParSet) {
-				Set<Transition> otherEnabled = new HashSet<>(enabled);
-				otherEnabled.removeAll(ypar);
-
-				Iterator<Transition> otherIterator = otherEnabled.iterator();
-				while (isParSet && otherIterator.hasNext()) {
+			Iterator<Transition> otherIterator = enabled.iterator();
+			while (isParSet && otherIterator.hasNext()) {
+				Transition t = otherIterator.next();
+				if (!parSet.contains(t)) {
 					Set<Transition> parSetPlus = new HashSet<>(parSet);
-					parSetPlus.add(otherIterator.next());
-					isParSet = canHaveContradiction(parSetPlus, parSet) || !isParallelEnabled(parSetPlus, marking);
+					parSetPlus.add(t);
+					isParSet = !isParallelEnabled(parSetPlus, marking); //|| canHaveContradiction(parSetPlus, parSet);
 				}
 			}
 			if(!isParSet)

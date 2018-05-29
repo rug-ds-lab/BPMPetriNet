@@ -1,7 +1,7 @@
 package nl.rug.ds.bpm.petrinet.ptnet.element;
 
+import nl.rug.ds.bpm.petrinet.interfaces.element.P;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.annotation.InitialMarking;
-import nl.rug.ds.bpm.util.interfaces.element.P;
 
 public class Place extends Node implements P {
 

@@ -22,7 +22,9 @@
 		
 		<javac srcdir="${dir.src}"
 			   destdir="${dir.build.production}"
-			   verbose="true"/>
+			   verbose="true">
+			<compilerarg line="--add-modules java.xml.bind"/>
+		</javac>
 	</target>
 	
 	<target name="jar" depends="compile">

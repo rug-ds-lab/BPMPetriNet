@@ -1,5 +1,9 @@
 package nl.rug.ds.bpm.petrinet.ddnet;
 
+import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.graph.DataDrivenGraph;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.DataM;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
@@ -11,10 +15,6 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
-import nl.rug.ds.bpm.util.interfaces.element.T;
-import nl.rug.ds.bpm.util.interfaces.graph.DataDrivenGraph;
-import nl.rug.ds.bpm.util.interfaces.marking.DataM;
-import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import javax.script.*;
 import java.util.HashSet;

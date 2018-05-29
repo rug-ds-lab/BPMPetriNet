@@ -2,10 +2,10 @@ package nl.rug.ds.bpm.petrinet.ptnet.marking;
 
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.util.comparator.StringComparator;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
-import nl.rug.ds.bpm.util.interfaces.marking.ConditionalM;
-import nl.rug.ds.bpm.util.interfaces.marking.M;
 
 import java.util.*;
 
