@@ -677,12 +677,38 @@ public class PlaceTransitionNet implements TransitionGraph, unfolding {
 
 		while (isParSet && transitions.hasNext()) {
 			T t = transitions.next();
-
-			if(m instanceof ConditionalM)
-				isParSet = isEnabledUnderCondition(t, (ConditionalM) m);
+			isParSet = !(m instanceof ConditionalM) || isEnabledUnderCondition(t, (ConditionalM) m);
 			
 			try {
 				for (Arc in : getIncoming((Node) t))
+					required.consumeTokens(in.getSource().getId(), in.getWeight());
+			} catch (IllegalMarkingException e) {
+				isParSet = false;
+			}
+		}
+
+		return isParSet;
+	}
+
+	//checks whether t is parallel enabled with a known parallel set
+	protected boolean isParallelEnabled(Set<? extends T> parSet, T t, M m) {
+		boolean isParSet = !(m instanceof ConditionalM) || isEnabledUnderCondition(t, (ConditionalM) m);
+		Marking required = (Marking) m.clone();
+
+		try {
+			for (Arc in : getIncoming((Node) t))
+				required.consumeTokens(in.getSource().getId(), in.getWeight());
+		} catch (IllegalMarkingException e) {
+			isParSet = false;
+		}
+
+		Iterator<? extends T> parIterator = parSet.iterator();
+		while (isParSet && parIterator.hasNext()) {
+			T p = parIterator.next();
+			isParSet = !areContradictory(t, p);
+
+			try {
+				for (Arc in : getIncoming((Node) p))
 					required.consumeTokens(in.getSource().getId(), in.getWeight());
 			} catch (IllegalMarkingException e) {
 				isParSet = false;
@@ -721,30 +747,27 @@ public class PlaceTransitionNet implements TransitionGraph, unfolding {
 	
 	public Set<? extends Set<? extends T>> getParallelEnabledTransitions(M marking) {
 		Set<Transition> enabled = (Set<Transition>) getEnabledTransitions(marking);
-		Set<Set<Transition>> ypar = new HashSet<>(Sets.powerSet(enabled));
-		
-		Set<Set<Transition>> pruned = new HashSet<>();
-		for (Set<Transition> parSet: ypar) {
+		Set<Set<Transition>> pow = new HashSet<>(Sets.powerSet(enabled));
+		Set<Set<Transition>> ypar = new HashSet<>();
+
+		for (Set<Transition> parSet: pow) {
 			boolean isParSet = isParallelEnabled(parSet, marking);
 			//check if other transitions exists that don't contradict and are enabled in par
 			Iterator<Transition> otherIterator = enabled.iterator();
 			while (isParSet && otherIterator.hasNext()) {
 				Transition t = otherIterator.next();
-				if (!parSet.contains(t)) {
-					Set<Transition> parSetPlus = new HashSet<>(parSet);
-					parSetPlus.add(t);
-					isParSet = !isParallelEnabled(parSetPlus, marking); //|| canHaveContradiction(parSetPlus, parSet);
-				}
+				if (!parSet.contains(t))
+					isParSet = !isParallelEnabled(parSet, t, marking); //|| canHaveContradiction(parSet, t);
 			}
-			if(!isParSet)
-				pruned.add(parSet);
+			if(isParSet)
+				ypar.add(parSet);
 		}
-		
-		ypar.removeAll(pruned);
+
 		return ypar;
 	}
 
-	protected boolean canHaveContradiction(Set<Transition> parSetPlus, Set<Transition> parSet) {
+	//checks whether parset can have contradiction with parset + t
+	protected boolean canHaveContradiction(Set<Transition> parSet, T t) {
 		//TODO awaiting Expression
 		return true;
 	}

@@ -1,5 +1,6 @@
 package nl.rug.ds.bpm.petrinet.ddnet;
 
+import nl.rug.ds.bpm.petrinet.ddnet.marking.DataMarking;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.graph.DataDrivenGraph;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.DataM;
@@ -9,7 +10,6 @@ import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
-import nl.rug.ds.bpm.petrinet.ptnet.marking.DataMarking;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Variable;
@@ -101,37 +101,57 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 	}
 
 	@Override
-	public boolean isParallelEnabled(Set<? extends T> ts, M marking) {
+	public boolean isParallelEnabled(Set<? extends T> ts, M m) {
 		boolean isParSet = true;
 
 		//check if enough tokens exist and check if guards contradict conditions
 		Iterator<? extends T> transitions = ts.iterator();
-		Marking required = new Marking();
+		Marking required = (Marking) m.clone();
 
 		while (isParSet && transitions.hasNext()) {
 			T t = transitions.next();
-			isParSet = (!(marking instanceof DataM) || evaluateGuard(t, (DataM) marking));
-			
+			isParSet = (!(m instanceof DataM) || evaluateGuard(t, (DataM) m));
+
 			try {
 				for (Arc in : getIncoming((Node) t))
-					required.addTokens(in.getSource().getId(), in.getWeight());
-				
+					required.consumeTokens(in.getSource().getId(), in.getWeight());
 			} catch (IllegalMarkingException e) {
 				isParSet = false;
-				e.printStackTrace();
 			}
-		}
-
-		Iterator<String> placesWithRequiredTokens = required.getMarkedPlaces().iterator();
-		while (isParSet && placesWithRequiredTokens.hasNext()) {
-			String place = placesWithRequiredTokens.next();
-			isParSet = required.getTokensAtPlace(place) <= marking.getTokensAtPlace(place);
 		}
 
 		return isParSet;
 	}
 
+	//checks whether t is parallel enabled with a known parallel set
 	@Override
+	protected boolean isParallelEnabled(Set<? extends T> parSet, T t, M m) {
+		boolean isParSet = (!(m instanceof DataM) || evaluateGuard(t, (DataM) m));
+		Marking required = (Marking) m.clone();
+
+		try {
+			for (Arc in : getIncoming((Node) t))
+				required.consumeTokens(in.getSource().getId(), in.getWeight());
+		} catch (IllegalMarkingException e) {
+			isParSet = false;
+		}
+
+		Iterator<? extends T> parIterator = parSet.iterator();
+		while (isParSet && parIterator.hasNext()) {
+			T p = parIterator.next();
+
+			try {
+				for (Arc in : getIncoming((Node) p))
+					required.consumeTokens(in.getSource().getId(), in.getWeight());
+			} catch (IllegalMarkingException e) {
+				isParSet = false;
+			}
+		}
+
+		return isParSet;
+	}
+
+		@Override
 	public Set<? extends DataM> fireTransition(T t, M m) {
 		Set<DataM> markings = new HashSet<>();
 		markings.add(fire(t, m));
