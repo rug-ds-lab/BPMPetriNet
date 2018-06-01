@@ -5,7 +5,7 @@ import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
-import nl.rug.ds.bpm.petrinet.interfaces.unfolding.unfolding;
+import nl.rug.ds.bpm.petrinet.interfaces.unfolding.Unfolding;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -27,7 +27,7 @@ import nl.rug.ds.bpm.util.set.Sets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PlaceTransitionNet implements TransitionGraph, unfolding {
+public class PlaceTransitionNet implements TransitionGraph, Unfolding {
 	protected HashMap<String, Node> nodes;
 	protected HashMap<String, Place> places;
 	protected HashMap<String, Transition> transitions;
