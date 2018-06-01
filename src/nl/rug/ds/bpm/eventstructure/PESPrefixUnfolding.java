@@ -23,6 +23,7 @@ import nl.rug.ds.bpm.util.comparator.MarkingComparator;
 public class PESPrefixUnfolding {
 	private List<String> labels;
 	private List<String> fulllabels;
+	private BitSet invisibles;
 	
 	private Map<Integer, BitSet> dcausality;
 	private Map<Integer, BitSet> tcausality;
@@ -47,6 +48,7 @@ public class PESPrefixUnfolding {
 	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
+		invisibles = new BitSet();
 		
 		dcausality = new HashMap<Integer, BitSet>();
 		tcausality = new HashMap<Integer, BitSet>();
@@ -201,6 +203,8 @@ public class PESPrefixUnfolding {
 		if (!fulllabels.contains(label)) {
 			fulllabels.add(label);
 			labels.add(tr.getName());
+			
+			if (tr.isTau()) invisibles.set(labels.size() - 1);
 		}
 	}
 	
@@ -276,9 +280,22 @@ public class PESPrefixUnfolding {
 		return labels.get(event);
 	}
 	
-	public BitSet getCausality(int event) {
+	public BitSet getInvisibleEvents() {
+		return invisibles;
+	}
+	
+	public BitSet getDirectSuccessors(int event) {
 		if (dcausality.containsKey(event)) {
 			return dcausality.get(event);
+		}
+		else {
+			return new BitSet();
+		}
+	}
+	
+	public BitSet getDirectPredecessors(int event) {
+		if (pred.containsKey(event)) {
+			return pred.get(event);
 		}
 		else {
 			return new BitSet();
@@ -312,7 +329,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	public BitSet getDirectConflict(int event) {
+	public BitSet getDirectConflicts(int event) {
 		if (dconflict.containsKey(event)) {
 			return dconflict.get(event);
 		}
@@ -321,7 +338,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	public BitSet getCutoffs() {
+	public BitSet getCutoffEvents() {
 		return cutoffs;
 	}
 	

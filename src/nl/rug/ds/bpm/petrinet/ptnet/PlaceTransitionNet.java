@@ -27,7 +27,7 @@ import nl.rug.ds.bpm.util.set.Sets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PlaceTransitionNet implements TransitionGraph, Unfolding {
+public class PlaceTransitionNet implements TransitionGraph {
 	protected HashMap<String, Node> nodes;
 	protected HashMap<String, Place> places;
 	protected HashMap<String, Transition> transitions;
