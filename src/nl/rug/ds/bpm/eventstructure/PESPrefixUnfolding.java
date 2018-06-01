@@ -1,13 +1,20 @@
 package nl.rug.ds.bpm.eventstructure;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 import nl.rug.ds.bpm.util.comparator.MarkingComparator;
-
-import java.util.*;
 
 /**
  * Created by Nick van Beest on 10 May 2018
@@ -23,10 +30,11 @@ public class PESPrefixUnfolding {
 	private Map<Integer, BitSet> tpred;
 	private Map<Integer, BitSet> conflict;
 	private Map<Integer, BitSet> concurrency;
-	
-	private BitSet tmpvisited;
-	
+	private Map<Integer, BitSet> dconflict;
+		
 	private BitSet cutoffs;
+	private Map<Integer, Integer> ccmap; // from cutoff to corresponding
+	private Map<Integer, Integer> tmpcc;
 	
 	private Set<Marking> visited;
 	
@@ -46,10 +54,11 @@ public class PESPrefixUnfolding {
 		tpred = new HashMap<Integer, BitSet>();
 		conflict = new HashMap<Integer, BitSet>();
 		concurrency = new HashMap<Integer, BitSet>();
+		dconflict = new HashMap<Integer, BitSet>();
 		
 		cutoffs = new BitSet();
-		
-		tmpvisited = new BitSet();
+		ccmap = new HashMap<Integer, Integer>();
+		tmpcc = new HashMap<Integer, Integer>();
 		
 		visited = new TreeSet<Marking>(new MarkingComparator());
 		
@@ -63,6 +72,7 @@ public class PESPrefixUnfolding {
 		
 		progressPES(stepper, marking, null);
 		
+		fillDirectConflictRelations();
 		fillConflictRelations();
 	}
 	
@@ -137,6 +147,27 @@ public class PESPrefixUnfolding {
 					if (tpred.containsKey(e)) tpred.get(p).or(tpred.get(e));
 					tpred.get(p).set(e);
 					fillTransitivePred(p);
+				}
+			}
+		}
+	}
+	
+	private void fillDirectConflictRelations() {
+		BitSet conf;
+		
+		for (int e: dcausality.keySet()) {
+			if (dcausality.get(e).cardinality() > 1) {
+				for (int dc = dcausality.get(e).nextSetBit(0); dc >= 0; dc = dcausality.get(e).nextSetBit(dc + 1)) {
+					conf = new BitSet();
+					conf.or(dcausality.get(e));
+				
+					// check if there are any events in the postset of e that are concurrent and remove
+					if (concurrency.containsKey(dc)) conf.andNot(concurrency.get(dc));
+						
+					if (!dconflict.containsKey(dc)) dconflict.put(dc, new BitSet());
+						
+					dconflict.get(dc).or(conf);
+					dconflict.get(dc).clear(dc);
 				}
 			}
 		}
@@ -219,14 +250,14 @@ public class PESPrefixUnfolding {
 			tmp.xor(pred.get(target));
 			if (tmp.cardinality() > 1) {
 				cutoffs.set(source);
+				
+				if (!tmpcc.containsKey(target)) {
+					tmp.andNot(cutoffs);
+					tmpcc.put(target, tmp.nextSetBit(0));
+				}
+				ccmap.put(source, tmpcc.get(target));
 			}
 		}
-		
-//		if (!tpred.containsKey(target)) tpred.put(target, new BitSet());
-//		if (!tpred.get(target).get(source)) {
-//			if (tpred.containsKey(source)) tpred.get(target).or(tpred.get(source));
-//			tpred.get(target).set(source);
-//		}
 	}
 	
 	public int getInitial() {
@@ -281,7 +312,25 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
+	public BitSet getDirectConflict(int event) {
+		if (dconflict.containsKey(event)) {
+			return dconflict.get(event);
+		}
+		else {
+			return new BitSet();
+		}
+	}
+	
 	public BitSet getCutoffs() {
 		return cutoffs;
+	}
+	
+	public int getCorrespondingEvent(int cutoff) {
+		if (ccmap.containsKey(cutoff)) {
+			return ccmap.get(cutoff);
+		}
+		else {
+			return -1;
+		}
 	}
 }
