@@ -20,6 +20,10 @@ public interface Unfolding {
 	public BitSet getConcurrency(int event);
 	public BitSet getDirectConflicts(int event);
 	
+	public BitSet getTransitiveSuccessors(int event);
+	public BitSet getTransitivePredecessors(int event);
+	public BitSet getConflicts(int event);
+	
 	public BitSet getCutoffEvents();
 	public int getCorrespondingEvent(int cutoff);
 }

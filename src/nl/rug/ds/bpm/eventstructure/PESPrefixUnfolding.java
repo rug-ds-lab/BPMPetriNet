@@ -25,9 +25,9 @@ public class PESPrefixUnfolding {
 	private List<String> fulllabels;
 	private BitSet invisibles;
 	
-	private Map<Integer, BitSet> dcausality;
-	private Map<Integer, BitSet> tcausality;
-	private Map<Integer, BitSet> pred;
+	private Map<Integer, BitSet> dsucc;
+	private Map<Integer, BitSet> tsucc;
+	private Map<Integer, BitSet> dpred;
 	private Map<Integer, BitSet> tpred;
 	private Map<Integer, BitSet> conflict;
 	private Map<Integer, BitSet> concurrency;
@@ -38,7 +38,7 @@ public class PESPrefixUnfolding {
 	private Map<Integer, Integer> tmpcc;
 	
 	private Set<Marking> visited;
-	
+		
 	private int initial, sink;
 	
 	public PESPrefixUnfolding(PlaceTransitionNet ptnet) {
@@ -50,9 +50,9 @@ public class PESPrefixUnfolding {
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
 		
-		dcausality = new HashMap<Integer, BitSet>();
-		tcausality = new HashMap<Integer, BitSet>();
-		pred = new HashMap<Integer, BitSet>();
+		dsucc = new HashMap<Integer, BitSet>();
+		tsucc = new HashMap<Integer, BitSet>();
+		dpred = new HashMap<Integer, BitSet>();
 		tpred = new HashMap<Integer, BitSet>();
 		conflict = new HashMap<Integer, BitSet>();
 		concurrency = new HashMap<Integer, BitSet>();
@@ -63,7 +63,7 @@ public class PESPrefixUnfolding {
 		tmpcc = new HashMap<Integer, Integer>();
 		
 		visited = new TreeSet<Marking>(new MarkingComparator());
-		
+				
 		buildPES(ptnet, globalconditions, transitionguardmap);
 	}
 	
@@ -110,7 +110,7 @@ public class PESPrefixUnfolding {
 					
 				if (last != null) {
 					if (!isConcurrent(last, selected)) {
-						addCausality(fulllabels.indexOf(last.toString()), fulllabels.indexOf(selected.toString()));
+						addSuccessor(fulllabels.indexOf(last.toString()), fulllabels.indexOf(selected.toString()));
 					}
 				}
 				else {
@@ -126,42 +126,52 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private void fillTransitiveCausality(int e) {
-		if (e != initial) {
-			for (int p = pred.get(e).nextSetBit(0); p >= 0; p = pred.get(e).nextSetBit(p + 1)) {
-				if (!tcausality.containsKey(p)) tcausality.put(p, new BitSet()); 
-				
-				if (!tcausality.get(p).get(e)) {
-					if (tcausality.containsKey(e)) tcausality.get(p).or(tcausality.get(e));
-					tcausality.get(p).set(e);
-					fillTransitiveCausality(p);
+	private BitSet fillTransitiveSuccessors(int e, BitSet past) {
+		BitSet succ = new BitSet();
+		
+		if (e != sink) {
+			BitSet npast = new BitSet();
+			npast.or(past);
+			npast.set(e);
+			for (int p = dsucc.get(e).nextSetBit(0); p >= 0; p = dsucc.get(e).nextSetBit(p + 1)) {
+				if (!past.get(p)) {
+					succ.set(p);
+					succ.or(fillTransitiveSuccessors(p, npast));
 				}
 			}
+			if (!tsucc.containsKey(e)) tsucc.put(e, succ);
 		}
+		
+		return succ;
 	}
 	
-	private void fillTransitivePred(int e) {
-		if (e != sink) {
-			for (int p = dcausality.get(e).nextSetBit(0); p >= 0; p = dcausality.get(e).nextSetBit(p + 1)) {
-				if (!tpred.containsKey(p)) tpred.put(p, new BitSet()); 
-				
-				if (!tpred.get(p).get(e)) {
-					if (tpred.containsKey(e)) tpred.get(p).or(tpred.get(e));
-					tpred.get(p).set(e);
-					fillTransitivePred(p);
+	private BitSet fillTransitivePredecessors(int e, BitSet past) {
+		BitSet pred = new BitSet();
+		
+		if (e != initial) {
+			BitSet npast = new BitSet();
+			npast.or(past);
+			npast.set(e);
+			for (int p = dpred.get(e).nextSetBit(0); p >= 0; p = dpred.get(e).nextSetBit(p + 1)) {
+				if (!past.get(p)) {
+					pred.set(p);
+					pred.or(fillTransitivePredecessors(p, npast));
 				}
 			}
+			if (!tpred.containsKey(e)) tpred.put(e, pred);
 		}
+		
+		return pred;
 	}
 	
 	private void fillDirectConflictRelations() {
 		BitSet conf;
 		
-		for (int e: dcausality.keySet()) {
-			if (dcausality.get(e).cardinality() > 1) {
-				for (int dc = dcausality.get(e).nextSetBit(0); dc >= 0; dc = dcausality.get(e).nextSetBit(dc + 1)) {
+		for (int e: dsucc.keySet()) {
+			if (dsucc.get(e).cardinality() > 1) {
+				for (int dc = dsucc.get(e).nextSetBit(0); dc >= 0; dc = dsucc.get(e).nextSetBit(dc + 1)) {
 					conf = new BitSet();
-					conf.or(dcausality.get(e));
+					conf.or(dsucc.get(e));
 				
 					// check if there are any events in the postset of e that are concurrent and remove
 					if (concurrency.containsKey(dc)) conf.andNot(concurrency.get(dc));
@@ -178,16 +188,12 @@ public class PESPrefixUnfolding {
 	private void fillConflictRelations() {
 		BitSet conf;
 		
-//		for (int c = cutoffs.nextSetBit(0); c >= 0; c = cutoffs.nextSetBit(c + 1)) {
-//			fillTransitiveCausality(c);
-//		}
-		fillTransitiveCausality(sink);
-		
-		fillTransitivePred(initial);
+		fillTransitiveSuccessors(initial, new BitSet());
+		fillTransitivePredecessors(sink, new BitSet());
 		
 		for (int e = 0; e < fulllabels.size(); e++) {
 			conf = new BitSet();
-			if (tcausality.containsKey(e)) conf.or(tcausality.get(e));
+			if (tsucc.containsKey(e)) conf.or(tsucc.get(e));
 			if (concurrency.containsKey(e)) conf.or(concurrency.get(e));
 			if (tpred.containsKey(e)) conf.or(tpred.get(e));
 			
@@ -216,8 +222,8 @@ public class PESPrefixUnfolding {
 		index1 = fulllabels.indexOf(t1.toString());
 		index2 = fulllabels.indexOf(t2.toString());
 		
-		if (dcausality.containsKey(index1)) {
-			if (dcausality.get(index1).get(index2)) {
+		if (dsucc.containsKey(index1)) {
+			if (dsucc.get(index1).get(index2)) {
 				return true;
 			}
 		}
@@ -242,16 +248,16 @@ public class PESPrefixUnfolding {
 		return false;
 	}
 	
-	private void addCausality(int source, int target) {
-		if (!dcausality.containsKey(source)) dcausality.put(source, new BitSet());
-		dcausality.get(source).set(target);
+	private void addSuccessor(int source, int target) {
+		if (!dsucc.containsKey(source)) dsucc.put(source, new BitSet());
+		dsucc.get(source).set(target);
 		
-		if (!pred.containsKey(target)) pred.put(target, new BitSet());
-		pred.get(target).set(source);
-		if (pred.get(target).cardinality() > 1) {
+		if (!dpred.containsKey(target)) dpred.put(target, new BitSet());
+		dpred.get(target).set(source);
+		if (dpred.get(target).cardinality() > 1) {
 			BitSet tmp = new BitSet();
 			tmp.or(concurrency.get(source));
-			tmp.xor(pred.get(target));
+			tmp.xor(dpred.get(target));
 			if (tmp.cardinality() > 1) {
 				cutoffs.set(source);
 				
@@ -285,8 +291,8 @@ public class PESPrefixUnfolding {
 	}
 	
 	public BitSet getDirectSuccessors(int event) {
-		if (dcausality.containsKey(event)) {
-			return dcausality.get(event);
+		if (dsucc.containsKey(event)) {
+			return dsucc.get(event);
 		}
 		else {
 			return new BitSet();
@@ -294,17 +300,26 @@ public class PESPrefixUnfolding {
 	}
 	
 	public BitSet getDirectPredecessors(int event) {
-		if (pred.containsKey(event)) {
-			return pred.get(event);
+		if (dpred.containsKey(event)) {
+			return dpred.get(event);
 		}
 		else {
 			return new BitSet();
 		}
 	}
 	
-	public BitSet getTransitiveCausality(int event) {
-		if (tcausality.containsKey(event)) {
-			return tcausality.get(event);
+	public BitSet getTransitiveSuccessors(int event) {
+		if (tsucc.containsKey(event)) {
+			return tsucc.get(event);
+		}
+		else {
+			return new BitSet();
+		}
+	}
+
+	public BitSet getTransitivePredecessors(int event) {
+		if (tpred.containsKey(event)) {
+			return tpred.get(event);
 		}
 		else {
 			return new BitSet();
@@ -320,7 +335,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	public BitSet getConflict(int event) {
+	public BitSet getConflicts(int event) {
 		if (conflict.containsKey(event)) {
 			return conflict.get(event);
 		}
@@ -350,4 +365,5 @@ public class PESPrefixUnfolding {
 			return -1;
 		}
 	}
+	
 }
