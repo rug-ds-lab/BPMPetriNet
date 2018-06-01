@@ -152,7 +152,7 @@ public class PESPrefixUnfolding implements Unfolding {
 		if (e != initial) {
 			BitSet npast = new BitSet();
 			npast.or(past);
-			npast.set(e);
+			if (cutoffs.get(e)) npast.set(e);
 			for (int p = dpred.get(e).nextSetBit(0); p >= 0; p = dpred.get(e).nextSetBit(p + 1)) {
 				if (!past.get(p)) {
 					pred.set(p);
