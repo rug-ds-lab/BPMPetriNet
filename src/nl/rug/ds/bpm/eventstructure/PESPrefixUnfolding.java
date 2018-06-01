@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.petrinet.interfaces.unfolding.Unfolding;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
@@ -20,7 +21,7 @@ import nl.rug.ds.bpm.util.comparator.MarkingComparator;
  * Created by Nick van Beest on 10 May 2018
  *
  */
-public class PESPrefixUnfolding {
+public class PESPrefixUnfolding implements Unfolding {
 	private List<String> labels;
 	private List<String> fulllabels;
 	private BitSet invisibles;
