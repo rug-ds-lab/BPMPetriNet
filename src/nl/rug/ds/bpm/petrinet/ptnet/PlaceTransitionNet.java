@@ -1,11 +1,17 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
-import nl.rug.ds.bpm.petrinet.interfaces.unfolding.Unfolding;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -23,9 +29,6 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.set.Sets;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class PlaceTransitionNet implements TransitionGraph {
 	protected HashMap<String, Node> nodes;
@@ -746,16 +749,16 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 	
 	public Set<? extends Set<? extends T>> getParallelEnabledTransitions(M marking) {
-		Set<Transition> enabled = (Set<Transition>) getEnabledTransitions(marking);
-		Set<Set<Transition>> pow = new HashSet<>(Sets.powerSet(enabled));
-		Set<Set<Transition>> ypar = new HashSet<>();
+		Set<? extends T> enabled = (Set<? extends T>) getEnabledTransitions(marking);
+		Set<Set<? extends T>> pow = new HashSet<>(Sets.powerSet(enabled));
+		Set<Set<? extends T>> ypar = new HashSet<>();
 
-		for (Set<Transition> parSet: pow) {
+		for (Set<? extends T> parSet: pow) {
 			boolean isParSet = isParallelEnabled(parSet, marking);
 			//check if other transitions exists that don't contradict and are enabled in par
-			Iterator<Transition> otherIterator = enabled.iterator();
+			Iterator<? extends T> otherIterator = enabled.iterator();
 			while (isParSet && otherIterator.hasNext()) {
-				Transition t = otherIterator.next();
+				T t = otherIterator.next();
 				if (!parSet.contains(t))
 					isParSet = !isParallelEnabled(parSet, t, marking); //|| canHaveContradiction(parSet, t);
 			}
@@ -767,7 +770,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 	}
 
 	//checks whether parset can have contradiction with parset + t
-	protected boolean canHaveContradiction(Set<Transition> parSet, T t) {
+	protected boolean canHaveContradiction(Set<T> parSet, T t) {
 		//TODO awaiting Expression
 		return true;
 	}
