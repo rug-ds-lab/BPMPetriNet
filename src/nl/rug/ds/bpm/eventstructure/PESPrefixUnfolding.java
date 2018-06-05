@@ -35,6 +35,7 @@ public class PESPrefixUnfolding implements Unfolding {
 	private Map<Integer, BitSet> dconflict;
 		
 	private BitSet cutoffs;
+	private BitSet correspondings;
 	private Map<Integer, Integer> ccmap; // from cutoff to corresponding
 	private Map<Integer, Integer> tmpcc;
 	
@@ -60,6 +61,7 @@ public class PESPrefixUnfolding implements Unfolding {
 		dconflict = new HashMap<Integer, BitSet>();
 		
 		cutoffs = new BitSet();
+		correspondings = new BitSet();
 		ccmap = new HashMap<Integer, Integer>();
 		tmpcc = new HashMap<Integer, Integer>();
 		
@@ -255,17 +257,18 @@ public class PESPrefixUnfolding implements Unfolding {
 		
 		if (!dpred.containsKey(target)) dpred.put(target, new BitSet());
 		dpred.get(target).set(source);
-		if (dpred.get(target).cardinality() > 1) {
+		if (dpred.get(target).cardinality() > 1)  {
 			BitSet tmp = new BitSet();
 			tmp.or(concurrency.get(source));
 			tmp.xor(dpred.get(target));
-			if (tmp.cardinality() > 1) {
+			if ((tmp.cardinality() > 1) && (!correspondings.get(source))) {
 				cutoffs.set(source);
 				
 				if (!tmpcc.containsKey(target)) {
 					tmp.andNot(cutoffs);
 					tmpcc.put(target, tmp.nextSetBit(0));
 				}
+				correspondings.set(tmpcc.get(target));
 				ccmap.put(source, tmpcc.get(target));
 			}
 		}
