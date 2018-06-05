@@ -11,7 +11,6 @@ import java.util.TreeSet;
 
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.Expression;
-import nl.rug.ds.bpm.petrinet.interfaces.unfolding.Unfolding;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
@@ -21,7 +20,7 @@ import nl.rug.ds.bpm.util.comparator.MarkingComparator;
  * Created by Nick van Beest on 10 May 2018
  *
  */
-public class PESPrefixUnfolding implements Unfolding {
+public class PESPrefixUnfolding {
 	private List<String> labels;
 	private List<String> fulllabels;
 	private BitSet invisibles;
@@ -43,11 +42,11 @@ public class PESPrefixUnfolding implements Unfolding {
 		
 	private int initial, sink;
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet) {
-		this(ptnet, new HashSet<Expression<?>>(), new HashMap<Transition, Set<Expression<?>>>());
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) {
+		this(ptnet, new HashSet<Expression<?>>(), new HashMap<Transition, Set<Expression<?>>>(), silentPrefix);
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap, String silentPrefix) {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -66,11 +65,15 @@ public class PESPrefixUnfolding implements Unfolding {
 		tmpcc = new HashMap<Integer, Integer>();
 		
 		visited = new TreeSet<Marking>(new MarkingComparator());
-				
-		buildPES(ptnet, globalconditions, transitionguardmap);
+		
+		buildPES(ptnet, globalconditions, transitionguardmap, silentPrefix);
 	}
 	
-	private void buildPES(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
+	private void buildPES(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap, String silentPrefix) {
+		for (Transition t: ptnet.getTransitions()) {
+			if (t.getName().startsWith(silentPrefix)) t.setTau(true);
+		}
+		
 		PTNetStepper stepper = new PTNetStepper(ptnet, globalconditions, transitionguardmap);
 		
 		Marking marking = stepper.getInitialMarking();
