@@ -14,7 +14,8 @@ import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
-import nl.rug.ds.bpm.util.comparator.MarkingComparator;
+import nl.rug.ds.bpm.util.comparator.PairComparator;
+import nl.rug.ds.bpm.util.pair.Pair;
 
 /**
  * Created by Nick van Beest on 10 May 2018
@@ -38,7 +39,7 @@ public class PESPrefixUnfolding {
 	private Map<Integer, Integer> ccmap; // from cutoff to corresponding
 	private Map<Integer, Integer> tmpcc;
 	
-	private Set<Marking> visited;
+	private Set<Pair<Marking, Transition>> visited;
 		
 	private int initial, sink;
 	
@@ -64,7 +65,7 @@ public class PESPrefixUnfolding {
 		ccmap = new HashMap<Integer, Integer>();
 		tmpcc = new HashMap<Integer, Integer>();
 		
-		visited = new TreeSet<Marking>(new MarkingComparator());
+		visited = new TreeSet<Pair<Marking,Transition>>(new PairComparator<Marking, Transition>());
 		
 		buildPES(ptnet, globalconditions, transitionguardmap, silentPrefix);
 	}
@@ -79,7 +80,7 @@ public class PESPrefixUnfolding {
 		Marking marking = stepper.getInitialMarking();
 		
 		progressPES(stepper, marking, null);
-		
+
 		fillDirectConflictRelations();
 		fillConflictRelations();
 	}
@@ -105,15 +106,17 @@ public class PESPrefixUnfolding {
 		
 		// fill in causality
 		Marking next;
+		
 		for (Transition selected: enabled) {
 			
 			addLabel(selected);
 			
-			if ((!visited.contains(marking)) || (!isCausal(last, selected))) {
-				visited.add(marking);
+			if ((!visited.contains(new Pair<Marking, Transition>(marking, selected))) || (!isCausal(last, selected))) {
+					
+				visited.add(new Pair<Marking, Transition>(marking, selected));
 				
 				next = stepper.fireTransition(marking, selected);
-					
+
 				if (last != null) {
 					if (!isConcurrent(last, selected)) {
 						addSuccessor(fulllabels.indexOf(last.toString()), fulllabels.indexOf(selected.toString()));
@@ -134,11 +137,12 @@ public class PESPrefixUnfolding {
 	
 	private BitSet fillTransitiveSuccessors(int e, BitSet past) {
 		BitSet succ = new BitSet();
-		
+
 		if (e != sink) {
 			BitSet npast = new BitSet();
 			npast.or(past);
 			npast.set(e);
+
 			for (int p = dsucc.get(e).nextSetBit(0); p >= 0; p = dsucc.get(e).nextSetBit(p + 1)) {
 				if (!past.get(p)) {
 					succ.set(p);
@@ -193,7 +197,7 @@ public class PESPrefixUnfolding {
 	
 	private void fillConflictRelations() {
 		BitSet conf;
-		
+
 		fillTransitiveSuccessors(initial, new BitSet());
 		fillTransitivePredecessors(sink, new BitSet());
 		
