@@ -266,8 +266,9 @@ public class PESPrefixUnfolding {
 		dpred.get(target).set(source);
 		if (dpred.get(target).cardinality() > 1)  {
 			BitSet tmp = new BitSet();
-			tmp.or(concurrency.get(source));
-			tmp.xor(dpred.get(target));
+//			tmp.or(concurrency.get(source));
+			tmp.or(dpred.get(target));
+			tmp.andNot(concurrency.get(source));
 			if ((tmp.cardinality() > 1) && (!correspondings.get(source))) {
 				cutoffs.set(source);
 				
