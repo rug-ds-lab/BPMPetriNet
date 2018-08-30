@@ -1,12 +1,5 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import nl.rug.ds.bpm.expression.Expression;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
@@ -28,7 +21,12 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Role;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
+import nl.rug.ds.bpm.util.log.LogEvent;
+import nl.rug.ds.bpm.util.log.Logger;
 import nl.rug.ds.bpm.util.set.Sets;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlaceTransitionNet implements TransitionGraph {
 	protected HashMap<String, Node> nodes;
@@ -624,6 +622,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 						m.addTokens(p.getId(), p.getTokens());
 		} catch (IllegalMarkingException e) {
 			m = new Marking();
+			Logger.log(e.getMessage(), LogEvent.ERROR);
 			e.printStackTrace();
 		}
 			
@@ -736,6 +735,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 					marking.addTokens(out.getTarget().getId(), out.getWeight());
 			} catch (IllegalMarkingException e) {
 				marking = (Marking) m.clone();
+				Logger.log(e.getMessage(), LogEvent.ERROR);
 				e.printStackTrace();
 			}
 		}

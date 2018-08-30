@@ -15,6 +15,8 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.NetContainer;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process.Variable;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
+import nl.rug.ds.bpm.util.log.LogEvent;
+import nl.rug.ds.bpm.util.log.Logger;
 
 import javax.script.*;
 import java.util.HashSet;
@@ -57,6 +59,7 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 						m.addTokens(p.getId(), p.getTokens());
 		} catch (IllegalMarkingException e) {
 			m = new DataMarking();
+			Logger.log(e.getMessage(), LogEvent.ERROR);
 			e.printStackTrace();
 		}
 		
