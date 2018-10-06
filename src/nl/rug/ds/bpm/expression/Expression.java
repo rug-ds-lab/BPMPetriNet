@@ -101,9 +101,16 @@ public class Expression<T> {
 	}
 	
 	// This method checks whether this SOMETIMES contradicts other
+	// This function is asymmetric:
+	// it checks whether the range of values in "other" can potentially be outside the domain of values allowed by "this"
 	@SuppressWarnings({ "rawtypes" })
 	public Boolean canContradict(Expression other) {		
-		return ((contradicts(other)) || (other.type != this.type) || (!other.value.equals(this.value)));
+		if (this.variablename.equals(other.variablename)) {
+			return !((overlaps(other) == 0) || (overlaps(other) == 1));
+		}
+		else {
+			return false;
+		}
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -142,6 +149,9 @@ public class Expression<T> {
 					else 
 						return -1;
 				}
+				else if ((other.type == ExpressionType.EQ) || (other.type == ExpressionType.NEQ)) {
+					return 1;
+				}
 				else {
 					return 2;
 				}
@@ -164,6 +174,9 @@ public class Expression<T> {
 						return 1;
 					else 
 						return -1;
+				}
+				else if ((other.type == ExpressionType.EQ) || (other.type == ExpressionType.NEQ)) {
+					return 1;
 				}
 				else {
 					return 2;
@@ -188,6 +201,9 @@ public class Expression<T> {
 					else 
 						return 1;
 				}
+				else if ((other.type == ExpressionType.EQ) || (other.type == ExpressionType.NEQ)) {
+					return 1;
+				}
 				else {
 					return 2;
 				}
@@ -210,6 +226,9 @@ public class Expression<T> {
 						return -1;
 					else 
 						return 1;
+				}
+				else if ((other.type == ExpressionType.EQ) || (other.type == ExpressionType.NEQ)) {
+					return 1;
 				}
 				else {
 					return 2;
