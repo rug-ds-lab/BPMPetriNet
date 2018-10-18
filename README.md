@@ -39,6 +39,8 @@ Arc a1 = pn.addArc(t1, p2);                                     //Add another ar
 Marking m = pn.getInitialMarking();                             //Retrieve the initial marking
 Transition t = pn.getEnabledTransitions(m).iterator().next();   //Retrieve an enabled transition
 Marking n = pn.fire(t, m);                                      //Fire the transition
+
+PTNetMarshaller pnm = new PTNetMarshaller(pnset, file));        //Write the pnml file
 ```
 
 ### Implementing your own Petri net format
