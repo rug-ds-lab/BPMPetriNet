@@ -47,7 +47,7 @@ PTNetMarshaller pnm = new PTNetMarshaller(pnset, file));        //Write the pnml
 To use the unfolding functionality provided by this package and the verification functionality
 provided by the [BPMVerification package](https://github.com/rug-ds-lab/BPMVerification) with
 your custom net implementations, the following elements of the Petri net should implement a
-number of interfaces:
+number of interfaces provided in nl.rug.ds.bpm.petrinet.interfaces.
 
 Petri net:
 * Unfolding
