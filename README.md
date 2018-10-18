@@ -53,11 +53,14 @@ Petri net:
 * Unfolding
 * TransitionGraph (optional, for verification)
 * DataDrivenGraph (optional, for data driven verification)
+
 Marking:
 * M
 * ConditionalM (optional, for conditional verification)
 * DataM (optional, for data driven verification)
+
 Place:
 * P
+
 Transition:
 * T
