@@ -3,7 +3,9 @@ The BPMPetriNet package provides a Petri net implementation for Business Process
 
 The package provides the following functionality:
 * Several place/transition net implementations
-* (Un)Marshalling place/transition nets (from) to pnml format
+  * Place/transition net
+  * Data-driven net
+* (Un)Marshalling place/transition nets (from) to [pnml](http://www.pnml.org/) format
 * Unfolding place/transition nets into an event structure
 * Conditional evaluation of guards using expressions
 
@@ -22,7 +24,7 @@ The package is structured as followed:
 ### Usage
 The package provides its core functionalities as follows:
 
-```Java
+```java
 PTNetUnmarshaller pnu = new PTNetUnmarshaller(file);            //Read the pnml file
 Set<Net> pnset = pnu.getNets();                                 //Retrieve the different nets from the file
 Net net = pnset.iterator().next();                              //Retrieve a pnml place/transition net
@@ -43,9 +45,30 @@ Marking n = pn.fire(t, m);                                      //Fire the trans
 PTNetMarshaller pnm = new PTNetMarshaller(pnset, file));        //Write the pnml file
 ```
 
+### Toolspecific BPM extensions of the pnml file format
+The package extends the pnml format with two BPM specific xml blocks.
+
+**1) Process block**
+
+The process block is part of a net and allows for the specification of global process information on:
+* groups,
+* roles, and
+* variables. 
+
+**2) Task block**
+
+The task block is part of a transition and allows for the specification of:
+* parent (i.e., the id of the group to which it may belong),
+* actor (i.e., the id of the role performing the task),
+* unitsoftime (i.e., an abstract unit of time it may take to fire the transition),
+* guard (i.e., the Boolean expression that must hold to fire the transition),
+* isTau (i.e., whether the transition is silent or not),
+* subProcess (i.e., the id of a net that contains the sub-process linked to the transition), and
+* script (i.e., a piece of JavaScript that simulates some execution of the transition for data-driven nets).
+
 ### Implementing your own Petri net format
 To use the unfolding functionality provided by this package and the verification functionality
-provided by the [BPMVerification package](https://github.com/rug-ds-lab/BPMVerification) with
+provided by the [BPMVerification](https://github.com/rug-ds-lab/BPMVerification) package with
 your custom net implementations, the following elements of the Petri net should implement a
 number of interfaces provided in nl.rug.ds.bpm.petrinet.interfaces.
 
