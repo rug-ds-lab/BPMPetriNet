@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.petrinet.interfaces.element;
 
-import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.expression.CompositeExpression;
 
 /**
  * Created by Heerko Groefsema on 14-May-18.
@@ -8,6 +8,6 @@ import nl.rug.ds.bpm.expression.Expression;
 public interface T {
 	String getId();
 	String getName();
-	Expression<?> getGuard();
+	CompositeExpression getGuard();
 	boolean isTau();
 }

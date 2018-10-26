@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.petrinet.ptnet.element;
 
-import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.ToolSpecific;
@@ -9,7 +9,7 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.task.Script;
 
 public class Transition extends Node implements T {
 	private Task task;
-	private Expression<?> guard;
+	private CompositeExpression guard;
 
 	public Transition(String id) {
 		xmlElement = new nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.node.transition.Transition(id);
@@ -38,7 +38,7 @@ public class Transition extends Node implements T {
 		} catch (NullPointerException e) {}
 	}
 
-	public Expression<?> getGuard() {
+	public CompositeExpression getGuard() {
 		return guard;
 	}
 

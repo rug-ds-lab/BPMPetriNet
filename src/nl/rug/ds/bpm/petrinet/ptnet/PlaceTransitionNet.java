@@ -1,6 +1,13 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
-import nl.rug.ds.bpm.expression.Expression;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
@@ -24,9 +31,6 @@ import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.log.LogEvent;
 import nl.rug.ds.bpm.util.log.Logger;
 import nl.rug.ds.bpm.util.set.Sets;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class PlaceTransitionNet implements TransitionGraph {
 	protected HashMap<String, Node> nodes;
@@ -659,7 +663,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 	private boolean isEnabledUnderCondition(T t, ConditionalM m) {
 		boolean enabled = true;
 		if(t.getGuard() != null) {
-			Iterator<Expression<?>> guardIterator = m.getConditions().iterator();
+			Iterator<CompositeExpression> guardIterator = m.getConditions().iterator();
 
 			while (enabled && guardIterator.hasNext())
 				enabled = !t.getGuard().contradicts(guardIterator.next());

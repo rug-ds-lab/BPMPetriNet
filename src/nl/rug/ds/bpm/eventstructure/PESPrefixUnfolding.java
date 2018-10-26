@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
-import nl.rug.ds.bpm.expression.Expression;
+import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
@@ -44,10 +44,10 @@ public class PESPrefixUnfolding {
 	private int initial, sink;
 	
 	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) {
-		this(ptnet, new HashSet<Expression<?>>(), new HashMap<Transition, Set<Expression<?>>>(), silentPrefix);
+		this(ptnet, new HashSet<CompositeExpression>(), new HashMap<Transition, Set<CompositeExpression>>(), silentPrefix);
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap, String silentPrefix) {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, Map<Transition, Set<CompositeExpression>> transitionguardmap, String silentPrefix) {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -70,7 +70,7 @@ public class PESPrefixUnfolding {
 		buildPES(ptnet, globalconditions, transitionguardmap, silentPrefix);
 	}
 	
-	private void buildPES(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap, String silentPrefix) {
+	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, Map<Transition, Set<CompositeExpression>> transitionguardmap, String silentPrefix) {
 		for (Transition t: ptnet.getTransitions()) {
 			if (t.getName().startsWith(silentPrefix)) t.setTau(true);
 		}

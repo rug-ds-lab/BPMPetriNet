@@ -1,11 +1,11 @@
 package nl.rug.ds.bpm.expression;
 
-public class Expression<T> {
+public class AtomicExpression<T> {
 	private T value;
 	private String variablename;
 	private ExpressionType type;
 	
-	public Expression(String variablename, ExpressionType type, T value) {
+	public AtomicExpression(String variablename, ExpressionType type, T value) {
 		this.variablename = variablename;
 		this.type = type;
 		this.value = value;
@@ -47,7 +47,7 @@ public class Expression<T> {
 	
 	// This method checks whether this ALWAYS contradicts other
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Boolean contradicts(Expression other) {
+	public Boolean contradicts(AtomicExpression other) {
 		if ((this.getClass().equals(other.getClass())) && (this.getVariableName().equals(other.getVariableName()))) {
 			switch (type) {
 			case EQ:
@@ -104,7 +104,7 @@ public class Expression<T> {
 	// This function is asymmetric:
 	// it checks whether the range of values in "other" can potentially be outside the domain of values allowed by "this"
 	@SuppressWarnings({ "rawtypes" })
-	public Boolean canContradict(Expression other) {		
+	public Boolean canContradict(AtomicExpression other) {		
 		if (this.variablename.equals(other.variablename)) {
 			return !((overlaps(other) == 0) || (overlaps(other) == 1));
 		}
@@ -114,7 +114,7 @@ public class Expression<T> {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public int overlaps(Expression other) {
+	public int overlaps(AtomicExpression other) {
 		// this function returns:
 		// 0 when ranges are identical (this+other)
 		// 1 when this has a larger range than other (this+other, this)

@@ -1,20 +1,25 @@
 package nl.rug.ds.bpm.petrinet.ptnet.marking;
 
-import nl.rug.ds.bpm.expression.Expression;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
+import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.util.comparator.StringComparator;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 
-import java.util.*;
-
 /**
  * Created by Nick van Beest 26-Apr-17.
  */
 public class Marking implements ConditionalM, Comparable<M> {
 	private SortedMap<String, Integer> tokenmap;
-	private HashMap<String, Expression<?>> conditions;
+	private HashMap<String, CompositeExpression> conditions;
 	
 	public Marking() {
 		tokenmap = new TreeMap<String, Integer>(new StringComparator());
@@ -112,12 +117,12 @@ public class Marking implements ConditionalM, Comparable<M> {
 		conditions.remove(condition);
 	}
 	
-	public void setConditions(HashMap<String, Expression<?>> conditions) {
+	public void setConditions(HashMap<String, CompositeExpression> conditions) {
 		this.conditions = conditions;
 	}
 	
 	@Override
-	public Collection<Expression<?>> getConditions() {
+	public Collection<CompositeExpression> getConditions() {
 		return conditions.values();
 	}
 	
@@ -138,7 +143,7 @@ public class Marking implements ConditionalM, Comparable<M> {
 	public Marking clone() {
 		Marking marking = new Marking();
 		marking.copyFromMarking(this);
-		HashMap<String, Expression<?>> c = new HashMap<>();
+		HashMap<String, CompositeExpression> c = new HashMap<>();
 		c.putAll(conditions);
 		marking.setConditions(c);
 		return marking;
