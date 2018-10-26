@@ -1,6 +1,16 @@
 package nl.rug.ds.bpm.eventstructure.stepper;
 
-import nl.rug.ds.bpm.expression.Expression;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
@@ -10,8 +20,6 @@ import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 import nl.rug.ds.bpm.util.comparator.StringComparator;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.set.Sets;
-
-import java.util.*;
 
 /**
  * Created by Nick van Beest on 10-05-2018
@@ -23,16 +31,16 @@ public class PTNetStepper {
 	private Map<String, Set<String>> transitionIdmap;
 	
 	// these are the guards on transitions
-	private Map<Transition, Set<Expression<?>>> transitionguardmap; 
+	private Map<Transition, Set<CompositeExpression>> transitionguardmap; 
 	
 	// these are the global conditions that hold for the ctl spec to be evaluated (and hence apply to the entire process)
-	private Set<Expression<?>> globalconditions; 
+	private Set<CompositeExpression> globalconditions; 
 	
 	public PTNetStepper(PlaceTransitionNet ptnet) {
-		this(ptnet, new HashSet<Expression<?>>(), new HashMap<Transition, Set<Expression<?>>>());
+		this(ptnet, new HashSet<CompositeExpression>(), new HashMap<Transition, Set<CompositeExpression>>());
 	}
 	
-	public PTNetStepper(PlaceTransitionNet ptnet, Set<Expression<?>> globalconditions, Map<Transition, Set<Expression<?>>> transitionguardmap) {
+	public PTNetStepper(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, Map<Transition, Set<CompositeExpression>> transitionguardmap) {
 		this.ptnet = ptnet;
 		initializeTransitionMaps();
 		initializePlaceMap();
@@ -100,8 +108,8 @@ public class PTNetStepper {
 	private Boolean contradictsConditions(Transition t) {
 		if ((globalconditions.size() == 0) || (!transitionguardmap.containsKey(t))) return false;
 
-		for (Expression<?> global: globalconditions) {
-			for (Expression<?> guard: transitionguardmap.get(t)) {
+		for (CompositeExpression global: globalconditions) {
+			for (CompositeExpression guard: transitionguardmap.get(t)) {
 				if (guard.contradicts(global)) return true;
 			}
 		}
@@ -111,9 +119,9 @@ public class PTNetStepper {
 	
 	private Boolean haveContradiction(Transition t1, Transition t2) {
 		if (transitionguardmap.containsKey(t1)) {
-			for (Expression<?> e1 : transitionguardmap.get(t1)) {
+			for (CompositeExpression e1 : transitionguardmap.get(t1)) {
 				if (transitionguardmap.containsKey(t2)) {
-					for (Expression<?> e2 : transitionguardmap.get(t2)) {
+					for (CompositeExpression e2 : transitionguardmap.get(t2)) {
 						if (e1.contradicts(e2)) return true;
 					}
 				}
@@ -125,9 +133,9 @@ public class PTNetStepper {
 	
 	private Boolean canHaveContradiction(Transition t1, Transition t2) {
 		if (transitionguardmap.containsKey(t1)) {
-			for (Expression<?> e1 : transitionguardmap.get(t1)) {
+			for (CompositeExpression e1 : transitionguardmap.get(t1)) {
 				if (transitionguardmap.containsKey(t2)) {
-					for (Expression<?> e2 : transitionguardmap.get(t2)) {
+					for (CompositeExpression e2 : transitionguardmap.get(t2)) {
 						if (e1.canContradict(e2)) return true;
 					}
 				}
@@ -172,28 +180,28 @@ public class PTNetStepper {
 		return transitionIdmap;
 	}
 	
-	public void setConditionsByExpression(Set<Expression<?>> conditions) {
-		this.globalconditions = new HashSet<Expression<?>>(conditions);
+	public void setConditionsByExpression(Set<CompositeExpression> conditions) {
+		this.globalconditions = new HashSet<CompositeExpression>(conditions);
 	}
 	
 	public void setConditions(Set<String> conditions) {
-		globalconditions = new HashSet<Expression<?>>();
+		globalconditions = new HashSet<CompositeExpression>();
 		
 		for (String c: conditions) {
 			globalconditions.add(ExpressionBuilder.parseExpression(c));
 		}
 	}
 	
-	public Set<Expression<?>> getConditions() {
+	public Set<CompositeExpression> getConditions() {
 		return globalconditions;
 	}
 	
-	public void setTransitionGuardsByExpression(Map<Transition, Set<Expression<?>>> guardmap) {
-		this.transitionguardmap = new HashMap<Transition, Set<Expression<?>>>(guardmap);
+	public void setTransitionGuardsByExpression(Map<Transition, Set<CompositeExpression>> guardmap) {
+		this.transitionguardmap = new HashMap<Transition, Set<CompositeExpression>>(guardmap);
 	}
 	
 	public void setTransitionGuards(Set<String> guards) {
-		transitionguardmap = new HashMap<Transition, Set<Expression<?>>>();
+		transitionguardmap = new HashMap<Transition, Set<CompositeExpression>>();
 		
 		Transition tr;
 		String t, guard;
@@ -202,19 +210,19 @@ public class PTNetStepper {
 			guard = g.substring(g.indexOf(":") + 1).trim();
 			
 			tr = ptnet.getTransition(t);
-			if (!transitionguardmap.containsKey(tr)) transitionguardmap.put(tr, new HashSet<Expression<?>>());
+			if (!transitionguardmap.containsKey(tr)) transitionguardmap.put(tr, new HashSet<CompositeExpression>());
 			
 			transitionguardmap.get(tr).add(ExpressionBuilder.parseExpression(guard));
 		}
 	}
 	
 	public void setTransitionGuards(Map<String, Set<String>> guardmap) {
-		transitionguardmap = new HashMap<Transition, Set<Expression<?>>>();
+		transitionguardmap = new HashMap<Transition, Set<CompositeExpression>>();
 		
 		Transition tr;
 		for (String t: guardmap.keySet()) {
 			tr = ptnet.getTransition(t);
-			if (!transitionguardmap.containsKey(tr)) transitionguardmap.put(tr, new HashSet<Expression<?>>());
+			if (!transitionguardmap.containsKey(tr)) transitionguardmap.put(tr, new HashSet<CompositeExpression>());
 			
 			for (String c: guardmap.get(t)) {
 				transitionguardmap.get(tr).add(ExpressionBuilder.parseExpression(c));
@@ -222,7 +230,7 @@ public class PTNetStepper {
 		}
 	}
 	
-	public Map<Transition, Set<Expression<?>>> getTransitionGuards() {
+	public Map<Transition, Set<CompositeExpression>> getTransitionGuards() {
 		return transitionguardmap;
 	}
 	
