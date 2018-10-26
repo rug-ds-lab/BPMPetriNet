@@ -1,17 +1,54 @@
 package nl.rug.ds.bpm.expression;
 
+import java.util.HashSet;
+
 public class ExpressionBuilder {
+
+	public static CompositeExpression parseExpression(String expression) {
+		CompositeExpression exp = new CompositeExpression(new HashSet<CompositeExpression>(), LogicalType.XOR);
 	
-	public static Expression<?> parseExpression(String expression) {
-		String operator = getOperator(expression);
-		String name = expression.substring(0, expression.indexOf(operator)).trim();
-		return parseExpression(name, expression);
+		int left = expression.indexOf("(");
+		int right = -1;
+		
+		if (left == -1) {
+			exp = new CompositeExpression(parseAtomicExpression(expression));
+		}
+		else {
+			right = getMatchingBracket(expression, left);
+			if (right == -1) return exp;
+
+			if (right == expression.length() - 1) {
+				return parseExpression(expression.substring(left + 1, right));
+			}
+			else {
+				if (expression.indexOf(" || ") == right + 1) {
+					exp.setType(LogicalType.XOR);
+				}
+				else {
+					exp.setType(LogicalType.AND);
+				}
+				
+				exp.addArgument(parseExpression(expression.substring(left, right + 1)));
+				
+				left = right + 5;
+				right = getMatchingBracket(expression, left);
+				exp.addArgument(parseExpression(expression.substring(left, right + 1)));
+			}
+		}
+		
+		return exp;
 	}
 	
-	public static Expression<?> parseExpression(String variablename, String expression) {		
+	public static AtomicExpression<?> parseAtomicExpression(String expression) {
+		String operator = getOperator(expression);
+		String name = expression.substring(0, expression.indexOf(operator)).trim();
+		return parseAtomicExpression(name, expression);
+	}
+	
+	public static AtomicExpression<?> parseAtomicExpression(String variablename, String expression) {		
 		String operator;
 		ExpressionType et;
-		Expression<?> exp;
+		AtomicExpression<?> exp;
 
 		expression = expression.replace(variablename, "").trim();
 		operator = getOperator(expression);
@@ -36,13 +73,32 @@ public class ExpressionBuilder {
 		expression = expression.replace(operator, "").trim();
 		
 		if (isNumeric(expression)) {
-			exp = new Expression<Double>(variablename, et, Double.parseDouble(expression));
+			exp = new AtomicExpression<Double>(variablename, et, Double.parseDouble(expression));
 		}
 		else {
-			exp = new Expression<String>(variablename, et, expression);
+			exp = new AtomicExpression<String>(variablename, et, expression);
 		}
 		
 		return exp;
+	}
+	
+	private static int getMatchingBracket(String expression, int left) {
+		int lvl = 1;
+		
+		if (left == -1) {
+			return -1;
+		}
+		else {
+			int cur = left;
+			while ((lvl > 0) && (cur < expression.length() - 1)) {
+				cur++;
+				if (expression.charAt(cur) == '(') lvl++;
+				if (expression.charAt(cur) == ')') lvl--;
+			}
+			if (lvl > 0) return -1;
+			
+			return cur;
+		}
 	}
 	
 	private static String getOperator(String expression) {
