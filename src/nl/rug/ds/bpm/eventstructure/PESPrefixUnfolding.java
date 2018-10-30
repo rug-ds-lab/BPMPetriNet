@@ -2,6 +2,7 @@ package nl.rug.ds.bpm.eventstructure;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,11 +10,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import nl.rug.ds.bpm.eventstructure.stepper.PTNetStepper;
 import nl.rug.ds.bpm.expression.CompositeExpression;
+import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
-import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 import nl.rug.ds.bpm.util.comparator.PairComparator;
 import nl.rug.ds.bpm.util.pair.Pair;
 
@@ -39,7 +41,7 @@ public class PESPrefixUnfolding {
 	private Map<Integer, Integer> ccmap; // from cutoff to corresponding
 	private Map<Integer, Integer> tmpcc;
 	
-	private Set<Pair<Marking, Transition>> visited;
+	private Set<Pair<M, T>> visited;
 		
 	private int initial, sink;
 	
@@ -65,7 +67,7 @@ public class PESPrefixUnfolding {
 		ccmap = new HashMap<Integer, Integer>();
 		tmpcc = new HashMap<Integer, Integer>();
 		
-		visited = new TreeSet<Pair<Marking,Transition>>(new PairComparator<Marking, Transition>());
+		visited = new TreeSet<Pair<M,T>>(new PairComparator<M, T>());
 		
 		buildPES(ptnet, globalconditions, transitionguardmap, silentPrefix);
 	}
@@ -75,25 +77,31 @@ public class PESPrefixUnfolding {
 			if (t.getName().startsWith(silentPrefix)) t.setTau(true);
 		}
 		
-		PTNetStepper stepper = new PTNetStepper(ptnet, globalconditions, transitionguardmap);
+//		PTNetStepper stepper = new PTNetStepper(ptnet, globalconditions, transitionguardmap);
 		
-		Marking marking = stepper.getInitialMarking();
 		
-		progressPES(stepper, marking, null);
+		
+		ConditionalM marking = ptnet.getInitialMarking();
+		
+		for (CompositeExpression e: globalconditions) {
+			marking.addCondition(e.toString(), e);
+		}
+		
+		progressPES(ptnet, marking, null);
 
 		fillDirectConflictRelations();
 		fillConflictRelations();
 	}
 	
-	private void progressPES(PTNetStepper stepper, Marking marking, Transition last) {
-		Set<Transition> enabled = stepper.getEnabledTransitions(marking);
-		Set<Set<Transition>> parenabled = stepper.parallelActivatedTransitions(marking);
+	private void progressPES(PlaceTransitionNet ptnet, ConditionalM marking, T last) {
+		Collection<? extends T> enabled = ptnet.getEnabledTransitions(marking);
+		Set<? extends Set<? extends T>> parenabled = ptnet.getParallelEnabledTransitions(marking);
 		
 		// fill in concurrency
 		BitSet partialconc;
-		for (Set<Transition> conc: parenabled) {
+		for (Set<? extends T> conc: parenabled) {
 			partialconc = new BitSet();
-			for (Transition c: conc) {
+			for (T c: conc) {
 				addLabel(c);
 				partialconc.set(fulllabels.indexOf(c.getId() + "_" + c.getName()));
 			}
@@ -105,17 +113,17 @@ public class PESPrefixUnfolding {
 		}
 		
 		// fill in causality
-		Marking next;
+		ConditionalM next;
 		
-		for (Transition selected: enabled) {
+		for (T selected: enabled) {
 			
 			addLabel(selected);
 			
-			if ((!visited.contains(new Pair<Marking, Transition>(marking, selected))) || (!isCausal(last, selected))) {
+			if ((!visited.contains(new Pair<M, T>(marking, selected))) || (!isCausal(last, selected))) {
 					
-				visited.add(new Pair<Marking, Transition>(marking, selected));
+				visited.add(new Pair<M, T>(marking, selected));
 				
-				next = stepper.fireTransition(marking, selected);
+				next = (ConditionalM) ptnet.fire(selected, marking);
 
 				if (last != null) {
 					if (!isConcurrent(last, selected)) {
@@ -126,7 +134,7 @@ public class PESPrefixUnfolding {
 					initial = fulllabels.indexOf(selected.toString());
 				}
 				
-				progressPES(stepper, next, selected);
+				progressPES(ptnet, next, selected);
 			}
 		}
 		
@@ -213,7 +221,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private void addLabel(Transition tr) {
+	private void addLabel(T tr) {
 		String label = tr.toString();
 		
 		if (!fulllabels.contains(label)) {
@@ -224,7 +232,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private Boolean isCausal(Transition t1, Transition t2) {
+	private Boolean isCausal(T t1, T t2) {
 		int index1, index2;
 		
 		if ((t1 == null) || (t2 == null)) return false;
@@ -241,7 +249,7 @@ public class PESPrefixUnfolding {
 		return false;
 	}
 	
-	private Boolean isConcurrent(Transition t1, Transition t2) {
+	private Boolean isConcurrent(T t1, T t2) {
 		int index1, index2;
 		
 		if ((t1 == null) || (t2 == null)) return false;

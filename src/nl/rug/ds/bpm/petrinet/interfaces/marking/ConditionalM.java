@@ -13,5 +13,6 @@ public interface ConditionalM extends M {
 	Collection<CompositeExpression> getConditions();
 
 	void addCondition(String condition);
+	void addCondition(String condition, CompositeExpression expression);
 	void removeCondition(String condition);
 }

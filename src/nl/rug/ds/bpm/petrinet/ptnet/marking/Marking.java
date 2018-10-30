@@ -113,6 +113,10 @@ public class Marking implements ConditionalM, Comparable<M> {
 		conditions.put(condition, ExpressionBuilder.parseExpression(condition));
 	}
 	
+	public void addCondition(String condition, CompositeExpression expression) {
+		conditions.put(condition, expression);
+	}
+	
 	public void removeCondition(String condition) {
 		conditions.remove(condition);
 	}

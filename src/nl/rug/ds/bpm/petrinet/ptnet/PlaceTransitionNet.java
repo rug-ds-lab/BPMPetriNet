@@ -763,20 +763,25 @@ public class PlaceTransitionNet implements TransitionGraph {
 			Iterator<? extends T> otherIterator = enabled.iterator();
 			while (isParSet && otherIterator.hasNext()) {
 				T t = otherIterator.next();
-				if (!parSet.contains(t))
-					isParSet = !isParallelEnabled(parSet, t, marking); //|| canHaveContradiction(parSet, t);
+				if (!parSet.contains(t)) {
+					isParSet = !isParallelEnabled(parSet, t, marking) || canHaveContradiction(parSet, t);
+				}
 			}
-			if(isParSet)
+			if (isParSet) {
 				ypar.add(parSet);
+			}
 		}
 
 		return ypar;
 	}
 
 	//checks whether parset can have contradiction with parset + t
-	protected boolean canHaveContradiction(Set<T> parSet, T t) {
-		//TODO awaiting Expression
-		return true;
+	protected boolean canHaveContradiction(Set<? extends T> parSet, T t) {		
+		for (T ps: parSet) {
+			if (ps.getGuard().canContradict(t.getGuard())) return true;
+		}
+		
+		return false;
 	}
 	
 	private boolean areContradictory(T t1, T t2) {
