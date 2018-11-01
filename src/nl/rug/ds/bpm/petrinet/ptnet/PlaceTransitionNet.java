@@ -777,6 +777,8 @@ public class PlaceTransitionNet implements TransitionGraph {
 
 	//checks whether parset can have contradiction with parset + t
 	protected boolean canHaveContradiction(Set<? extends T> parSet, T t) {		
+		if (t.getGuard() == null) return false;
+		
 		for (T ps: parSet) {
 			if (ps.getGuard().canContradict(t.getGuard())) return true;
 		}

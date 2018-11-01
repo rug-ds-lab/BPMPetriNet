@@ -46,10 +46,10 @@ public class PESPrefixUnfolding {
 	private int initial, sink;
 	
 	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) {
-		this(ptnet, new HashSet<CompositeExpression>(), new HashMap<Transition, Set<CompositeExpression>>(), silentPrefix);
+		this(ptnet, new HashSet<CompositeExpression>(), silentPrefix);
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, Map<Transition, Set<CompositeExpression>> transitionguardmap, String silentPrefix) {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -69,28 +69,26 @@ public class PESPrefixUnfolding {
 		
 		visited = new TreeSet<Pair<M,T>>(new PairComparator<M, T>());
 		
-		buildPES(ptnet, globalconditions, transitionguardmap, silentPrefix);
+		buildPES(ptnet, globalconditions, silentPrefix);
 	}
 	
-	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, Map<Transition, Set<CompositeExpression>> transitionguardmap, String silentPrefix) {
+	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) {
 		for (Transition t: ptnet.getTransitions()) {
 			if (t.getName().startsWith(silentPrefix)) t.setTau(true);
 		}
 		
-//		PTNetStepper stepper = new PTNetStepper(ptnet, globalconditions, transitionguardmap);
-		
-		
-		
 		ConditionalM marking = ptnet.getInitialMarking();
 		
-		for (CompositeExpression e: globalconditions) {
-			marking.addCondition(e.toString(), e);
+		if (marking.getMarkedPlaces().size() > 0) {	
+			for (CompositeExpression e: globalconditions) {
+				marking.addCondition(e.toString(), e);
+			}
+					
+			progressPES(ptnet, marking, null);
+	
+			fillDirectConflictRelations();
+			fillConflictRelations();
 		}
-		
-		progressPES(ptnet, marking, null);
-
-		fillDirectConflictRelations();
-		fillConflictRelations();
 	}
 	
 	private void progressPES(PlaceTransitionNet ptnet, ConditionalM marking, T last) {
