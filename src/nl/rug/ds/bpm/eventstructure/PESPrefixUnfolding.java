@@ -17,6 +17,7 @@ import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.util.comparator.PairComparator;
+import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.pair.Pair;
 
 /**
@@ -45,11 +46,11 @@ public class PESPrefixUnfolding {
 		
 	private int initial, sink;
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) throws IllegalMarkingException {
 		this(ptnet, new HashSet<CompositeExpression>(), silentPrefix);
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -72,7 +73,7 @@ public class PESPrefixUnfolding {
 		buildPES(ptnet, globalconditions, silentPrefix);
 	}
 	
-	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) {
+	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException {
 		for (Transition t: ptnet.getTransitions()) {
 			if (t.getName().startsWith(silentPrefix)) t.setTau(true);
 		}
@@ -88,6 +89,9 @@ public class PESPrefixUnfolding {
 	
 			fillDirectConflictRelations();
 			fillConflictRelations();
+		}
+		else {
+			throw new IllegalMarkingException("Input net has no initial marking");
 		}
 	}
 	
