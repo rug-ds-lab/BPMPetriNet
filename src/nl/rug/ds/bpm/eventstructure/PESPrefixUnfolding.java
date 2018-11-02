@@ -11,13 +11,16 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
+import nl.rug.ds.bpm.petrinet.interfaces.element.P;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.util.comparator.PairComparator;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
+import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.pair.Pair;
 
 /**
@@ -46,11 +49,11 @@ public class PESPrefixUnfolding {
 		
 	private int initial, sink;
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) throws IllegalMarkingException {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) throws IllegalMarkingException, MalformedNetException {
 		this(ptnet, new HashSet<CompositeExpression>(), silentPrefix);
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException {
+	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException, MalformedNetException {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -70,7 +73,30 @@ public class PESPrefixUnfolding {
 		
 		visited = new TreeSet<Pair<M,T>>(new PairComparator<M, T>());
 		
-		buildPES(ptnet, globalconditions, silentPrefix);
+		int sinkcount = 0;
+		P sinkplace = null;
+		for (P p: ptnet.getPlaces()) {
+			if (ptnet.getOutgoing((Place)p).size() == 0) {
+				sinkcount++;
+				sinkplace = p;
+			}
+		}
+		
+		// sinkcount must be 1, otherwise it is not a proper workflow net
+		if (sinkcount == 1) {
+			if (ptnet.getIncoming((Place)sinkplace).size() > 1) {
+				T artificialEnd = new Transition("artificial_end", "silentEnd");
+				P artificialSink = new Place("artificial_sink", "artificialSink");
+				
+				ptnet.addTransition((Transition)artificialEnd);
+				ptnet.addPlace((Place)artificialSink);
+				ptnet.addArc((Place)sinkplace, (Transition)artificialEnd);
+				ptnet.addArc((Transition)artificialEnd, (Place)artificialSink);
+			}
+			
+			buildPES(ptnet, globalconditions, silentPrefix);
+		}
+		
 	}
 	
 	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException {
