@@ -206,6 +206,55 @@ public class CompositeExpression {
 		return false;
 	}
 	
+	// This function checks whether this is being fulfilled by other
+	// That is, other sets the condition of this to true
+	@SuppressWarnings("rawtypes")
+	public Boolean isFulfilledBy(AtomicExpression other) {
+		if (atomic) return this.expression.isFulfilledBy(other);
+		
+		return false;
+	}
+	
+	// This function checks whether this is being fulfilled by other
+	// That is, other sets the condition of this to true
+	public Boolean isFulfilledBy(CompositeExpression other) {
+		if (!contradicts(other)) {
+			Set<String> varnames = getVariableNames();
+			varnames.removeAll(other.getVariableNames());
+			return (varnames.size() == 0);
+		}
+		
+		return false;
+	}
+		
+	public Boolean containsVariable(String varname) {
+		if (atomic) {
+			return this.expression.getVariableName().equals(varname);
+		}
+		else {
+			for (CompositeExpression e: arguments) {
+				if (e.containsVariable(varname)) return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public Set<String> getVariableNames() {
+		Set<String> varnames = new HashSet<String>();
+		
+		if (atomic) {
+			varnames.add(expression.getVariableName());
+		}
+		else {
+			for (CompositeExpression e: arguments) {
+				varnames.addAll(e.getVariableNames());
+			}
+		}
+		
+		return varnames;
+	}
+	
 	@Override
 	public String toString() {
 		String ex = "";

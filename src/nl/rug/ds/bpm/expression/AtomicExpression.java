@@ -239,6 +239,17 @@ public class AtomicExpression<T> {
 		return overlaps;
 	}
 	
+	// This function checks whether this is being fulfilled by other
+	// That is, other sets the condition of this to true
+	@SuppressWarnings("rawtypes")
+	public Boolean isFulfilledBy(AtomicExpression other) {
+		if (this.variablename.equals(other.variablename)) {
+			return !this.contradicts(other);
+		}
+		
+		return false;
+	}
+	
 	@Override
 	public String toString() {
 		String s = variablename;
