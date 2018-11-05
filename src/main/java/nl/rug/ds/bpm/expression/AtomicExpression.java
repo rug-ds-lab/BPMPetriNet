@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.expression;
 
-public class AtomicExpression<T> {
+public class AtomicExpression<T extends Comparable<T>> {
 	private T value;
 	private String variablename;
 	private ExpressionType type;
@@ -20,28 +20,24 @@ public class AtomicExpression<T> {
 	}
 	
 	public Boolean accepts(T value) {
-		switch (type) {
-		case EQ:
-			return (this.value.equals(value)); 
-		case NEQ:
-			return (!this.value.equals(value));
-		case LT:
-			if ((value instanceof Number) && (this.value instanceof Number)) {
-				return ((Double) value).doubleValue() < ((Double) this.value).doubleValue();
-			}
-		case LEQ:
-			if ((value instanceof Number) && (this.value instanceof Number)) {
-				return ((Double) value).doubleValue() <= ((Double) this.value).doubleValue();
-			}
-		case GT:
-			if ((value instanceof Number) && (this.value instanceof Number)) {
-				return ((Double) value).doubleValue() > ((Double) this.value).doubleValue();
-			}
-		case GEQ:
-			if ((value instanceof Number) && (this.value instanceof Number)) {
-				return ((Double) value).doubleValue() >= ((Double) this.value).doubleValue();
+		if ((value.getClass() == this.value.getClass()) || 
+				((value instanceof Number) && (this.value instanceof Number))) {
+			switch (type) {
+			case EQ:
+				return (this.value.equals(value)); 
+			case NEQ:
+				return (!this.value.equals(value));
+			case LT:
+				return (value.compareTo(this.value) < 0);
+			case LEQ:
+				return (value.compareTo(this.value) <= 0);
+			case GT:
+				return (value.compareTo(this.value) > 0);
+			case GEQ:
+				return (value.compareTo(this.value) >= 0);
 			}
 		}
+		
 		return false;
 	}
 	
