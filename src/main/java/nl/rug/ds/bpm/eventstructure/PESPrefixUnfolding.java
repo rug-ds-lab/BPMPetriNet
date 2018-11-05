@@ -15,11 +15,8 @@ import nl.rug.ds.bpm.petrinet.interfaces.element.P;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
-import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
-import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
-import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
+import nl.rug.ds.bpm.petrinet.interfaces.unfolding.UnfoldableNet;
 import nl.rug.ds.bpm.util.comparator.PairComparator;
-import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.pair.Pair;
 
@@ -49,11 +46,11 @@ public class PESPrefixUnfolding {
 		
 	private int initial, sink;
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, String silentPrefix) throws IllegalMarkingException, MalformedNetException {
+	public PESPrefixUnfolding(UnfoldableNet ptnet, String silentPrefix) throws MalformedNetException {
 		this(ptnet, new HashSet<CompositeExpression>(), silentPrefix);
 	}
 	
-	public PESPrefixUnfolding(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException, MalformedNetException {
+	public PESPrefixUnfolding(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws MalformedNetException {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -72,56 +69,47 @@ public class PESPrefixUnfolding {
 		tmpcc = new HashMap<Integer, Integer>();
 		
 		visited = new TreeSet<Pair<M,T>>(new PairComparator<M, T>());
-		
-		int sinkcount = 0;
-		P sinkplace = null;
-		for (P p: ptnet.getPlaces()) {
-			if (ptnet.getOutgoing((Place)p).size() == 0) {
-				sinkcount++;
-				sinkplace = p;
-			}
-		}
+
+		Collection<? extends P> sinks = ptnet.getSinks();
 		
 		// sinkcount must be 1, otherwise it is not a proper workflow net
-		if (sinkcount == 1) {
-			if (ptnet.getIncoming((Place)sinkplace).size() > 1) {
-				T artificialEnd = new Transition("artificial_end", "silentEnd");
-				P artificialSink = new Place("artificial_sink", "artificialSink");
-				
-				ptnet.addTransition((Transition)artificialEnd);
-				ptnet.addPlace((Place)artificialSink);
-				ptnet.addArc((Place)sinkplace, (Transition)artificialEnd);
-				ptnet.addArc((Transition)artificialEnd, (Place)artificialSink);
+		if (sinks.size() == 1) {
+			P sinkplace = sinks.iterator().next();
+			if (ptnet.getPreSet(sinkplace).size() > 1) {
+				ptnet.addTransition("artificial_end");
+				ptnet.addPlace("artificial_sink");
+				ptnet.addNext(sinkplace.getId(), "artificial_end");
+				ptnet.addNext("artificial_end", "artificial_sink");
+			}
+
+			for (T t: ptnet.getTransitions()) {
+				if (t.getName().startsWith(silentPrefix)) t.setTau(true);
 			}
 			
 			buildPES(ptnet, globalconditions, silentPrefix);
 		}
-		
+		else throw new MalformedNetException("Not a workflow net: Could not find a unique sink place.");
 	}
 	
-	private void buildPES(PlaceTransitionNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws IllegalMarkingException {
-		for (Transition t: ptnet.getTransitions()) {
-			if (t.getName().startsWith(silentPrefix)) t.setTau(true);
+	private void buildPES(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws MalformedNetException {
+		M marking = ptnet.getInitialMarking();
+		
+		if (marking.getMarkedPlaces().isEmpty()) {
+			throw new MalformedNetException("Initial marking empty, no tokens on any place.");
 		}
-		
-		ConditionalM marking = ptnet.getInitialMarking();
-		
-		if (marking.getMarkedPlaces().size() > 0) {	
-			for (CompositeExpression e: globalconditions) {
-				marking.addCondition(e.toString(), e);
-			}
+		else {
+			if(marking instanceof ConditionalM)
+				for (CompositeExpression e: globalconditions)
+					((ConditionalM)marking).addCondition(e.toString(), e);
 					
 			progressPES(ptnet, marking, null);
 	
 			fillDirectConflictRelations();
 			fillConflictRelations();
 		}
-		else {
-			throw new IllegalMarkingException("Input net has no initial marking");
-		}
 	}
 	
-	private void progressPES(PlaceTransitionNet ptnet, ConditionalM marking, T last) {
+	private void progressPES(UnfoldableNet ptnet, M marking, T last) {
 		Collection<? extends T> enabled = ptnet.getEnabledTransitions(marking);
 		Set<? extends Set<? extends T>> parenabled = ptnet.getParallelEnabledTransitions(marking);
 		
@@ -141,8 +129,6 @@ public class PESPrefixUnfolding {
 		}
 		
 		// fill in causality
-		ConditionalM next;
-		
 		for (T selected: enabled) {
 			
 			addLabel(selected);
@@ -150,8 +136,6 @@ public class PESPrefixUnfolding {
 			if ((!visited.contains(new Pair<M, T>(marking, selected))) || (!isCausal(last, selected))) {
 					
 				visited.add(new Pair<M, T>(marking, selected));
-				
-				next = (ConditionalM) ptnet.fire(selected, marking);
 
 				if (last != null) {
 					if (!isConcurrent(last, selected)) {
@@ -161,8 +145,11 @@ public class PESPrefixUnfolding {
 				else {
 					initial = fulllabels.indexOf(selected.toString());
 				}
-				
-				progressPES(ptnet, next, selected);
+
+				for (M next: ptnet.fireTransition(selected, marking))
+					progressPES(ptnet, next, selected);
+				// Returns a set because future nets with guards on arcs may
+				// produce multiple possible future markings (e.g., CPN).
 			}
 		}
 		

@@ -8,6 +8,9 @@ import nl.rug.ds.bpm.expression.CompositeExpression;
 public interface T {
 	String getId();
 	String getName();
+
 	CompositeExpression getGuard();
+
 	boolean isTau();
+	void setTau(boolean tau);
 }

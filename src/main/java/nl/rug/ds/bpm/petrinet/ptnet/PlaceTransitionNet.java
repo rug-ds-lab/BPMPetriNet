@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.element.P;
 import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
+import nl.rug.ds.bpm.petrinet.interfaces.unfolding.UnfoldableNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -32,7 +34,7 @@ import nl.rug.ds.bpm.util.log.LogEvent;
 import nl.rug.ds.bpm.util.log.Logger;
 import nl.rug.ds.bpm.util.set.Sets;
 
-public class PlaceTransitionNet implements TransitionGraph {
+public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 	protected HashMap<String, Node> nodes;
 	protected HashMap<String, Place> places;
 	protected HashMap<String, Transition> transitions;
@@ -236,7 +238,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		}
 	}
 
-	public Transition addTransition(String id) throws MalformedNetException {
+	public T addTransition(String id) throws MalformedNetException {
 		Transition t = new Transition(id);
 		addTransition(t);
 		return t;
@@ -288,7 +290,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		}
 	}
 
-	public Place addPlace(String id) throws MalformedNetException {
+	public P addPlace(String id) throws MalformedNetException {
 		Place p = new Place(id);
 		addPlace(p);
 		return p;
@@ -348,6 +350,10 @@ public class PlaceTransitionNet implements TransitionGraph {
 			
 			xmlElement.getArcs().add(a.getXmlElement());
 		}
+	}
+
+	public void addNext(String sourceId, String targetId) throws MalformedNetException {
+		addArc(sourceId, targetId);
 	}
 
 	public Arc addArc(Node source, Node target) throws MalformedNetException {
@@ -582,7 +588,7 @@ public class PlaceTransitionNet implements TransitionGraph {
 		return pre;
 	}
 	
-	public Collection<Transition> getPreSet(Place n) {
+	public Collection<? extends T> getPreSet(P n) {
 		Set<Transition> pre = new HashSet<>();
 		for (Arc a: incoming.get(n.getId())) {
 			if (a.getSource() instanceof Transition) pre.add((Transition)a.getSource());

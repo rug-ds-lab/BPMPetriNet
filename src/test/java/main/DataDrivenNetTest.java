@@ -47,7 +47,7 @@ public class DataDrivenNetTest {
 
 			Place p = pn.addPlace("x0", "test_x0", 2);
 			Transition t = pn.addTransition("y0", "ytest");
-			Place p1 = pn.addPlace("x1");
+			Place p1 = (Place) pn.addPlace("x1");
 
 			Arc a = pn.addArc("x0", "y0", 2);
 			Arc a1 = pn.addArc(t, p1);
