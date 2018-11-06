@@ -20,8 +20,13 @@ The package is structured as followed:
     * marking
     * net
   * ptnet
+    * element
+    * marking
   * ddnet
+    * marking
 * pnml.ptnet
+  * jaxb
+  * marshaller
 * util
 
 ### Usage
