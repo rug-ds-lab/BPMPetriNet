@@ -1,8 +1,9 @@
 package nl.rug.ds.bpm.petrinet.ptnet.element;
 
+import nl.rug.ds.bpm.petrinet.interfaces.element.NodeI;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.annotation.Name;
 
-public abstract class Node {
+public abstract class Node implements NodeI {
 	protected nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.node.Node xmlElement;
 
 	public Node() {}

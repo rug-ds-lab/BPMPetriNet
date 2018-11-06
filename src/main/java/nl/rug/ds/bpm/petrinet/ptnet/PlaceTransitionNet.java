@@ -1,19 +1,12 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import nl.rug.ds.bpm.expression.CompositeExpression;
-import nl.rug.ds.bpm.petrinet.interfaces.element.T;
-import nl.rug.ds.bpm.petrinet.interfaces.element.P;
-import nl.rug.ds.bpm.petrinet.interfaces.graph.TransitionGraph;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
-import nl.rug.ds.bpm.petrinet.interfaces.unfolding.UnfoldableNet;
+import nl.rug.ds.bpm.petrinet.interfaces.element.PlaceI;
+import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.net.UnfoldableNet;
+import nl.rug.ds.bpm.petrinet.interfaces.net.VerifiableNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -34,7 +27,10 @@ import nl.rug.ds.bpm.util.log.LogEvent;
 import nl.rug.ds.bpm.util.log.Logger;
 import nl.rug.ds.bpm.util.set.Sets;
 
-public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	protected HashMap<String, Node> nodes;
 	protected HashMap<String, Place> places;
 	protected HashMap<String, Transition> transitions;
@@ -238,7 +234,7 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		}
 	}
 
-	public T addTransition(String id) throws MalformedNetException {
+	public TransitionI addTransition(String id) throws MalformedNetException {
 		Transition t = new Transition(id);
 		addTransition(t);
 		return t;
@@ -290,7 +286,7 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		}
 	}
 
-	public P addPlace(String id) throws MalformedNetException {
+	public PlaceI addPlace(String id) throws MalformedNetException {
 		Place p = new Place(id);
 		addPlace(p);
 		return p;
@@ -588,7 +584,7 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		return pre;
 	}
 	
-	public Collection<? extends T> getPreSet(P n) {
+	public Collection<? extends TransitionI> getPreSet(PlaceI n) {
 		Set<Transition> pre = new HashSet<>();
 		for (Arc a: incoming.get(n.getId())) {
 			if (a.getSource() instanceof Transition) pre.add((Transition)a.getSource());
@@ -639,7 +635,7 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		return m;
 	}
 
-	public void setInitialMarking(M marking) throws MalformedNetException {
+	public void setInitialMarking(MarkingI marking) throws MalformedNetException {
 		Marking old = getInitialMarking();
 		for (String p: old.getMarkedPlaces()) {
 			Place place = getPlace(p);
@@ -654,7 +650,7 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		}
 	}
 
-	public boolean isEnabled(T t, M m) {
+	public boolean isEnabled(TransitionI t, MarkingI m) {
 		boolean enabled = true;
 		Iterator<Arc> iterator = incoming.get(t.getId()).iterator();
 
@@ -663,33 +659,33 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 			enabled = in.getWeight() <= m.getTokensAtPlace(in.getSource().getId());
 		}
 		
-		return (m instanceof ConditionalM ? enabled && isEnabledUnderCondition(t, (ConditionalM) m) : enabled);
+		return (m instanceof ConditionalMarkingI ? enabled && isEnabledUnderCondition(t, (ConditionalMarkingI) m) : enabled);
 	}
 
-	private boolean isEnabledUnderCondition(T t, ConditionalM m) {
+	private boolean isEnabledUnderCondition(TransitionI t, ConditionalMarkingI m) {
 		boolean enabled = true;
-		if(t.getGuard() != null) {
+		if(((Transition)t).getGuard() != null) {
 			Iterator<CompositeExpression> guardIterator = m.getConditions().iterator();
 
 			while (enabled && guardIterator.hasNext())
-				enabled = !t.getGuard().contradicts(guardIterator.next());
+				enabled = !((Transition)t).getGuard().contradicts(guardIterator.next());
 		}
 
 		return enabled;
 	}
 
 	@Override
-	public boolean isParallelEnabled(Set<? extends T> ts, M m) {
+	public boolean isParallelEnabled(Set<? extends TransitionI> ts, MarkingI m) {
 		//check if guards contradict
 		boolean isParSet = !areContradictory(ts);
 
 		//check if enough tokens exist and check if guards contradict conditions
-		Iterator<? extends T> transitions = ts.iterator();
+		Iterator<? extends TransitionI> transitions = ts.iterator();
 		Marking required = (Marking) m.clone();
 
 		while (isParSet && transitions.hasNext()) {
-			T t = transitions.next();
-			isParSet = !(m instanceof ConditionalM) || isEnabledUnderCondition(t, (ConditionalM) m);
+			TransitionI t = transitions.next();
+			isParSet = !(m instanceof ConditionalMarkingI) || isEnabledUnderCondition(t, (ConditionalMarkingI) m);
 			
 			try {
 				for (Arc in : getIncoming((Node) t))
@@ -703,8 +699,8 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 	}
 
 	//checks whether t is parallel enabled with a known parallel set
-	protected boolean isParallelEnabled(Set<? extends T> parSet, T t, M m) {
-		boolean isParSet = !(m instanceof ConditionalM) || isEnabledUnderCondition(t, (ConditionalM) m);
+	protected boolean isParallelEnabled(Set<? extends TransitionI> parSet, TransitionI t, MarkingI m) {
+		boolean isParSet = !(m instanceof ConditionalMarkingI) || isEnabledUnderCondition(t, (ConditionalMarkingI) m);
 		Marking required = (Marking) m.clone();
 
 		try {
@@ -714,9 +710,9 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 			isParSet = false;
 		}
 
-		Iterator<? extends T> parIterator = parSet.iterator();
+		Iterator<? extends TransitionI> parIterator = parSet.iterator();
 		while (isParSet && parIterator.hasNext()) {
-			T p = parIterator.next();
+			TransitionI p = parIterator.next();
 			isParSet = !areContradictory(t, p);
 
 			try {
@@ -730,11 +726,11 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		return isParSet;
 	}
 	
-	public Collection<? extends T> getEnabledTransitions(M m) {
+	public Collection<? extends TransitionI> getEnabledTransitions(MarkingI m) {
 		return transitions.values().stream().filter(t -> isEnabled(t, m)).collect(Collectors.toSet());
 	}
 
-	public M fire(T t, M m) {
+	public MarkingI fire(TransitionI t, MarkingI m) {
 		Marking marking = (Marking) m.clone();
 
 		if (isEnabled(t, m)){
@@ -752,23 +748,23 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 		return marking;
 	}
 	
-	public Set<? extends M> fireTransition(T t, M m) {
-		Set<M> markings = new HashSet<>();
+	public Set<? extends MarkingI> fireTransition(TransitionI t, MarkingI m) {
+		Set<MarkingI> markings = new HashSet<>();
 		markings.add(fire(t, m));
 		return markings;
 	}
 	
-	public Set<? extends Set<? extends T>> getParallelEnabledTransitions(M marking) {
-		Set<? extends T> enabled = (Set<? extends T>) getEnabledTransitions(marking);
-		Set<Set<? extends T>> pow = new HashSet<>(Sets.powerSet(enabled));
-		Set<Set<? extends T>> ypar = new HashSet<>();
+	public Set<? extends Set<? extends TransitionI>> getParallelEnabledTransitions(MarkingI marking) {
+		Set<? extends TransitionI> enabled = (Set<? extends TransitionI>) getEnabledTransitions(marking);
+		Set<Set<? extends TransitionI>> pow = new HashSet<>(Sets.powerSet(enabled));
+		Set<Set<? extends TransitionI>> ypar = new HashSet<>();
 
-		for (Set<? extends T> parSet: pow) {
+		for (Set<? extends TransitionI> parSet: pow) {
 			boolean isParSet = isParallelEnabled(parSet, marking);
 			//check if other transitions exists that don't contradict and are enabled in par
-			Iterator<? extends T> otherIterator = enabled.iterator();
+			Iterator<? extends TransitionI> otherIterator = enabled.iterator();
 			while (isParSet && otherIterator.hasNext()) {
-				T t = otherIterator.next();
+				TransitionI t = otherIterator.next();
 				if (!parSet.contains(t)) {
 					isParSet = !isParallelEnabled(parSet, t, marking) || canHaveContradiction(parSet, t);
 				}
@@ -782,22 +778,22 @@ public class PlaceTransitionNet implements TransitionGraph, UnfoldableNet {
 	}
 
 	//checks whether parset can have contradiction with parset + t
-	protected boolean canHaveContradiction(Set<? extends T> parSet, T t) {		
-		if (t.getGuard() != null) {
-			for (T ps: parSet) {
-				if ((ps.getGuard() != null) && (ps.getGuard().canContradict(t.getGuard()))) return true;
+	protected boolean canHaveContradiction(Set<? extends TransitionI> parSet, TransitionI t) {
+		if (((Transition)t).getGuard() != null) {
+			for (TransitionI ps: parSet) {
+				if ((((Transition)ps).getGuard() != null) && (((Transition)ps).getGuard().canContradict(((Transition)t).getGuard()))) return true;
 			}
 		}
 		return false;
 	}
 	
-	private boolean areContradictory(T t1, T t2) {
-		return t1.getGuard() != null && t2.getGuard() != null && t1.getGuard().contradicts(t2.getGuard());
+	private boolean areContradictory(TransitionI t1, TransitionI t2) {
+		return ((Transition)t1).getGuard() != null && ((Transition)t2).getGuard() != null && ((Transition)t1).getGuard().contradicts(((Transition)t2).getGuard());
 	}
 
-	private boolean areContradictory(Set<? extends  T> tset) {
-		for (T t1: tset)
-			for (T t2: tset)
+	private boolean areContradictory(Set<? extends TransitionI> tset) {
+		for (TransitionI t1: tset)
+			for (TransitionI t2: tset)
 				if(t1 != t2)
 					if (areContradictory(t1, t2))
 						return true;

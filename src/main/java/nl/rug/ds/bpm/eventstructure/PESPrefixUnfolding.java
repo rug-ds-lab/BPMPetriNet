@@ -1,24 +1,16 @@
 package nl.rug.ds.bpm.eventstructure;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import nl.rug.ds.bpm.expression.CompositeExpression;
-import nl.rug.ds.bpm.petrinet.interfaces.element.P;
-import nl.rug.ds.bpm.petrinet.interfaces.element.T;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
-import nl.rug.ds.bpm.petrinet.interfaces.unfolding.UnfoldableNet;
+import nl.rug.ds.bpm.petrinet.interfaces.element.PlaceI;
+import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.net.UnfoldableNet;
 import nl.rug.ds.bpm.util.comparator.PairComparator;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.pair.Pair;
+
+import java.util.*;
 
 /**
  * Created by Nick van Beest on 10 May 2018
@@ -42,7 +34,7 @@ public class PESPrefixUnfolding {
 	private Map<Integer, Integer> ccmap; // from cutoff to corresponding
 	private Map<Integer, Integer> tmpcc;
 	
-	private Set<Pair<M, T>> visited;
+	private Set<Pair<MarkingI, TransitionI>> visited;
 		
 	private int initial, sink;
 	
@@ -68,21 +60,21 @@ public class PESPrefixUnfolding {
 		ccmap = new HashMap<Integer, Integer>();
 		tmpcc = new HashMap<Integer, Integer>();
 		
-		visited = new TreeSet<Pair<M,T>>(new PairComparator<M, T>());
+		visited = new TreeSet<Pair<MarkingI, TransitionI>>(new PairComparator<MarkingI, TransitionI>());
 
-		Collection<? extends P> sinks = ptnet.getSinks();
+		Collection<? extends PlaceI> sinks = ptnet.getSinks();
 		
 		// sinkcount must be 1, otherwise it is not a proper workflow net
 		if (sinks.size() == 1) {
-			P sinkplace = sinks.iterator().next();
+			PlaceI sinkplace = sinks.iterator().next();
 			if (ptnet.getPreSet(sinkplace).size() > 1) {
 				ptnet.addTransition("artificial_end");
 				ptnet.addPlace("artificial_sink");
-				ptnet.addNext(sinkplace.getId(), "artificial_end");
-				ptnet.addNext("artificial_end", "artificial_sink");
+				ptnet.addArc(sinkplace.getId(), "artificial_end");
+				ptnet.addArc("artificial_end", "artificial_sink");
 			}
 
-			for (T t: ptnet.getTransitions()) {
+			for (TransitionI t: ptnet.getTransitions()) {
 				if (t.getName().startsWith(silentPrefix)) t.setTau(true);
 			}
 			
@@ -92,15 +84,15 @@ public class PESPrefixUnfolding {
 	}
 	
 	private void buildPES(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws MalformedNetException {
-		M marking = ptnet.getInitialMarking();
+		MarkingI marking = ptnet.getInitialMarking();
 		
 		if (marking.getMarkedPlaces().isEmpty()) {
 			throw new MalformedNetException("Initial marking empty, no tokens on any place.");
 		}
 		else {
-			if(marking instanceof ConditionalM)
+			if(marking instanceof ConditionalMarkingI)
 				for (CompositeExpression e: globalconditions)
-					((ConditionalM)marking).addCondition(e.toString(), e);
+					((ConditionalMarkingI)marking).addCondition(e.toString(), e);
 					
 			progressPES(ptnet, marking, null);
 	
@@ -109,15 +101,15 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private void progressPES(UnfoldableNet ptnet, M marking, T last) {
-		Collection<? extends T> enabled = ptnet.getEnabledTransitions(marking);
-		Set<? extends Set<? extends T>> parenabled = ptnet.getParallelEnabledTransitions(marking);
+	private void progressPES(UnfoldableNet ptnet, MarkingI marking, TransitionI last) {
+		Collection<? extends TransitionI> enabled = ptnet.getEnabledTransitions(marking);
+		Set<? extends Set<? extends TransitionI>> parenabled = ptnet.getParallelEnabledTransitions(marking);
 		
 		// fill in concurrency
 		BitSet partialconc;
-		for (Set<? extends T> conc: parenabled) {
+		for (Set<? extends TransitionI> conc: parenabled) {
 			partialconc = new BitSet();
-			for (T c: conc) {
+			for (TransitionI c: conc) {
 				addLabel(c);
 				partialconc.set(fulllabels.indexOf(c.getId() + "_" + c.getName()));
 			}
@@ -129,13 +121,13 @@ public class PESPrefixUnfolding {
 		}
 		
 		// fill in causality
-		for (T selected: enabled) {
+		for (TransitionI selected: enabled) {
 			
 			addLabel(selected);
 			
-			if ((!visited.contains(new Pair<M, T>(marking, selected))) || (!isCausal(last, selected))) {
+			if ((!visited.contains(new Pair<MarkingI, TransitionI>(marking, selected))) || (!isCausal(last, selected))) {
 					
-				visited.add(new Pair<M, T>(marking, selected));
+				visited.add(new Pair<MarkingI, TransitionI>(marking, selected));
 
 				if (last != null) {
 					if (!isConcurrent(last, selected)) {
@@ -146,7 +138,7 @@ public class PESPrefixUnfolding {
 					initial = fulllabels.indexOf(selected.toString());
 				}
 
-				for (M next: ptnet.fireTransition(selected, marking))
+				for (MarkingI next: ptnet.fireTransition(selected, marking))
 					progressPES(ptnet, next, selected);
 				// Returns a set because future nets with guards on arcs may
 				// produce multiple possible future markings (e.g., CPN).
@@ -236,7 +228,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private void addLabel(T tr) {
+	private void addLabel(TransitionI tr) {
 		String label = tr.toString();
 		
 		if (!fulllabels.contains(label)) {
@@ -247,7 +239,7 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private Boolean isCausal(T t1, T t2) {
+	private Boolean isCausal(TransitionI t1, TransitionI t2) {
 		int index1, index2;
 		
 		if ((t1 == null) || (t2 == null)) return false;
@@ -264,7 +256,7 @@ public class PESPrefixUnfolding {
 		return false;
 	}
 	
-	private Boolean isConcurrent(T t1, T t2) {
+	private Boolean isConcurrent(TransitionI t1, TransitionI t2) {
 		int index1, index2;
 		
 		if ((t1 == null) || (t2 == null)) return false;

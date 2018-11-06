@@ -2,8 +2,8 @@ package main;
 
 import nl.rug.ds.bpm.petrinet.ddnet.DataDrivenNet;
 import nl.rug.ds.bpm.petrinet.ddnet.marking.DataMarking;
-import nl.rug.ds.bpm.petrinet.interfaces.element.T;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.DataM;
+import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.DataMarkingI;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
@@ -70,7 +70,7 @@ public class DataDrivenNetTest {
 
 		System.out.println("y0 is enabled: " + pn.isEnabled(pn.getTransition("y0"), m));
 		
-		DataM m2 = pn.fire(pn.getTransition("y0"), m);
+		DataMarkingI m2 = pn.fire(pn.getTransition("y0"), m);
 		System.out.println("fired y0: " + m2.toString());
 		for (String var: m2.getBindings().keySet())
 			System.out.println(var + "=" + m2.getBindings().get(var));
@@ -80,11 +80,11 @@ public class DataDrivenNetTest {
 		Collection<Transition> en = (Collection<Transition>) pn.getEnabledTransitions(m2);
 		while (!en.isEmpty()) {
 			System.out.print("Enabled: ");
-			for (T transition : en)
+			for (TransitionI transition : en)
 				System.out.print(transition.getId() + " ");
 			System.out.println("");
 			
-			T t = en.iterator().next();
+			TransitionI t = en.iterator().next();
 			m2 = pn.fire(t, m2);
 			
 			System.out.println("fired " + t.getId() + ": " + m2.toString());

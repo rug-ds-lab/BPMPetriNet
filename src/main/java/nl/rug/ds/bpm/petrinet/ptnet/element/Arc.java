@@ -1,12 +1,13 @@
 package nl.rug.ds.bpm.petrinet.ptnet.element;
 
+import nl.rug.ds.bpm.petrinet.interfaces.element.ArcI;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.annotation.Inscription;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.annotation.Name;
 
 /**
  * Created by Heerko Groefsema on 30-Apr-18.
  */
-public class Arc {
+public class Arc implements ArcI {
 	private Node source;
 	private Node target;
 	private int weight;

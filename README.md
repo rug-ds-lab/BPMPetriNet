@@ -16,6 +16,9 @@ The package is structured as followed:
 * expression
 * petrinet
   * interfaces
+    * element
+    * marking
+    * net
   * ptnet
   * ddnet
 * pnml.ptnet
@@ -73,17 +76,17 @@ your custom net implementations, the following elements of the Petri net should 
 number of interfaces provided in nl.rug.ds.bpm.petrinet.interfaces.
 
 Petri net:
-* Unfolding
-* TransitionGraph (optional, for verification)
-* DataDrivenGraph (optional, for data driven verification)
+* UnfoldableNet (for unfolding support)
+* VerifiableNet (for verification support)
+* VerifiableDataNet (for data driven verification support)
 
 Marking:
-* M
-* ConditionalM (optional, for conditional verification)
-* DataM (optional, for data driven verification)
+* MarkingI
+* ConditionalMarkingI (for conditional verification support)
+* DataMarkingI (for data driven verification support)
 
-Place:
-* P
-
-Transition:
-* T
+Net elements:
+* NodeI (superclass of place and transition)
+* PlaceI
+* TransitionI
+* ArcI

@@ -1,23 +1,18 @@
 package nl.rug.ds.bpm.petrinet.ptnet.marking;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalM;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
 import nl.rug.ds.bpm.util.comparator.StringComparator;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
+
+import java.util.*;
 
 /**
  * Created by Nick van Beest 26-Apr-17.
  */
-public class Marking implements ConditionalM, Comparable<M> {
+public class Marking implements ConditionalMarkingI, Comparable<MarkingI> {
 	private SortedMap<String, Integer> tokenmap;
 	private HashMap<String, CompositeExpression> conditions;
 	
@@ -154,7 +149,7 @@ public class Marking implements ConditionalM, Comparable<M> {
 	}
 	
 	@Override
-	public int compareTo(M o) {
+	public int compareTo(MarkingI o) {
 		return this.toString().compareTo(o.toString());
 	}
 }

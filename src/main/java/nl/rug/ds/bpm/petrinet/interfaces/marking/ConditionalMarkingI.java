@@ -1,14 +1,14 @@
 package nl.rug.ds.bpm.petrinet.interfaces.marking;
 
+import nl.rug.ds.bpm.expression.CompositeExpression;
+
 import java.util.Collection;
 import java.util.HashMap;
-
-import nl.rug.ds.bpm.expression.CompositeExpression;
 
 /**
  * Created by Heerko Groefsema on 14-May-18.
  */
-public interface ConditionalM extends M {
+public interface ConditionalMarkingI extends MarkingI {
 	void setConditions(HashMap<String, CompositeExpression> conditions);
 	Collection<CompositeExpression> getConditions();
 

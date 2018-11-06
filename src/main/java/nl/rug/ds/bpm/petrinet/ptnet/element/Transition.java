@@ -2,12 +2,12 @@ package nl.rug.ds.bpm.petrinet.ptnet.element;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
-import nl.rug.ds.bpm.petrinet.interfaces.element.T;
+import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.ToolSpecific;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.Task;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.task.Script;
 
-public class Transition extends Node implements T {
+public class Transition extends Node implements TransitionI {
 	private Task task;
 	private CompositeExpression guard;
 

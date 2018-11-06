@@ -1,7 +1,7 @@
 package main;
 
-import nl.rug.ds.bpm.petrinet.interfaces.element.T;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
+import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
@@ -68,7 +68,7 @@ public class PlaceTransitionNetTest {
 		
 		System.out.println("y0 is enabled: " + pn.isEnabled(pn.getTransition("y0"), m));
 		
-		M m2 = pn.fire(pn.getTransition("y0"), m);
+		MarkingI m2 = pn.fire(pn.getTransition("y0"), m);
 		System.out.println("fired y0: " + m2.toString());
 
 		pn.setInitialMarking(m2);
@@ -76,11 +76,11 @@ public class PlaceTransitionNetTest {
 		Collection<Transition> en = (Collection<Transition>) pn.getEnabledTransitions(m2);
 		while (!en.isEmpty()) {
 			System.out.print("Enabled: ");
-			for (T transition : en)
+			for (TransitionI transition : en)
 				System.out.print(transition.getId() + " ");
 			System.out.println("");
 			
-			T t = en.iterator().next();
+			TransitionI t = en.iterator().next();
 			m2 = pn.fire(t, m2);
 			System.out.println("fired " + t.getId() + ": " + m2.toString());
 			en = (Collection<Transition>) pn.getEnabledTransitions(m2);

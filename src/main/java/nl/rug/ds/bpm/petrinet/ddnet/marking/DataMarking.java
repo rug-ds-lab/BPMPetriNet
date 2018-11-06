@@ -1,11 +1,11 @@
 package nl.rug.ds.bpm.petrinet.ddnet.marking;
 
-import nl.rug.ds.bpm.petrinet.interfaces.marking.DataM;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.DataMarkingI;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 
 import javax.script.Bindings;
 
-public class DataMarking extends Marking implements DataM {
+public class DataMarking extends Marking implements DataMarkingI {
 	private Bindings bindings;
 
 	public DataMarking() {

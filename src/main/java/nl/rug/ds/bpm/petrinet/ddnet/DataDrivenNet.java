@@ -1,10 +1,10 @@
 package nl.rug.ds.bpm.petrinet.ddnet;
 
 import nl.rug.ds.bpm.petrinet.ddnet.marking.DataMarking;
-import nl.rug.ds.bpm.petrinet.interfaces.element.T;
-import nl.rug.ds.bpm.petrinet.interfaces.graph.DataDrivenGraph;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.DataM;
-import nl.rug.ds.bpm.petrinet.interfaces.marking.M;
+import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.DataMarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
+import nl.rug.ds.bpm.petrinet.interfaces.net.VerifiableDataNet;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Created by Heerko Groefsema on 18-May-18.
  */
-public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph {
+public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataNet {
 	private ScriptEngineManager manager;
 	
 	public DataDrivenNet() {
@@ -80,13 +80,13 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 	}
 
 	@Override
-	public void setInitialMarking(M marking) throws MalformedNetException {
+	public void setInitialMarking(MarkingI marking) throws MalformedNetException {
 		super.setInitialMarking(marking);
 		for (String v: new HashSet<>(variables.keySet()))
 			removeVariable(v);
 
-		if(marking instanceof DataM) {
-			DataM m = (DataM) marking;
+		if(marking instanceof DataMarkingI) {
+			DataMarkingI m = (DataMarkingI) marking;
 
 			for (String b : m.getBindings().keySet())
 				if (!b.equalsIgnoreCase("nashorn.global")) {
@@ -99,21 +99,21 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 	}
 
 	@Override
-	public boolean isEnabled(T t, M m) {
-		return super.isEnabled(t, m) && (!(m instanceof DataM) || evaluateGuard(t, (DataM) m));
+	public boolean isEnabled(TransitionI t, MarkingI m) {
+		return super.isEnabled(t, m) && (!(m instanceof DataMarkingI) || evaluateGuard(t, (DataMarkingI) m));
 	}
 
 	@Override
-	public boolean isParallelEnabled(Set<? extends T> ts, M m) {
+	public boolean isParallelEnabled(Set<? extends TransitionI> ts, MarkingI m) {
 		boolean isParSet = true;
 
 		//check if enough tokens exist and check if guards contradict conditions
-		Iterator<? extends T> transitions = ts.iterator();
+		Iterator<? extends TransitionI> transitions = ts.iterator();
 		Marking required = (Marking) m.clone();
 
 		while (isParSet && transitions.hasNext()) {
-			T t = transitions.next();
-			isParSet = (!(m instanceof DataM) || evaluateGuard(t, (DataM) m));
+			TransitionI t = transitions.next();
+			isParSet = (!(m instanceof DataMarkingI) || evaluateGuard(t, (DataMarkingI) m));
 
 			try {
 				for (Arc in : getIncoming((Node) t))
@@ -128,8 +128,8 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 
 	//checks whether t is parallel enabled with a known parallel set
 	@Override
-	protected boolean isParallelEnabled(Set<? extends T> parSet, T t, M m) {
-		boolean isParSet = (!(m instanceof DataM) || evaluateGuard(t, (DataM) m));
+	protected boolean isParallelEnabled(Set<? extends TransitionI> parSet, TransitionI t, MarkingI m) {
+		boolean isParSet = (!(m instanceof DataMarkingI) || evaluateGuard(t, (DataMarkingI) m));
 		Marking required = (Marking) m.clone();
 
 		try {
@@ -139,9 +139,9 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 			isParSet = false;
 		}
 
-		Iterator<? extends T> parIterator = parSet.iterator();
+		Iterator<? extends TransitionI> parIterator = parSet.iterator();
 		while (isParSet && parIterator.hasNext()) {
-			T p = parIterator.next();
+			TransitionI p = parIterator.next();
 
 			try {
 				for (Arc in : getIncoming((Node) p))
@@ -155,28 +155,28 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 	}
 
 		@Override
-	public Set<? extends DataM> fireTransition(T t, M m) {
-		Set<DataM> markings = new HashSet<>();
+	public Set<? extends DataMarkingI> fireTransition(TransitionI t, MarkingI m) {
+		Set<DataMarkingI> markings = new HashSet<>();
 		markings.add(fire(t, m));
 		return markings;
 	}
 
 	@Override
-	public DataM fire(T t, M m) {
+	public DataMarkingI fire(TransitionI t, MarkingI m) {
 		//Marking with data, evaluates guards and script
 		DataMarking marking;
 		
-		if(evaluateGuard(t, (DataM) m)) {
+		if(evaluateGuard(t, (DataMarkingI) m)) {
 			marking = (DataMarking) super.fire(t, m);
 			
 			ScriptEngine engine = manager.getEngineByName("JavaScript");
 			
 			//Bindings only update when using createBindings, so create and clone manually
 			Bindings bindings = engine.createBindings();
-			bindings.putAll(((DataM)m).getBindings());
+			bindings.putAll(((DataMarkingI)m).getBindings());
 			marking.setBindings(bindings);
 
-			if(m instanceof DataM && t instanceof Transition) {
+			if(m instanceof DataMarkingI && t instanceof Transition) {
 				Transition transition = (Transition) t;
 				if (!transition.getScript().isEmpty()) {
 					engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
@@ -193,15 +193,15 @@ public class DataDrivenNet extends PlaceTransitionNet implements DataDrivenGraph
 		
 		return marking;
 	}
-	public boolean evaluateGuard(T t, DataM m) {
-		boolean satisfied = t.getGuard() == null;
+	public boolean evaluateGuard(TransitionI t, DataMarkingI m) {
+		boolean satisfied = ((Transition)t).getGuard() == null;
 		
 		if (!satisfied) {
 			ScriptEngine engine = manager.getEngineByName("JavaScript");
 			engine.setBindings(m.getBindings(), ScriptContext.ENGINE_SCOPE);
 			
 			try {
-				satisfied = (boolean) engine.eval(t.getGuard().toString());
+				satisfied = (boolean) engine.eval(((Transition)t).getGuard().toString());
 			} catch (ScriptException e) {
 				e.printStackTrace();
 			}
