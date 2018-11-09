@@ -75,6 +75,9 @@ public class ExpressionBuilder {
 		if (isNumeric(expression)) {
 			exp = new AtomicExpression<Double>(variablename, et, Double.parseDouble(expression));
 		}
+		else if (expression.toLowerCase().equals("false") || expression.toLowerCase().equals("true")) {
+			exp = new AtomicExpression<Boolean>(variablename, et, Boolean.parseBoolean(expression.toLowerCase()));
+		}
 		else {
 			exp = new AtomicExpression<String>(variablename, et, expression);
 		}

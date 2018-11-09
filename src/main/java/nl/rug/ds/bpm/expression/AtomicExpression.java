@@ -44,7 +44,9 @@ public class AtomicExpression<T extends Comparable<T>> {
 	// This method checks whether this ALWAYS contradicts other
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Boolean contradicts(AtomicExpression other) {
-		if ((this.getClass().equals(other.getClass())) && (this.getVariableName().equals(other.getVariableName()))) {
+		if (this.getVariableName().equals(other.getVariableName())) {
+			if (!this.getValue().getClass().equals(other.getValue().getClass())) return true;
+			
 			switch (type) {
 			case EQ:
 				return (!other.accepts(this.value)); 
@@ -52,9 +54,12 @@ public class AtomicExpression<T extends Comparable<T>> {
 				if ((other.getExpressionType() == ExpressionType.EQ) && (other.getValue().equals(this.value))) {
 					return true;
 				}
-				else {
-					return ((other.getExpressionType() == ExpressionType.NEQ) && (!other.getValue().equals(this.value)));
+				else if ((this.getValue().getClass().equals(Boolean.class)) && (other.getValue().getClass().equals(Boolean.class))) {
+					if ((other.getExpressionType() == ExpressionType.NEQ) && (!other.getValue().equals(this.value))) {
+						return true;
+					}
 				}
+				return false;
 			case LT:
 				if ((other.value instanceof Number) && (this.value instanceof Number)) {
 					if (other.getExpressionType() == ExpressionType.GT) {
