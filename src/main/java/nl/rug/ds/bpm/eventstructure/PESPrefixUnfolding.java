@@ -6,6 +6,7 @@ import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
 import nl.rug.ds.bpm.petrinet.interfaces.net.UnfoldableNet;
+import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.util.comparator.PairComparator;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.pair.Pair;
@@ -131,17 +132,22 @@ public class PESPrefixUnfolding {
 
 				if (last != null) {
 					if (!isConcurrent(last, selected)) {
-						addSuccessor(fulllabels.indexOf(last.toString()), fulllabels.indexOf(selected.toString()));
+						if (!areContradictory(last, selected)) {
+							addSuccessor(fulllabels.indexOf(last.toString()), fulllabels.indexOf(selected.toString()));
+						}
 					}
 				}
 				else {
 					initial = fulllabels.indexOf(selected.toString());
 				}
 
-				for (MarkingI next: ptnet.fireTransition(selected, marking))
-					progressPES(ptnet, next, selected);
-				// Returns a set because future nets with guards on arcs may
-				// produce multiple possible future markings (e.g., CPN).
+				if (!areContradictory(last, selected)) {
+					// fireTransition returns a set because future nets with guards on arcs may
+					// produce multiple possible future markings (e.g., CPN).
+					for (MarkingI next: ptnet.fireTransition(selected, marking)) {
+						progressPES(ptnet, next, selected);
+					}
+				}
 			}
 		}
 		
@@ -271,6 +277,12 @@ public class PESPrefixUnfolding {
 		}
 		
 		return false;
+	}
+	
+	private boolean areContradictory(TransitionI t1, TransitionI t2) {
+		if ((t1 == null) || (t2 == null)) return false;
+		
+		return ((Transition)t1).getGuard() != null && ((Transition)t2).getGuard() != null && ((Transition)t1).getGuard().contradicts(((Transition)t2).getGuard());
 	}
 	
 	private void addSuccessor(int source, int target) {
