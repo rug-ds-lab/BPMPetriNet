@@ -676,8 +676,13 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 
 	@Override
 	public boolean isParallelEnabled(Set<? extends TransitionI> ts, MarkingI m) {
+		return isParallelEnabled(ts, m, false);
+	}
+	
+	@Override
+	public boolean isParallelEnabled(Set<? extends TransitionI> ts, MarkingI m, boolean ignoreGuardConflicts) {
 		//check if guards contradict
-		boolean isParSet = !areContradictory(ts);
+		boolean isParSet = ignoreGuardConflicts || !areContradictory(ts);
 
 		//check if enough tokens exist and check if guards contradict conditions
 		Iterator<? extends TransitionI> transitions = ts.iterator();
@@ -697,9 +702,14 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 
 		return isParSet;
 	}
-
+	
 	//checks whether t is parallel enabled with a known parallel set
 	protected boolean isParallelEnabled(Set<? extends TransitionI> parSet, TransitionI t, MarkingI m) {
+		return isParallelEnabled(parSet, t, m, false);
+	}
+
+	//checks whether t is parallel enabled with a known parallel set
+	protected boolean isParallelEnabled(Set<? extends TransitionI> parSet, TransitionI t, MarkingI m, boolean ignoreGuardConflicts) {
 		boolean isParSet = !(m instanceof ConditionalMarkingI) || isEnabledUnderCondition(t, (ConditionalMarkingI) m);
 		Marking required = (Marking) m.clone();
 
@@ -713,7 +723,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		Iterator<? extends TransitionI> parIterator = parSet.iterator();
 		while (isParSet && parIterator.hasNext()) {
 			TransitionI p = parIterator.next();
-			isParSet = !areContradictory(t, p);
+			isParSet = ignoreGuardConflicts || !areContradictory(t, p);
 
 			try {
 				for (Arc in : getIncoming((Node) p))
@@ -753,20 +763,24 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		markings.add(fire(t, m));
 		return markings;
 	}
-	
+
 	public Set<? extends Set<? extends TransitionI>> getParallelEnabledTransitions(MarkingI marking) {
+		return getParallelEnabledTransitions(marking, false);
+	}
+
+	public Set<? extends Set<? extends TransitionI>> getParallelEnabledTransitions(MarkingI marking, boolean ignoreGuardConflicts) {
 		Set<? extends TransitionI> enabled = (Set<? extends TransitionI>) getEnabledTransitions(marking);
 		Set<Set<? extends TransitionI>> pow = new HashSet<>(Sets.powerSet(enabled));
 		Set<Set<? extends TransitionI>> ypar = new HashSet<>();
 
 		for (Set<? extends TransitionI> parSet: pow) {
-			boolean isParSet = isParallelEnabled(parSet, marking);
+			boolean isParSet = isParallelEnabled(parSet, marking, ignoreGuardConflicts);
 			//check if other transitions exists that don't contradict and are enabled in par
 			Iterator<? extends TransitionI> otherIterator = enabled.iterator();
 			while (isParSet && otherIterator.hasNext()) {
 				TransitionI t = otherIterator.next();
 				if (!parSet.contains(t)) {
-					isParSet = !isParallelEnabled(parSet, t, marking) || canHaveContradiction(parSet, t);
+					isParSet = !isParallelEnabled(parSet, t, marking, ignoreGuardConflicts) || canHaveContradiction(parSet, t); // !ignoreGuardConflicts || 
 				}
 			}
 			if (isParSet) {

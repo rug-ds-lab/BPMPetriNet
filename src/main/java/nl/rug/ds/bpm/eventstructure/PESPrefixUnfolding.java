@@ -36,7 +36,9 @@ public class PESPrefixUnfolding {
 	private Map<Integer, Integer> tmpcc;
 	
 	private Set<Pair<MarkingI, TransitionI>> visited;
-		
+	
+	private Map<Integer, CompositeExpression> guardmap;
+	
 	private int initial, sink;
 	
 	public PESPrefixUnfolding(UnfoldableNet ptnet, String silentPrefix) throws MalformedNetException {
@@ -65,6 +67,10 @@ public class PESPrefixUnfolding {
 
 		Collection<? extends PlaceI> sinks = ptnet.getSinks();
 		
+		guardmap = new HashMap<Integer, CompositeExpression>();
+		
+		sink = -1;
+
 		// sinkcount must be 1, otherwise it is not a proper workflow net
 		if (sinks.size() == 1) {
 			PlaceI sinkplace = sinks.iterator().next();
@@ -81,12 +87,12 @@ public class PESPrefixUnfolding {
 			
 			buildPES(ptnet, globalconditions, silentPrefix);
 		}
-		else throw new MalformedNetException("Not a workflow net: Could not find a unique sink place.");
+		else throw new MalformedNetException("Not a workflow net: Could not find a unique sink place.");		
 	}
 	
 	private void buildPES(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws MalformedNetException {
 		MarkingI marking = ptnet.getInitialMarking();
-		
+
 		if (marking.getMarkedPlaces().isEmpty()) {
 			throw new MalformedNetException("Initial marking empty, no tokens on any place.");
 		}
@@ -98,13 +104,15 @@ public class PESPrefixUnfolding {
 			progressPES(ptnet, marking, null);
 	
 			fillDirectConflictRelations();
-			fillConflictRelations();
+			fillAllTransitiveAndConflictRelations();
+			
+			removeInvalidConcurrency(ptnet);
 		}
 	}
 	
 	private void progressPES(UnfoldableNet ptnet, MarkingI marking, TransitionI last) {
 		Collection<? extends TransitionI> enabled = ptnet.getEnabledTransitions(marking);
-		Set<? extends Set<? extends TransitionI>> parenabled = ptnet.getParallelEnabledTransitions(marking);
+		Set<? extends Set<? extends TransitionI>> parenabled = ptnet.getParallelEnabledTransitions(marking, true);
 		
 		// fill in concurrency
 		BitSet partialconc;
@@ -118,7 +126,7 @@ public class PESPrefixUnfolding {
 				if (!concurrency.containsKey(b)) concurrency.put(b, new BitSet());
 				concurrency.get(b).or(partialconc);
 				concurrency.get(b).clear(b);
-			}	
+			}
 		}
 		
 		// fill in causality
@@ -141,13 +149,13 @@ public class PESPrefixUnfolding {
 					initial = fulllabels.indexOf(selected.toString());
 				}
 
-				if (!areContradictory(last, selected)) {
+//				if (!areContradictory(last, selected)) {
 					// fireTransition returns a set because future nets with guards on arcs may
 					// produce multiple possible future markings (e.g., CPN).
 					for (MarkingI next: ptnet.fireTransition(selected, marking)) {
 						progressPES(ptnet, next, selected);
 					}
-				}
+//				}
 			}
 		}
 		
@@ -216,12 +224,12 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
-	private void fillConflictRelations() {
+	private void fillAllTransitiveAndConflictRelations() {
 		BitSet conf;
 
 		fillTransitiveSuccessors(initial, new BitSet());
 		fillTransitivePredecessors(sink, new BitSet());
-		
+				
 		for (int e = 0; e < fulllabels.size(); e++) {
 			conf = new BitSet();
 			if (tsucc.containsKey(e)) conf.or(tsucc.get(e));
@@ -234,12 +242,33 @@ public class PESPrefixUnfolding {
 		}
 	}
 	
+	// remove all concurrency relations where the transitions have fully contradicting guards
+	private void removeInvalidConcurrency(UnfoldableNet ptnet) {
+		BitSet visited = new BitSet();
+		
+		for (int c: concurrency.keySet()) {
+			if (!visited.get(c) ) {
+				visited.set(c);
+				for (int b = concurrency.get(c).nextSetBit(0); b >= 0; b = concurrency.get(c).nextSetBit(b + 1)) {
+					if (!visited.get(b)) {
+						if ((concurrency.containsKey(c)) && (guardmap.containsKey(c)) && (guardmap.containsKey(b)) && (guardmap.get(c).contradicts(guardmap.get(b)))) {
+							concurrency.get(c).clear(b);
+							concurrency.get(b).clear(c);
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	private void addLabel(TransitionI tr) {
 		String label = tr.toString();
 		
 		if (!fulllabels.contains(label)) {
 			fulllabels.add(label);
 			labels.add(tr.getName());
+			
+			if (tr.getGuard() != null) guardmap.put(labels.size() - 1, tr.getGuard());
 			
 			if (tr.isTau()) invisibles.set(labels.size() - 1);
 		}
