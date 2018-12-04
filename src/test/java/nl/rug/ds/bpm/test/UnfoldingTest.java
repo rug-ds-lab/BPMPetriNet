@@ -1,4 +1,4 @@
-package main;
+package nl.rug.ds.bpm.test;
 
 import nl.rug.ds.bpm.eventstructure.PESPrefixUnfolding;
 import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;

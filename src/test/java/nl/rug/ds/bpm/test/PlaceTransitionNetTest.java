@@ -1,4 +1,4 @@
-package main;
+package nl.rug.ds.bpm.test;
 
 import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
