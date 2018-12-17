@@ -9,7 +9,7 @@ import java.util.Set;
  * Created by Heerko Groefsema on 01-Mar-18.
  */
 public class Logger {
-	private static int logLevel = 1;
+	private static int logLevel = 2;
 	private static Set<VerificationLogListener> verificationLogListenerSet = new HashSet<>();
 	
 	public Logger() {

@@ -41,11 +41,64 @@ public class PESPrefixUnfolding {
 	
 	private int initial, sink;
 	
+	
 	public PESPrefixUnfolding(UnfoldableNet ptnet, String silentPrefix) throws MalformedNetException {
 		this(ptnet, new HashSet<CompositeExpression>(), silentPrefix);
 	}
 	
+	public PESPrefixUnfolding(UnfoldableNet ptnet, Set<String> silentLabels) throws MalformedNetException {
+		this(ptnet, new HashSet<CompositeExpression>(), silentLabels);
+	}
+	
 	public PESPrefixUnfolding(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws MalformedNetException {
+		Collection<? extends PlaceI> sinks = ptnet.getSinks();
+
+		initialize();
+		
+		// sinkcount must be 1, otherwise it is not a proper workflow net
+		if (sinks.size() == 1) {
+			PlaceI sinkplace = sinks.iterator().next();
+			if (ptnet.getPreSet(sinkplace).size() > 1) {
+				ptnet.addTransition("artificial_end");
+				ptnet.addPlace("artificial_sink");
+				ptnet.addArc(sinkplace.getId(), "artificial_end");
+				ptnet.addArc("artificial_end", "artificial_sink");
+			}
+
+			for (TransitionI t: ptnet.getTransitions()) {
+				if (t.getName().startsWith(silentPrefix)) t.setTau(true);
+			}
+			
+			buildPES(ptnet, globalconditions);
+		}
+		else throw new MalformedNetException("Not a workflow net: Could not find a unique sink place.");		
+	}
+	
+	public PESPrefixUnfolding(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, Set<String> silentLabels) throws MalformedNetException {
+		Collection<? extends PlaceI> sinks = ptnet.getSinks();
+
+		initialize();
+		
+		// sinkcount must be 1, otherwise it is not a proper workflow net
+		if (sinks.size() == 1) {
+			PlaceI sinkplace = sinks.iterator().next();
+			if (ptnet.getPreSet(sinkplace).size() > 1) {
+				ptnet.addTransition("artificial_end");
+				ptnet.addPlace("artificial_sink");
+				ptnet.addArc(sinkplace.getId(), "artificial_end");
+				ptnet.addArc("artificial_end", "artificial_sink");
+			}
+
+			for (TransitionI t: ptnet.getTransitions()) {
+				if (silentLabels.contains(t.getName())) t.setTau(true);
+			}
+			
+			buildPES(ptnet, globalconditions);
+		}
+		else throw new MalformedNetException("Not a workflow net: Could not find a unique sink place.");		
+	}
+	
+	private void initialize() {
 		labels = new ArrayList<String>();
 		fulllabels = new ArrayList<String>();
 		invisibles = new BitSet();
@@ -64,33 +117,13 @@ public class PESPrefixUnfolding {
 		tmpcc = new HashMap<Integer, Integer>();
 		
 		visited = new TreeSet<Pair<MarkingI, TransitionI>>(new PairComparator<MarkingI, TransitionI>());
-
-		Collection<? extends PlaceI> sinks = ptnet.getSinks();
 		
 		guardmap = new HashMap<Integer, CompositeExpression>();
 		
 		sink = -1;
-
-		// sinkcount must be 1, otherwise it is not a proper workflow net
-		if (sinks.size() == 1) {
-			PlaceI sinkplace = sinks.iterator().next();
-			if (ptnet.getPreSet(sinkplace).size() > 1) {
-				ptnet.addTransition("artificial_end");
-				ptnet.addPlace("artificial_sink");
-				ptnet.addArc(sinkplace.getId(), "artificial_end");
-				ptnet.addArc("artificial_end", "artificial_sink");
-			}
-
-			for (TransitionI t: ptnet.getTransitions()) {
-				if (t.getName().startsWith(silentPrefix)) t.setTau(true);
-			}
-			
-			buildPES(ptnet, globalconditions, silentPrefix);
-		}
-		else throw new MalformedNetException("Not a workflow net: Could not find a unique sink place.");		
 	}
 	
-	private void buildPES(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions, String silentPrefix) throws MalformedNetException {
+	private void buildPES(UnfoldableNet ptnet, Set<CompositeExpression> globalconditions) throws MalformedNetException {
 		MarkingI marking = ptnet.getInitialMarking();
 
 		if (marking.getMarkedPlaces().isEmpty()) {
