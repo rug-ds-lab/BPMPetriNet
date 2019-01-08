@@ -4,7 +4,7 @@ import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
-import nl.rug.ds.bpm.util.comparator.StringComparator;
+import nl.rug.ds.bpm.util.comparator.ComparableComparator;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 
 import java.util.*;
@@ -17,7 +17,7 @@ public class Marking implements ConditionalMarkingI, Comparable<MarkingI> {
 	private HashMap<String, CompositeExpression> conditions;
 	
 	public Marking() {
-		tokenmap = new TreeMap<String, Integer>(new StringComparator());
+		tokenmap = new TreeMap<String, Integer>(new ComparableComparator());
 		conditions = new HashMap<>();
 	}
 	
