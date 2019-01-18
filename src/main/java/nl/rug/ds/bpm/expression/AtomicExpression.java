@@ -1,6 +1,6 @@
 package nl.rug.ds.bpm.expression;
 
-public class AtomicExpression<T extends Comparable<T>> {
+public class AtomicExpression<T extends Comparable<T>> implements Comparable<AtomicExpression<T>> {
 	private T value;
 	private String variablename;
 	private ExpressionType type;
@@ -276,5 +276,15 @@ public class AtomicExpression<T extends Comparable<T>> {
 	
 	public String getVariableName() {
 		return variablename;
+	}
+
+	@Override
+	public int compareTo(AtomicExpression<T> o) {
+		int ret = (o.getExpressionType() == type ? 0 : -1);
+		if (ret == 0)
+			ret = o.getVariableName().compareTo(variablename);
+		if (ret == 0)
+			ret = (o.accepts(value) ? o.getValue().compareTo(value) : -1);
+		return ret;
 	}
 }

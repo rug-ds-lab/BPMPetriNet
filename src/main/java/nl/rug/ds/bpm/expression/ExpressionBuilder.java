@@ -27,12 +27,16 @@ public class ExpressionBuilder {
 				else {
 					exp.setType(LogicalType.AND);
 				}
-				
-				exp.addArgument(parseExpression(expression.substring(left, right + 1)));
+
+				CompositeExpression el = parseExpression(expression.substring(left, right + 1));
+				if (el != null)
+					exp.addArgument(el);
 				
 				left = right + 5;
 				right = getMatchingBracket(expression, left);
-				exp.addArgument(parseExpression(expression.substring(left, right + 1)));
+				CompositeExpression er = parseExpression(expression.substring(left, right + 1));
+				if (er != null)
+					exp.addArgument(er);
 			}
 		}
 		
@@ -42,7 +46,7 @@ public class ExpressionBuilder {
 	public static AtomicExpression<?> parseAtomicExpression(String expression) {
 		String operator = getOperator(expression);
 		String name = expression.substring(0, expression.indexOf(operator)).trim();
-		return parseAtomicExpression(name, expression);
+		return (operator.isEmpty() ? null : parseAtomicExpression(name, expression));
 	}
 	
 	public static AtomicExpression<?> parseAtomicExpression(String variablename, String expression) {		
@@ -71,8 +75,10 @@ public class ExpressionBuilder {
 		}
 		
 		expression = expression.replace(operator, "").trim();
-		
-		if (isNumeric(expression)) {
+		if (expression.isEmpty()) {
+			exp = null;
+		}
+		else if (isNumeric(expression)) {
 			exp = new AtomicExpression<Double>(variablename, et, Double.parseDouble(expression));
 		}
 		else if (expression.toLowerCase().equals("false") || expression.toLowerCase().equals("true")) {
