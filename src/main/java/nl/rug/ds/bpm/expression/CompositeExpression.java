@@ -15,6 +15,12 @@ public class CompositeExpression {
 	private Boolean atomic;
 	
 	private AtomicExpression<?> expression;
+
+	public CompositeExpression(LogicalType logicalType) {
+		this.logicalType = logicalType;
+		atomic = false;
+		arguments = new HashSet<>();
+	}
 	
 	public CompositeExpression(AtomicExpression<?> expression) {
 		this.atomic = true;
