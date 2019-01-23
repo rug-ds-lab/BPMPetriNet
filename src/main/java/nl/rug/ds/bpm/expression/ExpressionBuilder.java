@@ -1,59 +1,121 @@
 package nl.rug.ds.bpm.expression;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 
 public class ExpressionBuilder {
 
 	public static CompositeExpression parseExpression(String expression) {
-		CompositeExpression exp = new CompositeExpression(new HashSet<CompositeExpression>(), LogicalType.XOR);
-	
-		int left = expression.indexOf("(");
-		int right = -1;
+		CompositeExpression exp;
 		
-		if (left == -1) {
-			exp = new CompositeExpression(parseAtomicExpression(expression));
-		}
-		else {
-			right = getMatchingBracket(expression, left);
-			if (right == -1) return exp;
-
+		expression = expression.trim();
+		
+		if (expression.startsWith("(")) {
+			int right = getMatchingBracket(expression, 0);
+			if (right == -1) return new CompositeExpression(new ArrayList<CompositeExpression>(), LogicalType.XOR);
+			
 			if (right == expression.length() - 1) {
-				return parseExpression(expression.substring(left + 1, right));
+				return parseExpression(expression.substring(1, right));
 			}
 			else {
-				if (expression.indexOf(" || ") == right + 1) {
-					exp.setType(LogicalType.XOR);
+				int flt = firstLogicalType(expression, right);
+				
+				LogicalType lt;
+				if (flt > -1) {
+					lt = getLogicalTypeAt(expression, flt);
+					exp = new CompositeExpression(new ArrayList<CompositeExpression>(), lt);
+					exp.addArgument(parseExpression(expression.substring(1, right)));
+					
+					CompositeExpression second = parseExpression(expression.substring(flt + 2));
+					if (second.isAtomic()) {
+						exp.addArgument(second);
+						return exp;
+					}
+					else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
+						exp.addArgument(second.getArguments().get(0));
+						second.getArguments().remove(0);
+						second.getArguments().add(0, exp);
+						return second;
+					}
+					else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
+						exp.addArgument(second);
+						return exp;
+					}
+					else {
+						exp.addArguments(second.getArguments());
+						return exp;
+					}
+				}
+				else { // no logicaltype, so it's an atomic expression
+					return new CompositeExpression(parseAtomicExpression(expression));
+				}
+			}
+		}
+		else { // no starting bracket
+			int flt = firstLogicalType(expression, 0);
+			
+			if (flt > -1) { // if it has a logical operator
+				LogicalType lt = getLogicalTypeAt(expression, flt);
+				exp = new CompositeExpression(new ArrayList<CompositeExpression>(), lt);
+				
+				exp.addArgument(new CompositeExpression(parseAtomicExpression(expression.substring(0, flt))));
+				
+				CompositeExpression second = parseExpression(expression.substring(flt + 2));
+				if (second.isAtomic()) {
+					exp.addArgument(second);
+					return exp;
+				} 
+				else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
+					exp.addArgument(second.getArguments().get(0));
+					second.getArguments().remove(0);
+					second.getArguments().add(0, exp);
+					return second;
+				}
+				else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
+					exp.addArgument(second);
+					return exp;
 				}
 				else {
-					exp.setType(LogicalType.AND);
+					exp.addArguments(second.getArguments());
+					return exp;
 				}
-
-				CompositeExpression el = parseExpression(expression.substring(left, right + 1));
-				if (el != null)
-					exp.addArgument(el);
-				
-				left = right + 5;
-				right = getMatchingBracket(expression, left);
-				CompositeExpression er = parseExpression(expression.substring(left, right + 1));
-				if (er != null)
-					exp.addArgument(er);
+			}
+			else {
+				return new CompositeExpression(parseAtomicExpression(expression));
 			}
 		}
 		
-		return exp;
 	}
 	
-	public static AtomicExpression<?> parseAtomicExpression(String expression) {
+	private static AtomicExpression<?> parseAtomicExpression(String expression) {
 		String operator = getOperator(expression);
-		String name = expression.substring(0, expression.indexOf(operator)).trim();
-		return (operator.isEmpty() ? null : parseAtomicExpression(name, expression));
+		String name;
+		if (operator.equals("")) {
+			name = expression;
+		}
+		else {
+			name = expression.substring(0, expression.indexOf(operator)).trim();
+		}
+		return parseAtomicExpression(name, expression);
 	}
 	
-	public static AtomicExpression<?> parseAtomicExpression(String variablename, String expression) {		
+	private static AtomicExpression<?> parseAtomicExpression(String variablename, String expression) {	
 		String operator;
 		ExpressionType et;
 		AtomicExpression<?> exp;
 
+		if (variablename.equals(expression)) {
+			et = ExpressionType.EQ;
+			
+			if (expression.startsWith("!")) {
+				variablename = variablename.substring(1);				
+				exp = new AtomicExpression<Boolean>(variablename, et, false);
+			}
+			else {
+				exp = new AtomicExpression<Boolean>(variablename, et, true);
+			}
+			return exp;
+		}
+		
 		expression = expression.replace(variablename, "").trim();
 		operator = getOperator(expression);
 
@@ -107,6 +169,31 @@ public class ExpressionBuilder {
 			if (lvl > 0) return -1;
 			
 			return cur;
+		}
+	}
+	
+	private static int firstLogicalType(String expression, int start) {
+		int pos = Integer.MAX_VALUE;
+		int tp;
+		
+		tp = expression.indexOf("||", start);
+		if ((tp >= 0) && (tp < pos)) pos = tp;
+		tp = expression.indexOf("&&", start);
+		if ((tp >= 0) && (tp < pos)) pos = tp;
+		
+		if (pos == Integer.MAX_VALUE) pos = -1;
+		return pos;
+	}
+	
+	private static LogicalType getLogicalTypeAt(String expression, int pos) {
+		if (expression.length() < (pos + 2)) return LogicalType.XOR;
+		
+		String lt = expression.substring(pos, pos + 2);
+		if (lt.equals("&&")) {
+			return LogicalType.AND;
+		}
+		else {
+			return LogicalType.XOR;
 		}
 	}
 	

@@ -1,6 +1,8 @@
 package nl.rug.ds.bpm.expression;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -10,7 +12,7 @@ import java.util.Set;
 public class CompositeExpression {
 	private LogicalType logicalType;
 	
-	private Set<CompositeExpression> arguments;
+	private List<CompositeExpression> arguments;
 	
 	private Boolean atomic;
 	
@@ -19,7 +21,7 @@ public class CompositeExpression {
 	public CompositeExpression(LogicalType logicalType) {
 		this.logicalType = logicalType;
 		atomic = false;
-		arguments = new HashSet<>();
+		arguments = new ArrayList<>();
 	}
 	
 	public CompositeExpression(AtomicExpression<?> expression) {
@@ -28,7 +30,7 @@ public class CompositeExpression {
 		this.logicalType = LogicalType.XOR;
 	}
 	
-	public CompositeExpression(Set<CompositeExpression> arguments, LogicalType ltype) {
+	public CompositeExpression(List<CompositeExpression> arguments, LogicalType ltype) {
 		this.arguments = arguments;
 		this.logicalType = ltype;
 		this.atomic = false;
@@ -38,19 +40,19 @@ public class CompositeExpression {
 		if (!atomic) arguments.add(argument);
 	}
 	
-	public void addAtomicArguments(Set<AtomicExpression<?>> arguments) {
+	public void addAtomicArguments(List<AtomicExpression<?>> arguments) {
 		makeNonAtomic(LogicalType.XOR);
 		for (AtomicExpression<?> e: arguments) {
 			this.arguments.add(new CompositeExpression(e));
 		}
 	}
 	
-	public void addArguments(Set<CompositeExpression> arguments) {
+	public void addArguments(List<CompositeExpression> arguments) {
 		makeNonAtomic(LogicalType.XOR);
 		this.arguments.addAll(arguments);
 	}
 	
-	public Set<CompositeExpression> getArguments() {
+	public List<CompositeExpression> getArguments() {
 		return arguments;
 	}
 	
@@ -69,7 +71,7 @@ public class CompositeExpression {
 	public void makeNonAtomic(LogicalType logicalType) {
 		if (atomic) {
 			this.logicalType = logicalType;
-			this.arguments = new HashSet<CompositeExpression>();
+			this.arguments = new ArrayList<CompositeExpression>();
 			arguments.add(new CompositeExpression(expression));
 			this.atomic = false;
 		}
