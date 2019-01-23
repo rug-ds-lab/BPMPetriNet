@@ -14,6 +14,7 @@ public class CompositeExpression {
 	
 	private List<CompositeExpression> arguments;
 	
+	private Boolean enclosed;
 	private Boolean atomic;
 	
 	private AtomicExpression<?> expression;
@@ -22,18 +23,21 @@ public class CompositeExpression {
 		this.logicalType = logicalType;
 		atomic = false;
 		arguments = new ArrayList<>();
+		enclosed = false;
 	}
 	
 	public CompositeExpression(AtomicExpression<?> expression) {
 		this.atomic = true;
 		this.expression = expression;
 		this.logicalType = LogicalType.XOR;
+		enclosed = false;
 	}
 	
 	public CompositeExpression(List<CompositeExpression> arguments, LogicalType ltype) {
 		this.arguments = arguments;
 		this.logicalType = ltype;
 		this.atomic = false;
+		enclosed = false;
 	}
 	
 	public void addArgument(CompositeExpression argument) {
@@ -75,6 +79,12 @@ public class CompositeExpression {
 			arguments.add(new CompositeExpression(expression));
 			this.atomic = false;
 		}
+	}
+	
+	public boolean isEnclosed() {return enclosed;}
+	
+	public void setEnclosed(boolean enclosed) {
+		this.enclosed = enclosed;
 	}
 	
 	public AtomicExpression<?> getExpression() {

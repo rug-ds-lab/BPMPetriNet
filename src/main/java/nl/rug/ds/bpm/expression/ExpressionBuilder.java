@@ -14,7 +14,9 @@ public class ExpressionBuilder {
 			if (right == -1) return new CompositeExpression(new ArrayList<CompositeExpression>(), LogicalType.XOR);
 			
 			if (right == expression.length() - 1) {
-				return parseExpression(expression.substring(1, right));
+				exp = parseExpression(expression.substring(1, right));
+				exp.setEnclosed(true);
+				return exp;
 			}
 			else {
 				int flt = firstLogicalType(expression, right);
@@ -31,10 +33,16 @@ public class ExpressionBuilder {
 						return exp;
 					}
 					else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
-						exp.addArgument(second.getArguments().get(0));
-						second.getArguments().remove(0);
-						second.getArguments().add(0, exp);
-						return second;
+						if (second.isEnclosed()) {
+							exp.addArgument(second);
+							return exp;
+						}
+						else {
+							exp.addArgument(second.getArguments().get(0));
+							second.getArguments().remove(0);
+							second.getArguments().add(0, exp);
+							return second;
+						}
 					}
 					else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
 						exp.addArgument(second);
@@ -65,10 +73,16 @@ public class ExpressionBuilder {
 					return exp;
 				} 
 				else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
-					exp.addArgument(second.getArguments().get(0));
-					second.getArguments().remove(0);
-					second.getArguments().add(0, exp);
-					return second;
+					if (second.isEnclosed()) {
+						exp.addArgument(second);
+						return exp;
+					}
+					else {
+						exp.addArgument(second.getArguments().get(0));
+						second.getArguments().remove(0);
+						second.getArguments().add(0, exp);
+						return second;	
+					}
 				}
 				else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
 					exp.addArgument(second);
