@@ -17,7 +17,7 @@ public class Marking implements ConditionalMarkingI, Comparable<MarkingI> {
 	private HashMap<String, CompositeExpression> conditions;
 	
 	public Marking() {
-		tokenmap = new TreeMap<String, Integer>(new ComparableComparator());
+		tokenmap = new TreeMap<String, Integer>(new ComparableComparator<String>());
 		conditions = new HashMap<>();
 	}
 	

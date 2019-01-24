@@ -9,7 +9,7 @@ import java.util.Set;
  * Created by Nick van Beest on 1 Oct. 2018
  *
  */
-public class CompositeExpression {
+public class CompositeExpression implements Comparable<CompositeExpression>{
 	private LogicalType logicalType;
 	
 	private List<CompositeExpression> arguments;
@@ -293,5 +293,10 @@ public class CompositeExpression {
 		}
 		
 		return ex;
+	}
+
+	@Override
+	public int compareTo(CompositeExpression o) {
+		return this.toString().compareTo(o.toString());
 	}
 }
