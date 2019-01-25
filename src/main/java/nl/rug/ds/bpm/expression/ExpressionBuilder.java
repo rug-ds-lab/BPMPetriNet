@@ -16,7 +16,6 @@ public class ExpressionBuilder {
 			if (right == expression.length() - 1) {
 				exp = parseExpression(expression.substring(1, right));
 				exp.setEnclosed(true);
-				return exp;
 			}
 			else {
 				int flt = firstLogicalType(expression, right);
@@ -30,31 +29,29 @@ public class ExpressionBuilder {
 					CompositeExpression second = parseExpression(expression.substring(flt + 2));
 					if (second.isAtomic()) {
 						exp.addArgument(second);
-						return exp;
 					}
 					else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
 						if (second.isEnclosed()) {
 							exp.addArgument(second);
-							return exp;
 						}
 						else {
 							exp.addArgument(second.getArguments().get(0));
 							second.getArguments().remove(0);
 							second.getArguments().add(0, exp);
+							second.setOriginalExpression(expression);
 							return second;
 						}
 					}
 					else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
 						exp.addArgument(second);
-						return exp;
 					}
 					else {
 						exp.addArguments(second.getArguments());
-						return exp;
 					}
 				}
 				else { // no logicaltype, so it's an atomic expression
-					return new CompositeExpression(parseAtomicExpression(expression));
+					exp = new CompositeExpression(parseAtomicExpression(expression));
+					return exp;
 				}
 			}
 		}
@@ -70,33 +67,33 @@ public class ExpressionBuilder {
 				CompositeExpression second = parseExpression(expression.substring(flt + 2));
 				if (second.isAtomic()) {
 					exp.addArgument(second);
-					return exp;
 				} 
 				else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
 					if (second.isEnclosed()) {
 						exp.addArgument(second);
-						return exp;
 					}
 					else {
 						exp.addArgument(second.getArguments().get(0));
 						second.getArguments().remove(0);
 						second.getArguments().add(0, exp);
+						second.setOriginalExpression(expression);
 						return second;	
 					}
 				}
 				else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
 					exp.addArgument(second);
-					return exp;
 				}
 				else {
 					exp.addArguments(second.getArguments());
-					return exp;
 				}
 			}
 			else {
-				return new CompositeExpression(parseAtomicExpression(expression));
+				exp = new CompositeExpression(parseAtomicExpression(expression));
 			}
 		}
+		
+		exp.setOriginalExpression(expression);
+		return exp;
 		
 	}
 	

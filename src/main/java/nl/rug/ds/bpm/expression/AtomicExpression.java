@@ -3,12 +3,14 @@ package nl.rug.ds.bpm.expression;
 public class AtomicExpression<T extends Comparable<T>> implements Comparable<AtomicExpression<T>> {
 	private T value;
 	private String variablename;
+	private String originalExpression;
 	private ExpressionType type;
 	
 	public AtomicExpression(String variablename, ExpressionType type, T value) {
 		this.variablename = variablename;
 		this.type = type;
 		this.value = value;
+		this.originalExpression = "";
 	}
 	
 	public T getValue() {
@@ -276,6 +278,14 @@ public class AtomicExpression<T extends Comparable<T>> implements Comparable<Ato
 	
 	public String getVariableName() {
 		return variablename;
+	}
+	
+	public void setOriginalExpression(String originalExpression) {
+		this.originalExpression = originalExpression;
+	}
+	
+	public String getOriginalExpression() {
+		return originalExpression;
 	}
 
 	@Override

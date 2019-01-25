@@ -17,6 +17,8 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 	private Boolean enclosed;
 	private Boolean atomic;
 	
+	private String originalExpression;
+	
 	private AtomicExpression<?> expression;
 
 	public CompositeExpression(LogicalType logicalType) {
@@ -24,6 +26,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		atomic = false;
 		arguments = new ArrayList<>();
 		enclosed = false;
+		originalExpression = "";
 	}
 	
 	public CompositeExpression(AtomicExpression<?> expression) {
@@ -31,6 +34,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		this.expression = expression;
 		this.logicalType = LogicalType.XOR;
 		enclosed = false;
+		originalExpression = "";
 	}
 	
 	public CompositeExpression(List<CompositeExpression> arguments, LogicalType ltype) {
@@ -38,6 +42,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		this.logicalType = ltype;
 		this.atomic = false;
 		enclosed = false;
+		originalExpression = "";
 	}
 	
 	public void addArgument(CompositeExpression argument) {
@@ -271,6 +276,14 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		}
 		
 		return varnames;
+	}
+	
+	public void setOriginalExpression(String originalExpression) {
+		this.originalExpression = originalExpression;
+	}
+	
+	public String getOriginalExpression() {
+		return originalExpression;
 	}
 	
 	@Override
