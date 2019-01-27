@@ -32,7 +32,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 	public CompositeExpression(AtomicExpression<?> expression) {
 		this.atomic = true;
 		this.expression = expression;
-		this.logicalType = LogicalType.XOR;
+		this.logicalType = LogicalType.OR;
 		enclosed = false;
 		originalExpression = "";
 	}
@@ -50,14 +50,14 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 	}
 	
 	public void addAtomicArguments(List<AtomicExpression<?>> arguments) {
-		makeNonAtomic(LogicalType.XOR);
+		makeNonAtomic(LogicalType.OR);
 		for (AtomicExpression<?> e: arguments) {
 			this.arguments.add(new CompositeExpression(e));
 		}
 	}
 	
 	public void addArguments(List<CompositeExpression> arguments) {
-		makeNonAtomic(LogicalType.XOR);
+		makeNonAtomic(LogicalType.OR);
 		this.arguments.addAll(arguments);
 	}
 	
@@ -111,7 +111,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 				}
 				return false;
 			}
-			else if(logicalType.equals(LogicalType.XOR)) {
+			else if(logicalType.equals(LogicalType.OR)) {
 				for (CompositeExpression e: arguments) {
 					if (!e.contradicts(other)) return false;
 				}
@@ -129,19 +129,19 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 			return other.contradicts(this);
 		}
 		else {
-			if ((logicalType.equals(LogicalType.XOR)) && (other.getType().equals(LogicalType.XOR))) {
+			if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.OR))) {
 				for (CompositeExpression e: other.getArguments()) {
 					if (!contradicts(e)) return false;
 				}
 				return true;
 			}
-			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.XOR))) {
+			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.OR))) {
 				for (CompositeExpression e: other.getArguments()) {
 					if (!contradicts(e)) return false;
 				}
 				return true;
 			}
-			else if ((logicalType.equals(LogicalType.XOR)) && (other.getType().equals(LogicalType.AND))) {
+			else if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.AND))) {
 				Boolean partial;
 				for (CompositeExpression a: arguments) {
 					partial = false;
@@ -177,7 +177,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 				}
 				return false;
 			}
-			else if (logicalType.equals(LogicalType.XOR)) {
+			else if (logicalType.equals(LogicalType.OR)) {
 				for (CompositeExpression e: arguments) {
 					if (!e.canContradict(other)) return false;
 				}
@@ -195,19 +195,19 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 			return other.canContradict(this);
 		}
 		else {
-			if ((logicalType.equals(LogicalType.XOR)) && (other.getType().equals(LogicalType.XOR))) {
+			if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.OR))) {
 				for (CompositeExpression e: other.getArguments()) {
 					if (!canContradict(e)) return false;
 				}
 				return true;
 			}
-			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.XOR))) {
+			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.OR))) {
 				for (CompositeExpression e: other.getArguments()) {
 					if (!canContradict(e)) return false;
 				}
 				return true;
 			}
-			else if ((logicalType.equals(LogicalType.XOR)) && (other.getType().equals(LogicalType.AND))) {
+			else if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.AND))) {
 				Boolean partial;
 				for (CompositeExpression a: arguments) {
 					partial = false;
@@ -298,7 +298,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 			for (CompositeExpression e: arguments) {
 				ex += e.toString();
 				if (logicalType.equals(LogicalType.AND)) ex += " && ";
-				if (logicalType.equals(LogicalType.XOR)) ex += " || ";
+				if (logicalType.equals(LogicalType.OR)) ex += " || ";
 			}
 			
 			if (arguments.size() > 0) ex = ex.substring(0, ex.length() - 4);

@@ -11,7 +11,7 @@ public class ExpressionBuilder {
 		
 		if (expression.startsWith("(")) {
 			int right = getMatchingBracket(expression, 0);
-			if (right == -1) return new CompositeExpression(new ArrayList<CompositeExpression>(), LogicalType.XOR);
+			if (right == -1) return new CompositeExpression(new ArrayList<CompositeExpression>(), LogicalType.OR);
 			
 			if (right == expression.length() - 1) {
 				exp = parseExpression(expression.substring(1, right));
@@ -30,7 +30,7 @@ public class ExpressionBuilder {
 					if (second.isAtomic()) {
 						exp.addArgument(second);
 					}
-					else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
+					else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.OR)) {
 						if (second.isEnclosed()) {
 							exp.addArgument(second);
 						}
@@ -42,7 +42,7 @@ public class ExpressionBuilder {
 							return second;
 						}
 					}
-					else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
+					else if ((lt == LogicalType.OR) && (second.getType() == LogicalType.AND)) {
 						exp.addArgument(second);
 					}
 					else {
@@ -68,7 +68,7 @@ public class ExpressionBuilder {
 				if (second.isAtomic()) {
 					exp.addArgument(second);
 				} 
-				else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.XOR)) {
+				else if ((lt == LogicalType.AND) && (second.getType() == LogicalType.OR)) {
 					if (second.isEnclosed()) {
 						exp.addArgument(second);
 					}
@@ -80,7 +80,7 @@ public class ExpressionBuilder {
 						return second;	
 					}
 				}
-				else if ((lt == LogicalType.XOR) && (second.getType() == LogicalType.AND)) {
+				else if ((lt == LogicalType.OR) && (second.getType() == LogicalType.AND)) {
 					exp.addArgument(second);
 				}
 				else {
@@ -197,14 +197,14 @@ public class ExpressionBuilder {
 	}
 	
 	private static LogicalType getLogicalTypeAt(String expression, int pos) {
-		if (expression.length() < (pos + 2)) return LogicalType.XOR;
+		if (expression.length() < (pos + 2)) return LogicalType.OR;
 		
 		String lt = expression.substring(pos, pos + 2);
 		if (lt.equals("&&")) {
 			return LogicalType.AND;
 		}
 		else {
-			return LogicalType.XOR;
+			return LogicalType.OR;
 		}
 	}
 	
