@@ -293,9 +293,11 @@ public class AtomicExpression<T extends Comparable<T>> implements Comparable<Ato
 		int ret = (o.getExpressionType() == type ? 0 : this.type.compareTo(o.getExpressionType()));
 		if (ret == 0) {
 			ret = o.getVariableName().compareTo(variablename);
-			if (ret == 0)
+			if (ret == 0) {
 //				ret = (o.accepts(value) ? o.getValue().compareTo(value) : -1);
 				ret = o.getValue().compareTo(value);
+		
+			}
 		}
 		return ret;
 	}
