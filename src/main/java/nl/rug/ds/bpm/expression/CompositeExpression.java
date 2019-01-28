@@ -310,6 +310,34 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 
 	@Override
 	public int compareTo(CompositeExpression o) {
-		return this.toString().compareTo(o.toString());
+		if (this.atomic) {
+			if (o.isAtomic()) {
+				return (this.toString().compareTo(o.toString()));
+			}
+			else {
+				return -1;
+			}
+		}
+		else if (o.isAtomic()) {
+			return 1;
+		}
+		else if (this.logicalType.equals(o.logicalType)) {
+			if (this.arguments.size() != o.getArguments().size()) {
+				return (this.arguments.size() < o.getArguments().size()) ? -1 : 1;
+			}
+			else {
+				int ret = 0;
+				for (int  i = 0; i < this.arguments.size(); i++) {
+					ret = (this.getArguments().get(i).compareTo(o.getArguments().get(i)));
+					if (ret != 0) return ret;
+				}
+				return ret;
+			}
+		}
+		else {
+			return (this.logicalType.equals(LogicalType.AND) ? -1 : 1);
+		}
+		
+//		return this.toString().compareTo(o.toString());
 	}
 }

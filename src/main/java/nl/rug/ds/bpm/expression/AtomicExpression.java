@@ -290,7 +290,7 @@ public class AtomicExpression<T extends Comparable<T>> implements Comparable<Ato
 
 	@Override
 	public int compareTo(AtomicExpression<T> o) {
-		int ret = (o.getExpressionType() == type ? 0 : -1);
+		int ret = (o.getExpressionType() == type ? 0 : this.type.compareTo(o.getExpressionType()));
 		if (ret == 0)
 			ret = o.getVariableName().compareTo(variablename);
 		if (ret == 0)
