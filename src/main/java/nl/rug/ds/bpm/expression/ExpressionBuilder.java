@@ -98,6 +98,8 @@ public class ExpressionBuilder {
 	}
 	
 	private static AtomicExpression<?> parseAtomicExpression(String expression) {
+		expression = expression.trim();
+		
 		String operator = getOperator(expression);
 		String name;
 		if (operator.equals("")) {
