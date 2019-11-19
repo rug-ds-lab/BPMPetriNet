@@ -8,6 +8,11 @@
     <artifactId>BPMPetriNet</artifactId>
     <version>1.0.3</version>
 
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -15,8 +20,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>12</release>
                     <testExcludes>
                         <exclude>**/apm/*</exclude>
                     </testExcludes>
