@@ -4,8 +4,8 @@ import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Pnml;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -27,7 +27,6 @@ public class PTNetUnmarshaller {
 			nets.addAll(((Pnml) unmarshaller.unmarshal(file)).getNets());
 		}
 		catch (Exception e) {
-			e.printStackTrace();
 			throw new MalformedNetException("Malformed PNML file.");
 		}
 	}

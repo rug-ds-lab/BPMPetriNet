@@ -2,9 +2,9 @@ package nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet;
 
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.annotation.Inscription;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Created by Heerko Groefsema on 20-Apr-18.

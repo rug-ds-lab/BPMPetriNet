@@ -14,6 +14,7 @@ import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -23,8 +24,20 @@ import java.util.Set;
 public class PlaceTransitionNetTest {
 
 	public static void main(String[] args) throws MalformedNetException {
-		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(args[0]));
-		Set<Net> pnset = pnu.getNets();
+		File file = new File(args[0]);
+		Set<Net> pnset = new HashSet<Net>();
+
+		if (file.exists()) {
+			try {
+				PTNetUnmarshaller pnu = new PTNetUnmarshaller(file);
+				pnset = pnu.getNets();
+			} catch (MalformedNetException e) {
+				System.out.println("File is not a PNML file.");
+			}
+		}
+		else
+			System.out.println("No such file.");
+
 		PlaceTransitionNet pn;
 		
 		if (pnset.isEmpty()) {
@@ -52,7 +65,7 @@ public class PlaceTransitionNetTest {
 			Arc a = pn.addArc("x0", "y0", 2);
 			Arc a1 = pn.addArc(t, p1);
 
-			t.setScript("i=i+1;", "JavaScript");
+			t.setScript("i=i+1;", "js");
 			t.setGuard("i>=0");
 			
 			PlaceTransitionNet page = new PlaceTransitionNet(pn.addPage("page1"));

@@ -3,7 +3,7 @@ package nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.annotation;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Graphics;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.ToolSpecific;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 import java.util.Set;
 
 /**

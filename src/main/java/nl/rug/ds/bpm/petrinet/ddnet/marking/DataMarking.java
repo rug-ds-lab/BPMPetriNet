@@ -3,21 +3,27 @@ package nl.rug.ds.bpm.petrinet.ddnet.marking;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.DataMarkingI;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 
-import javax.script.Bindings;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DataMarking extends Marking implements DataMarkingI {
-	private Bindings bindings;
+	private Map<String, String> bindings;
 
 	public DataMarking() {
 		super();
+		bindings = new HashMap<>();
 	}
 	
-	public Bindings getBindings() {
+	public Map<String, String> getBindings() {
 		return bindings;
 	}
 	
-	public void setBindings(Bindings bindings) {
-		this.bindings = bindings;
+	public void setBinding(String key, String value) {
+		this.bindings.put(key, value);
+	}
+
+	public void setBindings(Map<String, String> bindings) {
+		this.bindings.putAll(bindings);
 	}
 
 	public boolean containsBinding(String variable) {
@@ -28,11 +34,7 @@ public class DataMarking extends Marking implements DataMarkingI {
 	public DataMarking clone() {
 		DataMarking dataMarking = new DataMarking();
 		dataMarking.copyFromMarking(this);
-		
-		//Bindings only update within ScriptEngine when using createBindings, not with new SimpleBindings.
-		//Remember to create and clone Bindings manually after calling clone()
-		
-		//dataMarking.setBindings(new SimpleBindings(bindings));  //this fails to update
+		dataMarking.setBindings(bindings);
 		
 		return dataMarking;
 	}

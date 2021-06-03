@@ -18,7 +18,8 @@ import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.log.LogEvent;
 import nl.rug.ds.bpm.util.log.Logger;
 
-import javax.script.*;
+import org.graalvm.polyglot.*;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -27,27 +28,21 @@ import java.util.Set;
  * Created by Heerko Groefsema on 18-May-18.
  */
 public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataNet {
-	private ScriptEngineManager manager;
 	
 	public DataDrivenNet() {
 		super();
-		manager = new ScriptEngineManager();
 	}
-	
-	
+
 	public DataDrivenNet(String id) {
 		super(id);
-		manager = new ScriptEngineManager();
 	}
 	
 	public DataDrivenNet(String id, String name) {
 		super(id, name);
-		manager = new ScriptEngineManager();
 	}
 	
 	public DataDrivenNet(NetContainer xmlElement) throws MalformedNetException {
 		super(xmlElement);
-		manager = new ScriptEngineManager();
 	}
 
 	@Override
@@ -62,20 +57,10 @@ public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataN
 			Logger.log(e.getMessage(), LogEvent.ERROR);
 			e.printStackTrace();
 		}
-		
-		ScriptEngine engine = manager.getEngineByName("JavaScript");
-		try {
-			for (Variable v : getVariables()) {
-				String var = "var " + v.getName();
-				if (!v.getValue().isEmpty())
-					var = var + " = " + v.getValue() + ";";
-				engine.eval(var);
-			}
-			m.setBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE));
-		} catch (ScriptException e) {
-			e.printStackTrace();
-		}
-		
+
+		for (Variable v : getVariables())
+			m.setBinding(v.getName(), v.getValue());
+
 		return m;
 	}
 
@@ -168,23 +153,21 @@ public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataN
 		
 		if(evaluateGuard(t, (DataMarkingI) m)) {
 			marking = (DataMarking) super.fire(t, m);
-			
-			ScriptEngine engine = manager.getEngineByName("JavaScript");
-			
-			//Bindings only update when using createBindings, so create and clone manually
-			Bindings bindings = engine.createBindings();
-			bindings.putAll(((DataMarkingI)m).getBindings());
-			marking.setBindings(bindings);
 
 			if(m instanceof DataMarkingI && t instanceof Transition) {
 				Transition transition = (Transition) t;
 				if (!transition.getScript().isEmpty()) {
-					engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+					String langid = (transition.getScriptType().isEmpty() ? "js" : transition.getScriptType());
+					Context polyglot = Context.create();
+					Value bindings = polyglot.getBindings(langid);
 
-					try {
-						engine.eval(transition.getScript());
-					} catch (ScriptException e) {
-						e.printStackTrace();
+					for (String key: marking.getBindings().keySet())
+						bindings.putMember(key, marking.getBindings().get(key));
+
+					polyglot.eval(langid, transition.getScript());
+
+					for (String key: polyglot.getBindings(langid).getMemberKeys()) {
+						marking.setBinding(key, polyglot.getBindings(langid).getMember(key).toString());
 					}
 				}
 			}
@@ -197,14 +180,21 @@ public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataN
 		boolean satisfied = ((Transition)t).getGuard() == null;
 		
 		if (!satisfied) {
-			ScriptEngine engine = manager.getEngineByName("JavaScript");
-			engine.setBindings(m.getBindings(), ScriptContext.ENGINE_SCOPE);
-			
+			Transition transition = (Transition) t;
+			Context polyglot = Context.create();
+			Value bindings = polyglot.getBindings("js");
+
+			for (String key: m.getBindings().keySet())
+				bindings.putMember(key, m.getBindings().get(key));
+
 			try {
-				satisfied = (boolean) engine.eval(((Transition)t).getGuard().toString());
-			} catch (ScriptException e) {
-				e.printStackTrace();
+				satisfied = polyglot.eval("js", transition.getGuard().getOriginalExpression()).asBoolean();
 			}
+			catch (Exception e) {
+				satisfied = false;
+			}
+
+			System.out.println("Guard " + transition.getGuard().getOriginalExpression() + " evaluated to " + satisfied);
 		}
 		
 		return satisfied;

@@ -14,6 +14,7 @@ import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -23,10 +24,21 @@ import java.util.Set;
 public class DataDrivenNetTest {
 
 	public static void main(String[] args) throws MalformedNetException {
-		PTNetUnmarshaller pnu = new PTNetUnmarshaller(new File(args[0]));
-		Set<Net> pnset = pnu.getNets();
+		File file = new File(args[0]);
+		Set<Net> pnset = new HashSet<Net>();
 		DataDrivenNet pn;
-		
+
+		if (file.exists()) {
+			try {
+				PTNetUnmarshaller pnu = new PTNetUnmarshaller(file);
+				pnset = pnu.getNets();
+			} catch (MalformedNetException e) {
+				System.out.println("File is not a PNML file.");
+			}
+		}
+		else
+			System.out.println("No such file.");
+
 		if (pnset.isEmpty()) {
 			System.out.println("empty");
 			pn = new DataDrivenNet("t1");
@@ -43,7 +55,7 @@ public class DataDrivenNetTest {
 		if (pn.getTransition("y0") == null) {
 			System.out.println("Adding test elements");
 
-			pn.addVariable("i", "int", "0.0");
+			pn.addVariable("i", "int", "0");
 
 			Place p = pn.addPlace("x0", "test_x0", 2);
 			Transition t = pn.addTransition("y0", "ytest");
@@ -52,7 +64,7 @@ public class DataDrivenNetTest {
 			Arc a = pn.addArc("x0", "y0", 2);
 			Arc a1 = pn.addArc(t, p1);
 
-			t.setScript("i=i+1;", "JavaScript");
+			t.setScript("i++;", "js");
 			t.setGuard("i>=0");
 			
 			DataDrivenNet page = new DataDrivenNet(pn.addPage("page1"));

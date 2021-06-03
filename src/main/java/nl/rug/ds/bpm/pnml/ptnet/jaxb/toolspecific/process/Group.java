@@ -1,7 +1,7 @@
 package nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.process;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Created by Heerko Groefsema on 23-Apr-18.

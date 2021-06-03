@@ -1,7 +1,7 @@
 package nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
 import java.util.Set;
 

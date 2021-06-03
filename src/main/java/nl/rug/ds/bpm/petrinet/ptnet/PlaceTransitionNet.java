@@ -148,6 +148,8 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 			Arc a = new Arc(arc);
 			if (arcs.containsKey(arc.getId()))
 				throw new MalformedNetException("Duplicate arc i.d.: " + arc.getId() + ".");
+			if (nodes.get(arc.getSource()) == null || nodes.get(arc.getTarget()) == null)
+				throw new MalformedNetException("Arc with non-existent source/target.");
 			a.setSource(nodes.get(arc.getSource()));
 			a.setTarget(nodes.get(arc.getTarget()));
 			arcs.put(arc.getId(), a);
