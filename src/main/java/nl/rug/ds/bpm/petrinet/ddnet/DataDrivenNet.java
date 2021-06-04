@@ -193,8 +193,6 @@ public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataN
 			catch (Exception e) {
 				satisfied = false;
 			}
-
-			System.out.println("Guard " + transition.getGuard().getOriginalExpression() + " evaluated to " + satisfied);
 		}
 		
 		return satisfied;

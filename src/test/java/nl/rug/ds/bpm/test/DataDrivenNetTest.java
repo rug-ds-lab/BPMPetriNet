@@ -10,6 +10,7 @@ import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.pnml.ptnet.marshaller.PTNetMarshaller;
 import nl.rug.ds.bpm.pnml.ptnet.marshaller.PTNetUnmarshaller;
+import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
 import java.io.File;
@@ -86,8 +87,21 @@ public class DataDrivenNetTest {
 		System.out.println("fired y0: " + m2.toString());
 		for (String var: m2.getBindings().keySet())
 			System.out.println(var + "=" + m2.getBindings().get(var));
-		
-		pn.setInitialMarking(m2);
+
+		try {
+			((DataMarking)m2).addTokens("x0", 2);
+		}
+		catch (IllegalMarkingException e) {
+			System.out.println("Error adding tokens");
+		}
+
+
+		DataMarkingI m3 = pn.fire(pn.getTransition("y0"), m);
+		System.out.println("fired y0: " + m2.toString());
+		for (String var: m2.getBindings().keySet())
+			System.out.println(var + "=" + m2.getBindings().get(var));
+
+		pn.setInitialMarking(m3);
 		
 		Collection<Transition> en = (Collection<Transition>) pn.getEnabledTransitions(m2);
 		while (!en.isEmpty()) {
