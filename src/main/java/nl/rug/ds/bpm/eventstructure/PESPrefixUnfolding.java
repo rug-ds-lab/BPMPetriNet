@@ -66,7 +66,7 @@ public class PESPrefixUnfolding {
 			}
 
 			for (TransitionI t: ptnet.getTransitions()) {
-				if (t.getName().startsWith(silentPrefix)) t.setTau(true);
+				if (!t.isTau() && t.getName().startsWith(silentPrefix)) t.setTau(true);
 			}
 			
 			buildPES(ptnet, globalconditions);
@@ -465,6 +465,79 @@ public class PESPrefixUnfolding {
 		else {
 			return -1;
 		}
+	}
+
+	/**
+	 * Returns the relation between two events in String format.
+	 *
+	 * @param source the source event.
+	 * @param target the target event.
+	 * @return
+	 */
+	public String getRelation(int source, int target) {
+		String relation = "";
+
+		if (source > labels.size() || target > labels.size())	relation = "";
+		else if (source == target)								relation = "X";
+		else if (getDirectSuccessors(source).get(target))		relation = "<d";
+		else if (getTransitiveSuccessors(source).get(target))	relation = "<";
+		else if (getDirectPredecessors(source).get(target))		relation = ">d";
+		else if (getTransitivePredecessors(source).get(target))	relation = ">";
+		else if (getConcurrency(source).get(target))			relation = "||";
+		else if (getConflicts(source).get(target))				relation = "#";
+		else if (getDirectConflicts(source).get(target))		relation = "#d";
+		else 													relation = "?";
+
+		return relation;
+	}
+
+	/**
+	 * Returns all relations between all events in String format.
+	 *
+	 * @return a String[][] of relations between all source and target events.
+	 */
+	public String[][] getRelations() {
+		String[][] relations = new String[labels.size()][labels.size()];
+
+		for (int source = 0; source < relations.length; source++) {
+			for (int target = 0; target < relations[source].length; target++) {
+				relations[source][target] = getRelation(source, target);
+			}
+		}
+
+		return relations;
+	}
+
+	private String printLabels() {
+		String labels = "\t";
+
+		for (String label: getLabels())
+			labels = labels + label + "\t";
+
+		return labels;
+	}
+
+	private String printRow(String source, String[] relations) {
+		String row = source + "\t";
+
+		for (int i = 0; i < relations.length; i++)
+			row = row + relations[i] + "\t";
+
+		return row;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		String[][] relations = getRelations();
+
+		sb.append(printLabels() + "\n");
+
+		for (int source = 0; source < relations.length; source++) {
+			sb.append(printRow(getLabel(source), relations[source]) + "\n");
+		}
+
+		return sb.toString();
 	}
 	
 }
