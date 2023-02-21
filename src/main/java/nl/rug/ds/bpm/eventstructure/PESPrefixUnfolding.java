@@ -472,7 +472,7 @@ public class PESPrefixUnfolding {
 	 *
 	 * @param source the source event.
 	 * @param target the target event.
-	 * @return
+	 * @return the relation between two events in String format.
 	 */
 	public String getRelation(int source, int target) {
 		String relation = "";
@@ -489,6 +489,17 @@ public class PESPrefixUnfolding {
 		else 													relation = "?";
 
 		return relation;
+	}
+
+	/**
+	 * Returns the relation between two events in String format.
+	 *
+	 * @param source the source event label.
+	 * @param target the target event label.
+	 * @return the relation between two events in String format.
+	 */
+	public String getRelation(String source, String target) {
+		return getRelation(labels.indexOf(source), labels.indexOf(target));
 	}
 
 	/**
@@ -539,5 +550,5 @@ public class PESPrefixUnfolding {
 
 		return sb.toString();
 	}
-	
+
 }
