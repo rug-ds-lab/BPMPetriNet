@@ -797,7 +797,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	protected boolean canHaveContradiction(Set<? extends TransitionI> parSet, TransitionI t) {
 		if (((Transition)t).getGuard() != null) {
 			for (TransitionI ps: parSet) {
-				if ((((Transition)ps).getGuard() != null) && (((Transition)ps).getGuard().canContradict(((Transition)t).getGuard()))) return true;
+				if ((((Transition)ps).getGuard() != null) && (((Transition)ps).getGuard().canBeContradictedBy(((Transition)t).getGuard()))) return true;
 			}
 		}
 		return false;

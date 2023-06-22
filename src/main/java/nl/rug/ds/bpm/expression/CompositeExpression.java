@@ -5,21 +5,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import nl.rug.ds.bpm.expression.solution.DisjointDomain;
+import nl.rug.ds.bpm.expression.solution.TruthTable;
+
 /**
  * Created by Nick van Beest on 1 Oct. 2018
  *
  */
 public class CompositeExpression implements Comparable<CompositeExpression>{
 	private LogicalType logicalType;
-	
+
 	private List<CompositeExpression> arguments;
-	
+
 	private Boolean enclosed;
 	private Boolean atomic;
-	
+
 	private String originalExpression;
-	
+
 	private AtomicExpression<?> expression;
+	
+	private TruthTable table;
 
 	public CompositeExpression(LogicalType logicalType) {
 		this.logicalType = logicalType;
@@ -27,48 +32,79 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		arguments = new ArrayList<>();
 		enclosed = false;
 		originalExpression = "";
+		this.table = new TruthTable();
 	}
-	
+
 	public CompositeExpression(AtomicExpression<?> expression) {
 		this.atomic = true;
 		this.expression = expression;
 		this.logicalType = LogicalType.OR;
 		enclosed = false;
 		originalExpression = "";
+		this.table = new TruthTable(expression);
 	}
-	
+
 	public CompositeExpression(List<CompositeExpression> arguments, LogicalType ltype) {
 		this.arguments = arguments;
 		this.logicalType = ltype;
 		this.atomic = false;
 		enclosed = false;
 		originalExpression = "";
+		this.table = new TruthTable();
+		for (int i=0; i<arguments.size(); i++) {
+			this.table = this.table.combine(arguments.get(i).table, ltype);
+		}
 	}
-	
+
 	public void addArgument(CompositeExpression argument) {
 		if (!atomic) arguments.add(argument);
+		this.table = this.table.combine(argument.table, logicalType);
 	}
-	
+
 	public void addAtomicArguments(List<AtomicExpression<?>> arguments) {
 		makeNonAtomic(LogicalType.OR);
 		for (AtomicExpression<?> e: arguments) {
 			this.arguments.add(new CompositeExpression(e));
 		}
+		for (int i=this.arguments.size()-arguments.size()-1; i<this.arguments.size(); i++) {
+			this.table = this.table.combine(this.arguments.get(i).table, LogicalType.OR);
+		}
 	}
-	
+
 	public void addArguments(List<CompositeExpression> arguments) {
 		makeNonAtomic(LogicalType.OR);
 		this.arguments.addAll(arguments);
+		for (int i=0; i<arguments.size(); i++) {
+			this.table = this.table.combine(arguments.get(i).table, LogicalType.OR);
+		}
 	}
 	
+	/*
+	 * returns the complement of the condition
+	 */
+	public CompositeExpression negate() {
+		if (atomic) return new CompositeExpression(expression.negate());
+		else {
+			List<CompositeExpression> negatedArguments = arguments.stream().map(a->a.negate()).toList();
+			switch (logicalType) {
+			case AND:
+				return new CompositeExpression(negatedArguments, LogicalType.OR);
+			case OR:
+				return new CompositeExpression(negatedArguments, LogicalType.AND);
+			default:
+				throw new RuntimeException("Cannot negate: "+this.toString());
+			}
+		}
+	}
+
 	public List<CompositeExpression> getArguments() {
 		return arguments;
 	}
-	
+
 	public void setType(LogicalType logicalType) {
 		this.logicalType = logicalType;
 	}
-	
+
 	public LogicalType getType() {
 		return logicalType;
 	}
@@ -77,6 +113,10 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		return atomic;
 	}
 	
+	public TruthTable getTable() {
+		return table;
+	}
+
 	public void makeNonAtomic(LogicalType logicalType) {
 		if (atomic) {
 			this.logicalType = logicalType;
@@ -85,159 +125,34 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 			this.atomic = false;
 		}
 	}
-	
+
 	public boolean isEnclosed() {return enclosed;}
-	
+
 	public void setEnclosed(boolean enclosed) {
 		this.enclosed = enclosed;
 	}
-	
+
 	public AtomicExpression<?> getExpression() {
 		if (atomic) return expression;
-		
+
 		return null;
 	}
-	
-	// This method checks whether this ALWAYS contradicts other
-	@SuppressWarnings({ "rawtypes" })
-	public Boolean contradicts(AtomicExpression other) {
-		if (atomic) {
-			return this.expression.contradicts(other);
-		}
-		else {
-			if (logicalType.equals(LogicalType.AND)) {
-				for (CompositeExpression e: arguments) {
-					if (e.contradicts(other)) return true;
-				}
-				return false;
-			}
-			else if(logicalType.equals(LogicalType.OR)) {
-				for (CompositeExpression e: arguments) {
-					if (!e.contradicts(other)) return false;
-				}
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
+
 	public Boolean contradicts(CompositeExpression other) {
-		if (other.isAtomic()) return contradicts(other.getExpression());
-		
-		if (atomic) {
-			return other.contradicts(this);
-		}
-		else {
-			if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.OR))) {
-				for (CompositeExpression e: other.getArguments()) {
-					if (!contradicts(e)) return false;
-				}
-				return true;
-			}
-			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.OR))) {
-				for (CompositeExpression e: other.getArguments()) {
-					if (!contradicts(e)) return false;
-				}
-				return true;
-			}
-			else if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.AND))) {
-				Boolean partial;
-				for (CompositeExpression a: arguments) {
-					partial = false;
-					for (CompositeExpression e: other.getArguments()) {
-						if (a.contradicts(e)) partial = true;
-					}
-					if (partial == false) return false;
-				}
-				return true;
-			}
-			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.AND))) {
-				for (CompositeExpression e: other.getArguments()) {
-					if (contradicts(e)) return true;
-				}
-				return false;
-			}
-		}
-		return false;
+		CompositeExpression conjunction = new CompositeExpression(List.of(this, other), LogicalType.AND);
+		DisjointDomain solution = new DisjointDomain().evaluate(conjunction);
+		return solution.isEmpty();
 	}
 
 	// This method checks whether this SOMETIMES contradicts other
 	// This function is asymmetric:
 	// it checks whether the range of values in "other" can potentially be outside the domain of values allowed by "this"
-	@SuppressWarnings({ "rawtypes" })
-	public Boolean canContradict(AtomicExpression other) {		
-		if (atomic) {
-			return this.expression.canContradict(other);
-		}
-		else {
-			if (logicalType.equals(LogicalType.AND)) {
-				for (CompositeExpression e: arguments) {
-					if (e.canContradict(other)) return true;
-				}
-				return false;
-			}
-			else if (logicalType.equals(LogicalType.OR)) {
-				for (CompositeExpression e: arguments) {
-					if (!e.canContradict(other)) return false;
-				}
-				return true;
-			}
-		}
-		
-		return false;
+	public Boolean canBeContradictedBy(CompositeExpression other) {
+		CompositeExpression conjunction = new CompositeExpression(List.of(this.negate(), other), LogicalType.AND);
+		DisjointDomain solution = new DisjointDomain().evaluate(conjunction);
+		return !solution.isEmpty();
 	}
-	
-	public Boolean canContradict(CompositeExpression other) {
-		if (other.isAtomic()) return canContradict(other.getExpression());
-		
-		if (atomic) {
-			return other.canContradict(this);
-		}
-		else {
-			if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.OR))) {
-				for (CompositeExpression e: other.getArguments()) {
-					if (!canContradict(e)) return false;
-				}
-				return true;
-			}
-			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.OR))) {
-				for (CompositeExpression e: other.getArguments()) {
-					if (!canContradict(e)) return false;
-				}
-				return true;
-			}
-			else if ((logicalType.equals(LogicalType.OR)) && (other.getType().equals(LogicalType.AND))) {
-				Boolean partial;
-				for (CompositeExpression a: arguments) {
-					partial = false;
-					for (CompositeExpression e: other.getArguments()) {
-						if (a.canContradict(e)) partial = true;
-					}
-					if (partial == false) return false;
-				}
-				return true;
-			}
-			else if ((logicalType.equals(LogicalType.AND)) && (other.getType().equals(LogicalType.AND))) {
-				for (CompositeExpression e: other.getArguments()) {
-					if (canContradict(e)) return true;
-				}
-				return false;
-			}
-		}
-		
-		return false;
-	}
-	
-	// This function checks whether this is being fulfilled by other
-	// That is, other sets the condition of this to true
-	@SuppressWarnings("rawtypes")
-	public Boolean isFulfilledBy(AtomicExpression other) {
-		if (atomic) return this.expression.isFulfilledBy(other);
-		
-		return false;
-	}
-	
+
 	// This function checks whether this is being fulfilled by other
 	// That is, other sets the condition of this to true
 	public Boolean isFulfilledBy(CompositeExpression other) {
@@ -246,10 +161,10 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 			varnames.removeAll(other.getVariableNames());
 			return (varnames.size() == 0);
 		}
-		
+
 		return false;
 	}
-		
+
 	public Boolean containsVariable(String varname) {
 		if (atomic) {
 			return this.expression.getVariableName().equals(varname);
@@ -259,13 +174,13 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 				if (e.containsVariable(varname)) return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public Set<String> getVariableNames() {
 		Set<String> varnames = new HashSet<String>();
-		
+
 		if (atomic) {
 			varnames.add(expression.getVariableName());
 		}
@@ -274,22 +189,22 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 				varnames.addAll(e.getVariableNames());
 			}
 		}
-		
+
 		return varnames;
 	}
-	
+
 	public void setOriginalExpression(String originalExpression) {
 		this.originalExpression = originalExpression;
 	}
-	
+
 	public String getOriginalExpression() {
 		return originalExpression;
 	}
-	
+
 	@Override
 	public String toString() {
 		String ex = "";
-		
+
 		if (atomic) {
 			return "(" + expression.toString() + ")";
 		}
@@ -300,11 +215,11 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 				if (logicalType.equals(LogicalType.AND)) ex += " && ";
 				if (logicalType.equals(LogicalType.OR)) ex += " || ";
 			}
-			
+
 			if (arguments.size() > 0) ex = ex.substring(0, ex.length() - 4);
 			ex += ")";
 		}
-		
+
 		return ex;
 	}
 
@@ -337,7 +252,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		else {
 			return (this.logicalType.equals(LogicalType.AND) ? -1 : 1);
 		}
-		
-//		return this.toString().compareTo(o.toString());
+
+		//		return this.toString().compareTo(o.toString());
 	}
 }
