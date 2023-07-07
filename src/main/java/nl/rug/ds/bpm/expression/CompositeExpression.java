@@ -155,13 +155,11 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 
 	// This function checks whether this is being fulfilled by other
 	// That is, other sets the condition of this to true
+	// This function is asymmetric
 	public Boolean isFulfilledBy(CompositeExpression other) {
-		if (!contradicts(other)) {
-			Set<String> varnames = getVariableNames();
-			varnames.removeAll(other.getVariableNames());
-			return (varnames.size() == 0);
+		if (!this.canBeContradictedBy(other)) {
+			return other.getVariableNames().containsAll(getVariableNames());
 		}
-
 		return false;
 	}
 
