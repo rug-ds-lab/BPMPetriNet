@@ -17,6 +17,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * Created by Nick van Beest on 4 May 2018
  *
@@ -99,5 +103,64 @@ public class PlaceTransitionNetTest {
 			en = (Collection<Transition>) pn.getEnabledTransitions(m2);
 		}
 		PTNetMarshaller pnm = new PTNetMarshaller(pnset, new File(args[0]+".out"));
+	}
+
+	@Test
+	public void verifiableNetTest() throws MalformedNetException {
+		PlaceTransitionNet net = new PlaceTransitionNet();
+
+		Place p0 = net.addPlace("p0", "p0", 1);
+		Transition t0 = net.addTransition("t0", "t0");
+		Transition t1 = net.addTransition("t1", "t1");
+		Transition t2 = net.addTransition("t2", "t2");
+
+		net.addArc(p0, t0);
+		net.addArc(p0, t1);
+		net.addArc(p0, t2);
+
+		t0.setGuard("x>=0");
+		t1.setGuard("x<=0 && y==true");
+		t2.setGuard("x<0 && y==false");
+
+		assertFalse(t0.getGuard().contradicts(t1.getGuard()));
+		assertTrue(t0.getGuard().canBeContradictedBy(t1.getGuard()));
+
+		assertTrue(t0.getGuard().contradicts(t2.getGuard()));
+
+		assertTrue(t1.getGuard().contradicts(t2.getGuard()));
+
+		Collection<Transition> enabled = new HashSet<>();
+		enabled.add(t0);
+		enabled.add(t1);
+		enabled.add(t2);
+
+		// x==-1 && y==true
+		Collection<Transition> parallelEnabledFirstSet = new HashSet<>();
+		parallelEnabledFirstSet.add(t1);
+
+		// x==-1 && y==false
+		Collection<Transition> parallelEnabledSecondSet = new HashSet<>();
+		parallelEnabledSecondSet.add(t2);
+
+		// x==0 && y==true
+		Collection<Transition> parallelEnabledThirdSet = new HashSet<>();
+		parallelEnabledThirdSet.add(t0);
+		parallelEnabledThirdSet.add(t1);
+
+		// x==0 && y==false
+		Collection<Transition> parallelEnabledFourthSet = new HashSet<>();
+
+		// x==1 && y==true|false
+		Collection<Transition> parallelEnabledFifthSet = new HashSet<>();
+		parallelEnabledFifthSet.add(t0);
+
+		Collection<Collection<Transition>> parallelEnabled = new HashSet<>();
+		parallelEnabled.add(parallelEnabledFirstSet);
+		parallelEnabled.add(parallelEnabledSecondSet);
+		parallelEnabled.add(parallelEnabledThirdSet);
+		parallelEnabled.add(parallelEnabledFifthSet);
+
+		assertArrayEquals(enabled.toArray(), net.getEnabledTransitions(net.getInitialMarking()).toArray());
+		assertArrayEquals(parallelEnabled.toArray(), net.getParallelEnabledTransitions(net.getInitialMarking()).toArray());
 	}
 }
