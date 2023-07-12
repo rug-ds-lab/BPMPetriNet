@@ -1,6 +1,16 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import nl.rug.ds.bpm.expression.CompositeExpression;
+import nl.rug.ds.bpm.expression.LogicalType;
 import nl.rug.ds.bpm.petrinet.interfaces.element.PlaceI;
 import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
@@ -26,9 +36,6 @@ import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.log.LogEvent;
 import nl.rug.ds.bpm.util.log.Logger;
 import nl.rug.ds.bpm.util.set.Sets;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	protected HashMap<String, Node> nodes;
@@ -734,7 +741,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 				isParSet = false;
 			}
 		}
-
+		
 		return isParSet;
 	}
 	
@@ -775,32 +782,55 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		Set<Set<? extends TransitionI>> pow = new HashSet<>(Sets.powerSet(enabled));
 		Set<Set<? extends TransitionI>> ypar = new HashSet<>();
 
+		// for this set of transitions to be a maximum enabled set, it must have
+		// - structurally it must be parallel enabled
+		// - there must exist an assignment of model variables that satisfies all guard conditions of the transitions in this set,
+		//   while not satisfying the guard variables of any transitions outside this set that are also enabled in parallel
 		for (Set<? extends TransitionI> parSet: pow) {
-			boolean isParSet = isParallelEnabled(parSet, marking, ignoreGuardConflicts);
-			//check if other transitions exists that don't contradict and are enabled in par
+			
+			if (!isParallelEnabled(parSet, marking, true)) continue; // first check structure 
+			
+			//find any other transitions that structurally are enabled in parallel
 			Iterator<? extends TransitionI> otherIterator = enabled.iterator();
-			while (isParSet && otherIterator.hasNext()) {
+			Set<TransitionI> otherTransitions = new HashSet<>();
+			while (otherIterator.hasNext()) {
 				TransitionI t = otherIterator.next();
-				if (!parSet.contains(t)) {
-					isParSet = !isParallelEnabled(parSet, t, marking, ignoreGuardConflicts) || canHaveContradiction(parSet, t); // !ignoreGuardConflicts || 
-				}
+				if (!parSet.contains(t) && isParallelEnabled(parSet, t, marking, true)) // if there is an enabled transition not in this set
+					otherTransitions.add(t);
 			}
-			if (isParSet) {
+			
+			// check there exists an assignment that satisfies the guards in parset while not satisfying any of the otherTransitions
+			if (existsContradictingAssignment(parSet, otherTransitions)) // || ignoreGuardConflicts
 				ypar.add(parSet);
-			}
 		}
-
 		return ypar;
 	}
 
-	//checks whether parset can have contradiction with parset + t
-	protected boolean canHaveContradiction(Set<? extends TransitionI> parSet, TransitionI t) {
-		if (((Transition)t).getGuard() != null) {
-			for (TransitionI ps: parSet) {
-				if ((((Transition)ps).getGuard() != null) && (((Transition)ps).getGuard().canBeContradictedBy(((Transition)t).getGuard()))) return true;
+	/*
+	 * returns whether there exists an assignment that can satisfy all guards in parSet, while contradicting all guards in otherSet
+	 */
+	protected boolean existsContradictingAssignment(Set<? extends TransitionI> parSet, Set<TransitionI> otherSet) {
+		// create conjunction of parSet guards
+		List<CompositeExpression> guards = new ArrayList<>();
+		guards.add(new CompositeExpression(LogicalType.AND));
+		for (TransitionI ps: parSet) {
+			if (((Transition)ps).getGuard() != null) {
+				guards.add(((Transition)ps).getGuard());
 			}
 		}
-		return false;
+		CompositeExpression parSetConjunction = new CompositeExpression(guards, LogicalType.AND);
+		
+		// create disjunction of otherSet guards
+		List<CompositeExpression> guardsOther = new ArrayList<>();
+		for (TransitionI ps: otherSet) {
+			if (((Transition)ps).getGuard() != null) {
+				guardsOther.add(((Transition)ps).getGuard());
+			}
+		}
+		CompositeExpression otherSetDisjunction = new CompositeExpression(guardsOther, LogicalType.OR);
+		
+		// return whether there exists an assignment in parSetConjunction that contradicts the entire otherSetDisjunction
+		return otherSetDisjunction.canBeContradictedBy(parSetConjunction);
 	}
 	
 	private boolean areContradictory(TransitionI t1, TransitionI t2) {
