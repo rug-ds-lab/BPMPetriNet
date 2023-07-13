@@ -146,31 +146,41 @@ public class PlaceTransitionNetTest {
 		Collection<Transition> parallelEnabledSecondSet = new HashSet<>();
 		parallelEnabledSecondSet.add(t2);
 
-		// x==0 && y==true
+		// x==0 && y==true token grabbed by t0
 		Collection<Transition> parallelEnabledThirdSet = new HashSet<>();
 		parallelEnabledThirdSet.add(t0);
-		parallelEnabledThirdSet.add(t1);
+
+		// x==0 && y==true token grabbed by t1
+		Collection<Transition> parallelEnabledFourthSet = new HashSet<>();
+		parallelEnabledFourthSet.add(t1);
 
 		// x==0 && y==false
-		Collection<Transition> parallelEnabledFourthSet = new HashSet<>();
-
-		// x==1 && y==true|false
 		Collection<Transition> parallelEnabledFifthSet = new HashSet<>();
 		parallelEnabledFifthSet.add(t0);
+
+		// x==1 && y==true|false
+		Collection<Transition> parallelEnabledSixthSet = new HashSet<>();
+		parallelEnabledSixthSet.add(t0);
 
 		Collection<Collection<Transition>> parallelEnabled = new HashSet<>();
 		parallelEnabled.add(parallelEnabledFirstSet);
 		parallelEnabled.add(parallelEnabledSecondSet);
-//		parallelEnabled.add(parallelEnabledThirdSet); // this one doesn't exist because of the structure - can't execute both transitions in parallel
-//		parallelEnabled.add(parallelEnabledFourthSet); // this one doesn't exist because if x==0, y==false, then t0 is enabled
-		parallelEnabled.add(parallelEnabledFifthSet);
+		parallelEnabled.add(parallelEnabledThirdSet);
+//		parallelEnabled.add(parallelEnabledFourthSet); // Same as first
+//		parallelEnabled.add(parallelEnabledFifthSet);  // Same as third
+//		parallelEnabled.add(parallelEnabledSixthSet);  // Same as third
 
 		assertArrayEquals(enabled.toArray(), net.getEnabledTransitions(net.getInitialMarking()).toArray());
 		assertEquals(parallelEnabled.stream().collect(Collectors.toSet()), 
 				net.getParallelEnabledTransitions(net.getInitialMarking()).stream().collect(Collectors.toSet()));
-		
-		t0.setGuard("x>0");
-		parallelEnabled.add(parallelEnabledFourthSet);
+
+
+		t0.setGuard("x>0"); // Adds case where nothing is enabled
+
+		// x==0 && y==false
+		parallelEnabledFifthSet.clear();
+
+		parallelEnabled.add(parallelEnabledFifthSet);
 		assertEquals(parallelEnabled.stream().collect(Collectors.toSet()), 
 				net.getParallelEnabledTransitions(net.getInitialMarking()).stream().collect(Collectors.toSet()));
 	}
@@ -227,6 +237,7 @@ public class PlaceTransitionNetTest {
 
 		// x==0 && y==false
 		Collection<Transition> parallelEnabledFourthSet = new HashSet<>();
+		parallelEnabledFourthSet.add(t1);
 
 		// x==1 && y==true|false
 		Collection<Transition> parallelEnabledFifthSet = new HashSet<>();
@@ -235,9 +246,9 @@ public class PlaceTransitionNetTest {
 		Collection<Collection<Transition>> parallelEnabled = new HashSet<>();
 		parallelEnabled.add(parallelEnabledFirstSet);
 		parallelEnabled.add(parallelEnabledSecondSet);
-		parallelEnabled.add(parallelEnabledFifthSet); 
-//		parallelEnabled.add(parallelEnabledFourthSet); // this one doesn't exist because if x==0, y==false, then t1 is enabled
 		parallelEnabled.add(parallelEnabledThirdSet);
+		parallelEnabled.add(parallelEnabledFourthSet);
+//		parallelEnabled.add(parallelEnabledFifthSet);  // Same as fourth
 
 		assertArrayEquals(enabled.toArray(), net.getEnabledTransitions(markingAND).toArray());
 		assertEquals(parallelEnabled.stream().collect(Collectors.toSet()), 
