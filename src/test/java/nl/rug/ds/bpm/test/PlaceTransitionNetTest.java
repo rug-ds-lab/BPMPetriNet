@@ -215,9 +215,27 @@ public class PlaceTransitionNetTest {
 		t3.setGuard("x<0 && y==false");
 		
 		MarkingI marking = net.getInitialMarking();
-		MarkingI markingAND = net.fire(t0, marking);
+
+		assertEquals("1p0", marking.toString());
 
 		Collection<Transition> enabled = new HashSet<>();
+		enabled.add(t0);
+		assertEquals(enabled, net.getEnabledTransitions(net.getInitialMarking()));
+		assertTrue(net.isParallelEnabled((Set<? extends TransitionI>) enabled, marking));
+
+		// Made existsContradictingAssignment public to show this part of getParallelEnabledTransitions fails.
+		// Should be made protected again and this test should be removed after a fix.
+		assertTrue(net.existsContradictingAssignment((Set<? extends TransitionI>) enabled, new HashSet<>()));
+
+		Collection<Collection<Transition>> parallelEnabled = new HashSet<>();
+		parallelEnabled.add(enabled);
+
+		assertEquals(parallelEnabled.stream().collect(Collectors.toSet()),
+				net.getParallelEnabledTransitions(marking).stream().collect(Collectors.toSet()));
+
+		MarkingI markingAND = net.fire(t0, marking);
+
+		enabled.clear();
 		enabled.add(t1);
 		enabled.add(t2);
 		enabled.add(t3);
@@ -243,7 +261,7 @@ public class PlaceTransitionNetTest {
 		Collection<Transition> parallelEnabledFifthSet = new HashSet<>();
 		parallelEnabledFifthSet.add(t1);
 
-		Collection<Collection<Transition>> parallelEnabled = new HashSet<>();
+		parallelEnabled.clear();
 		parallelEnabled.add(parallelEnabledFirstSet);
 		parallelEnabled.add(parallelEnabledSecondSet);
 		parallelEnabled.add(parallelEnabledThirdSet);
