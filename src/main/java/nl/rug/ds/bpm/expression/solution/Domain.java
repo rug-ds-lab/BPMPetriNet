@@ -3,7 +3,7 @@ package nl.rug.ds.bpm.expression.solution;
 import java.util.HashSet;
 import java.util.Set;
 
-import nl.rug.ds.bpm.expression.AtomicExpression;
+import nl.rug.ds.bpm.expression.AtomicPredicate;
 
 /*
  * Created by Hannah Burke on 22 June 2023
@@ -13,7 +13,7 @@ import nl.rug.ds.bpm.expression.AtomicExpression;
 public interface Domain{
 
 	public boolean contains(Object value); // returns whether the domain contains the value
-	public Set<Domain> evaluate(AtomicExpression<?> input); // from the current domain, returns the set of sub-domains where the input predicate is satisfied 
+	public Set<Domain> evaluate(AtomicPredicate<?> input); // from the current domain, returns the set of sub-domains where the input predicate is satisfied 
 	
 	public static Domain infinite(Object input) { // generates a domain representing all possible values for the input type
 		if (input instanceof Boolean) return Bool.infinite();
@@ -54,7 +54,7 @@ public interface Domain{
 			return false;
 		}
 
-		public Set<Domain> evaluate(AtomicExpression<?> input) {
+		public Set<Domain> evaluate(AtomicPredicate<?> input) {
 			switch (input.getExpressionType()){
 			case EQ:
 				if (this.contains(input.getValue())) {
@@ -121,7 +121,7 @@ public interface Domain{
 		}
 
 		@Override
-		public Set<Domain> evaluate(AtomicExpression<?> input) {
+		public Set<Domain> evaluate(AtomicPredicate<?> input) {
 			switch (input.getExpressionType()){
 			case EQ:
 				if (this.contains(input.getValue())) { // if val is in input, return val, otherwise null

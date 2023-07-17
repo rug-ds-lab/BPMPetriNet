@@ -44,21 +44,22 @@ public class DisjointDomain {
 		Set<ContinuousDomain> allSatisfyingDomains = new HashSet<>();
 
 		List<List<AtomicExpression<?>>> all_desired_rows = boolExpression.getTable().evaluates_to(true);
-		for (List<AtomicExpression<?>> predicates: all_desired_rows) {
+		
+		for (List<AtomicExpression<?>> atomics: all_desired_rows) {
 
-			// predicates is a List of Predicate instances (ie columns of the TT)
+			// atomics is a List of Predicate instances (ie columns of the TT)
 			// which all must be true for the current TT row to be met
 
 			// rowDomains is used to store all continuous domains such that the columns of the current TT row evaluate to true. 
 			// it starts just as the original set of continuous domains in this disjoint domain, and applies each column to the current set
 			Set<ContinuousDomain> rowDomains = new HashSet<>(disjointSet); 
 
-			for (AtomicExpression<?> predicate: predicates) { // iterate through the columns of the TT
+			for (AtomicExpression<?> atom: atomics) { // iterate through the columns of the TT
 				Set<ContinuousDomain> columnDomains = new HashSet<>(); // used to build the new set of continuous where the current column is true
 				for (ContinuousDomain domain: rowDomains) { // iterate through the domains generated at the previous column
 
-					Set<ContinuousDomain> columnEvaluation = domain.evaluate(predicate); // from the given domain, evaluate the current predicate
-					// this returns a set of domains where the predicate is true, or null if it cannot be satisfied
+					Set<ContinuousDomain> columnEvaluation = domain.evaluate(atom); // from the given domain, evaluate the current atomic
+					// this returns a set of domains where the atomic is true, or null if it cannot be satisfied
 					if (columnEvaluation==null) { 
 						continue; // if null, evaluate next domain
 					}

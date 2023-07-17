@@ -222,11 +222,7 @@ public class PlaceTransitionNetTest {
 		enabled.add(t0);
 		assertEquals(enabled, net.getEnabledTransitions(net.getInitialMarking()));
 		assertTrue(net.isParallelEnabled((Set<? extends TransitionI>) enabled, marking));
-
-		// Made existsContradictingAssignment public to show this part of getParallelEnabledTransitions fails.
-		// Should be made protected again and this test should be removed after a fix.
-		assertTrue(net.existsContradictingAssignment((Set<? extends TransitionI>) enabled, new HashSet<>()));
-
+		
 		Collection<Collection<Transition>> parallelEnabled = new HashSet<>();
 		parallelEnabled.add(enabled);
 

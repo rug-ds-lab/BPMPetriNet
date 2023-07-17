@@ -2,6 +2,7 @@ package nl.rug.ds.bpm.petrinet.ptnet.element;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.ExpressionBuilder;
+import nl.rug.ds.bpm.expression.Tautology;
 import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.ToolSpecific;
 import nl.rug.ds.bpm.pnml.ptnet.jaxb.toolspecific.Task;
@@ -39,6 +40,7 @@ public class Transition extends Node implements TransitionI {
 	}
 
 	public CompositeExpression getGuard() {
+		if (guard==null) return new CompositeExpression(Tautology.trueTautology);
 		return guard;
 	}
 

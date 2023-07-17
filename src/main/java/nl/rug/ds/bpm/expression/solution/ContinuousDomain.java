@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import nl.rug.ds.bpm.expression.AtomicExpression;
+import nl.rug.ds.bpm.expression.AtomicPredicate;
+import nl.rug.ds.bpm.expression.Tautology;
 
 /*
  * Created by Hannah Burke on 22 June 2023
@@ -22,23 +24,32 @@ public class ContinuousDomain extends HashMap<String, Domain>{
 	 * (which is usually just one sub-domain, but can be two distinct ranges in the case of != for doubles), 
 	 * then returns a map for each of these sub-domains, where that sub-domain is put that at the key for the predicate's variable
 	 */
-	public Set<ContinuousDomain> evaluate(AtomicExpression<?> predicate){
+	public Set<ContinuousDomain> evaluate(AtomicExpression<?> expression){
 
-		Domain currentDomain = this.getOrDefault(predicate.getVariableName(), Domain.infinite(predicate.getValue()));
-		Set<Domain> true_vals = currentDomain.evaluate(predicate); // returns all possible Domain instances from the currentDomain allowing for a true predicate, or null if not possible
+		if (expression instanceof Tautology) {
+			Tautology tautology = (Tautology) expression;
+			if (tautology.isTrue) return Set.of(this);
+			else return new HashSet<>();
+		}
+		else {
+			AtomicPredicate<?> predicate = (AtomicPredicate<?>) expression;
 
-		if (true_vals==null) return null; 
-		else { //clone the current map and update the key for the predicate's variable to be each of the elements of true_vals
-			Set<ContinuousDomain> true_states = new HashSet<>();
-			for (Domain true_val: true_vals) {
-				ContinuousDomain clone = new ContinuousDomain();
-				for (Entry<String, Domain> entry: this.entrySet()) {
-					clone.put(entry.getKey(), entry.getValue());
+			Domain currentDomain = this.getOrDefault(predicate.getVariableName(), Domain.infinite(predicate.getValue()));
+			Set<Domain> true_vals = currentDomain.evaluate(predicate); // returns all possible Domain instances from the currentDomain allowing for a true predicate, or null if not possible
+
+			if (true_vals==null) return null; 
+			else { //clone the current map and update the key for the predicate's variable to be each of the elements of true_vals
+				Set<ContinuousDomain> true_states = new HashSet<>();
+				for (Domain true_val: true_vals) {
+					ContinuousDomain clone = new ContinuousDomain();
+					for (Entry<String, Domain> entry: this.entrySet()) {
+						clone.put(entry.getKey(), entry.getValue());
+					}
+					clone.put(predicate.getVariableName(), true_val);
+					true_states.add(clone);
 				}
-				clone.put(predicate.getVariableName(), true_val);
-				true_states.add(clone);
+				return true_states; // then return all of these cloned maps
 			}
-			return true_states; // then return all of these cloned maps
 		}
 	}
 }

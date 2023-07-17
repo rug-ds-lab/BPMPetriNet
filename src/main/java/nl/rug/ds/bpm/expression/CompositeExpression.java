@@ -23,7 +23,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 	private String originalExpression;
 
 	private AtomicExpression<?> expression;
-	
+
 	private TruthTable table;
 
 	public CompositeExpression(LogicalType logicalType) {
@@ -78,7 +78,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 			this.table = this.table.combine(arguments.get(i).table, LogicalType.OR);
 		}
 	}
-	
+
 	/*
 	 * returns the complement of the condition
 	 */
@@ -112,7 +112,7 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 	public Boolean isAtomic() {
 		return atomic;
 	}
-	
+
 	public TruthTable getTable() {
 		return table;
 	}
@@ -165,7 +165,9 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 
 	public Boolean containsVariable(String varname) {
 		if (atomic) {
-			return this.expression.getVariableName().equals(varname);
+			if (expression instanceof AtomicPredicate) {
+				return ((AtomicPredicate<?>) expression).getVariableName().equals(varname);
+			}
 		}
 		else {
 			for (CompositeExpression e: arguments) {
@@ -180,7 +182,9 @@ public class CompositeExpression implements Comparable<CompositeExpression>{
 		Set<String> varnames = new HashSet<String>();
 
 		if (atomic) {
-			varnames.add(expression.getVariableName());
+			if (expression instanceof AtomicPredicate) {
+				varnames.add(((AtomicPredicate<?>) expression).getVariableName());
+			}
 		}
 		else {
 			for (CompositeExpression e: arguments) {

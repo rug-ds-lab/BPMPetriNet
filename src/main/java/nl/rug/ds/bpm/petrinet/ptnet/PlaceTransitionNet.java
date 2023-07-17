@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.LogicalType;
+import nl.rug.ds.bpm.expression.Tautology;
 import nl.rug.ds.bpm.petrinet.interfaces.element.PlaceI;
 import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
@@ -789,7 +790,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		for (Set<? extends TransitionI> parSet: pow) {
 			
 			if (!isParallelEnabled(parSet, marking, true)) continue; // first check structure
-			
+						
 			//find any other transitions that structurally are enabled in parallel
 			Iterator<? extends TransitionI> otherIterator = enabled.iterator();
 			Set<TransitionI> otherTransitions = new HashSet<>();
@@ -798,7 +799,6 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 				if (!parSet.contains(t) && isParallelEnabled(parSet, t, marking, true)) // if there is an enabled transition not in this set
 					otherTransitions.add(t);
 			}
-			
 			// check there exists an assignment that satisfies the guards in parset while not satisfying any of the otherTransitions
 			if (existsContradictingAssignment(parSet, otherTransitions)) // || ignoreGuardConflicts
 				ypar.add(parSet);
@@ -809,14 +809,12 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	/*
 	 * returns whether there exists an assignment that can satisfy all guards in parSet, while contradicting all guards in otherSet
 	 */
-	public boolean existsContradictingAssignment(Set<? extends TransitionI> parSet, Set<TransitionI> otherSet) {
+	private boolean existsContradictingAssignment(Set<? extends TransitionI> parSet, Set<TransitionI> otherSet) {
 		// create conjunction of parSet guards
 		List<CompositeExpression> guards = new ArrayList<>();
 		guards.add(new CompositeExpression(LogicalType.AND));
 		for (TransitionI ps: parSet) {
-			if (((Transition)ps).getGuard() != null) {
-				guards.add(((Transition)ps).getGuard());
-			}
+			guards.add(((Transition)ps).getGuard());
 		}
 		CompositeExpression parSetConjunction = new CompositeExpression(guards, LogicalType.AND);
 		

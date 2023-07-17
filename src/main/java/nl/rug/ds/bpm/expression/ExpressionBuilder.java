@@ -100,6 +100,9 @@ public class ExpressionBuilder {
 	private static AtomicExpression<?> parseAtomicExpression(String expression) {
 		expression = expression.trim();
 		
+		if (expression.equals("true")) return Tautology.trueTautology;
+		else if (expression.equals("false")) return Tautology.falseTautology;
+		
 		String operator = getOperator(expression);
 		String name;
 		if (operator.equals("")) {
@@ -108,23 +111,23 @@ public class ExpressionBuilder {
 		else {
 			name = expression.substring(0, expression.indexOf(operator)).trim();
 		}
-		return parseAtomicExpression(name, expression);
+		return parseAtomicPredicate(name, expression);
 	}
 	
-	private static AtomicExpression<?> parseAtomicExpression(String variablename, String expression) {	
+	private static AtomicPredicate<?> parseAtomicPredicate(String variablename, String expression) {	
 		String operator;
 		ExpressionType et;
-		AtomicExpression<?> exp;
+		AtomicPredicate<?> exp;
 
 		if (variablename.equals(expression)) {
 			et = ExpressionType.EQ;
 			
 			if (expression.startsWith("!")) {
 				variablename = variablename.substring(1);				
-				exp = new AtomicExpression<Boolean>(variablename, et, false);
+				exp = new AtomicPredicate<Boolean>(variablename, et, false);
 			}
 			else {
-				exp = new AtomicExpression<Boolean>(variablename, et, true);
+				exp = new AtomicPredicate<Boolean>(variablename, et, true);
 			}
 			return exp;
 		}
@@ -154,13 +157,13 @@ public class ExpressionBuilder {
 			exp = null;
 		}
 		else if (isNumeric(expression)) {
-			exp = new AtomicExpression<Double>(variablename, et, Double.parseDouble(expression));
+			exp = new AtomicPredicate<Double>(variablename, et, Double.parseDouble(expression));
 		}
 		else if (expression.toLowerCase().equals("false") || expression.toLowerCase().equals("true")) {
-			exp = new AtomicExpression<Boolean>(variablename, et, Boolean.parseBoolean(expression.toLowerCase()));
+			exp = new AtomicPredicate<Boolean>(variablename, et, Boolean.parseBoolean(expression.toLowerCase()));
 		}
 		else {
-			exp = new AtomicExpression<String>(variablename, et, expression);
+			exp = new AtomicPredicate<String>(variablename, et, expression);
 		}
 		
 		return exp;

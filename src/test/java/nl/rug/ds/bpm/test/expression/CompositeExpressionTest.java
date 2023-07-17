@@ -86,6 +86,11 @@ class CompositeExpressionTest {
 		assertTrue(ExpressionBuilder.parseExpression("x==true").canBeContradictedBy(ExpressionBuilder.parseExpression("x==false")));
 		assertFalse(ExpressionBuilder.parseExpression("x==false").canBeContradictedBy(ExpressionBuilder.parseExpression("x==false")));
 		assertTrue(ExpressionBuilder.parseExpression("x==true").canBeContradictedBy(ExpressionBuilder.parseExpression("(x==false || x==true)")));
+	
+		assertFalse(ExpressionBuilder.parseExpression("true").canBeContradictedBy(ExpressionBuilder.parseExpression("true")));
+		assertTrue(ExpressionBuilder.parseExpression("x>0").canBeContradictedBy(ExpressionBuilder.parseExpression("true")));
+		assertFalse(ExpressionBuilder.parseExpression("true").canBeContradictedBy(ExpressionBuilder.parseExpression("x>0")));
+
 	}
 	
 	@Test

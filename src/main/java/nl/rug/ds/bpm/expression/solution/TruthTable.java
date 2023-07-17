@@ -6,26 +6,27 @@ import java.util.List;
 
 import nl.rug.ds.bpm.expression.AtomicExpression;
 import nl.rug.ds.bpm.expression.LogicalType;
+import nl.rug.ds.bpm.expression.Tautology;
 
 /*
  * Created by Hannah Burke on 22 June 2023
  * 
- * Class for storing the possible evaluation combinations of a composite condition's individual predicates 
+ * Class for storing the possible evaluation combinations of a composite condition's individual atomics 
  * such that a given evaluation for the overall condition is achieved
  * 
  * Constructed for a composite condition by combining the truth tables of each condition in the composition
  */
 public class TruthTable {
 	
-	private List<AtomicExpression<?>> predicates; // the row headers
-    private List<AtomicExpression<?>> inverse_predicates = new ArrayList<>(); // stores the complement of each header, for quick calculations
-	private List<List<Boolean>> rows; // rows[i,j] is the evaluation of the predicate at predicates[j] corresponding to the i-th row in the truth table
+	private List<AtomicExpression<?>> atomics; // the row headers
+    private List<AtomicExpression<?>> inverse_atomics = new ArrayList<>(); // stores the complement of each header, for quick calculations
+	private List<List<Boolean>> rows; // rows[i,j] is the evaluation of the atomic at atomics[j] corresponding to the i-th row in the truth table
     private List<Boolean> evals; // evals[i] is the overall evaluation of the composite condition at the i-th row in the truth table
     
-    private TruthTable(List<AtomicExpression<?>> predicates) {
-    	this.predicates = predicates;
-    	for (AtomicExpression<?> pred: predicates) {
-    		inverse_predicates.add(pred.negate());
+    private TruthTable(List<AtomicExpression<?>> atomics) {
+    	this.atomics = atomics;
+    	for (AtomicExpression<?> atom: atomics) {
+    		inverse_atomics.add(atom.negate());
     	}
     	rows = new ArrayList<>();
     	evals = new ArrayList<>();
@@ -35,14 +36,16 @@ public class TruthTable {
      * Constructor for empty truth table
      */
     public TruthTable() {
-    	this(List.of());
+    	this(Arrays.asList(Tautology.trueTautology));
+		rows.add(Arrays.asList(true));
+		evals.add(true);
     }
 
     /**
-     * Constructor for a condition with a single predicate. Add one row for true and one for false
+     * Constructor for a condition with a single atomic. Add one row for true and one for false
      */
-    public TruthTable(AtomicExpression<?> predicate) {
-    	this(Arrays.asList(predicate));
+    public TruthTable(AtomicExpression<?> atomic) {
+    	this(Arrays.asList(atomic));
 		// add one row for true and one row for false
 		rows.add(Arrays.asList(true));
 		evals.add(true);
@@ -53,41 +56,46 @@ public class TruthTable {
     /*
      * returns number of rows in truth table
      */
-    private Integer height() {
+    public Integer height() {
     	return rows.size();
     }
     
     /*
-     * returns number of columns (ie. predicates) in truth table
+     * returns number of columns (ie. atomics) in truth table
      */
-    private Integer width() {
-    	return predicates.size();
+    public Integer width() {
+    	return atomics.size();
+    }
+    
+
+    private boolean isEmpty() {
+    	return rows.size()==1; // an empty truth table will have one row, that is a tautology (see constructor for empty truth table)
     }
     
     /**
      * Returns all rows of the truth table that evaluate to the given evaluation
-     * With each row containing a list of the respective predicate/inversed predicates depending on whether the predicate evaluation is true/false in that row
+     * With each row containing a list of the respective atomic/inversed atomics depending on whether the atomic evaluation is true/false in that row
      * which all must be satisfied
      */
     public List<List<AtomicExpression<?>>> evaluates_to(Boolean desiredEval){
     	
-    	List<List<AtomicExpression<?>>> predicateRows = new ArrayList<>();
+    	List<List<AtomicExpression<?>>> atomicRows = new ArrayList<>();
     	for (int i=0; i<this.height(); i++) {
     		if (evals.get(i)==desiredEval) {
     			
-    			List<AtomicExpression<?>> truePredicates = new ArrayList<>();
+    			List<AtomicExpression<?>> trueAtomics = new ArrayList<>();
     			for (int j=0; j<this.width(); j++){ // iterate through columns
     				if (rows.get(i).get(j)== true) {
-    					truePredicates.add(predicates.get(j)); // use original if predicate evaluation for this row is true
+    					trueAtomics.add(atomics.get(j)); // use original if atomic evaluation for this row is true
     				}
     				else {
-    					truePredicates.add(inverse_predicates.get(j)); // use inverse if predicate evaluation for this row is false
+    					trueAtomics.add(inverse_atomics.get(j)); // use inverse if atomic evaluation for this row is false
     				}
     			}
-    			predicateRows.add(truePredicates);
+    			atomicRows.add(trueAtomics);
     		}
     	}
-    	return predicateRows;
+    	return atomicRows;
     }
    
     
@@ -101,14 +109,15 @@ public class TruthTable {
      */
     public TruthTable combine(TruthTable other_table, LogicalType connector){
     	
-    	if (this.height()==0) return other_table;
-    	if (other_table.height()==0) return this;
+    	// if either truth table simply is empty, return the other one
+    	if (this.isEmpty()) return other_table;
+    	if (other_table.isEmpty()) return this;
     	
-    	// combine the predicates of each this and other to get the headers of the combined table
-    	List<AtomicExpression<?>> comb_pred = new ArrayList<>();
-    	comb_pred.addAll(this.predicates);
-    	comb_pred.addAll(other_table.predicates);
-    	TruthTable new_table = new TruthTable(comb_pred);
+    	// combine the atomics of each this and other to get the headers of the combined table
+    	List<AtomicExpression<?>> comb_atom = new ArrayList<>();
+    	comb_atom.addAll(this.atomics);
+    	comb_atom.addAll(other_table.atomics);
+    	TruthTable new_table = new TruthTable(comb_atom);
     	
     	// iterate through the rows of this
     	for (int i=0; i<this.height(); i++) {
@@ -141,5 +150,24 @@ public class TruthTable {
     		}
     	}
     	return new_table;
+    }
+    
+    @Override
+    public String toString() {
+    	StringBuilder result = new StringBuilder("");
+    	for (AtomicExpression<?> atom: atomics) {
+    		result.append(atom +"\t");
+    	}
+		result.append("evaluation\n");
+    	
+		int counter = 0;
+    	for (List<Boolean> row: rows) {
+    		for (Boolean bool: row) {
+    			result.append(bool+"\t");
+    		}
+    		result.append(evals.get(counter)+"\n");
+    		counter+=1;
+    	}
+        return result.toString();
     }
 }
