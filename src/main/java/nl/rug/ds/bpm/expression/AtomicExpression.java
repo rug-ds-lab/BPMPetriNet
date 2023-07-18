@@ -7,7 +7,7 @@ package nl.rug.ds.bpm.expression;
  * - a predicate (x>0, a==true, etc)
  * - a tautology (true, false)
  */
-public interface AtomicExpression<T extends Comparable<T>> extends Comparable<AtomicExpression<T>> {
+public interface AtomicExpression<T extends Comparable<T>> {
 	
 	/*
 	 * returns the complement of the expression

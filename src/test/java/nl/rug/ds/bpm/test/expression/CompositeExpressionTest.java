@@ -1,6 +1,8 @@
 package nl.rug.ds.bpm.test.expression;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -100,6 +102,20 @@ class CompositeExpressionTest {
 		assertFalse(ExpressionBuilder.parseExpression("x>1 && y==0").isFulfilledBy(ExpressionBuilder.parseExpression("x>2")));
 
 
+	}
+	
+	@Test
+	void compareTo() {
+		assertEquals(ExpressionBuilder.parseExpression("x>1").compareTo(ExpressionBuilder.parseExpression("x>1")), 0);
+		assertNotEquals(ExpressionBuilder.parseExpression("x>2").compareTo(ExpressionBuilder.parseExpression("x>1")), 0);
+		assertNotEquals(ExpressionBuilder.parseExpression("x>1").compareTo(ExpressionBuilder.parseExpression("x>2")), 0);
+		assertNotEquals(ExpressionBuilder.parseExpression("x>1").compareTo(ExpressionBuilder.parseExpression("x>1 && y>1")), 0);
+		assertEquals(ExpressionBuilder.parseExpression("y>1 && x>1").compareTo(ExpressionBuilder.parseExpression("x>1 && y>1")), 0);
+		assertEquals(ExpressionBuilder.parseExpression("x>=2 && x<=2").compareTo(ExpressionBuilder.parseExpression("x==2")), 0);
+		assertEquals(ExpressionBuilder.parseExpression("(x>1 && y>1) || z>1").compareTo(ExpressionBuilder.parseExpression("(x>1 || z>1) && (y>1 || z>1)")), 0);
+		assertNotEquals(ExpressionBuilder.parseExpression("(x>1 && y>1) || (x<1 && y<1)").compareTo(ExpressionBuilder.parseExpression("(y>1 || y<1) && (x>1 || x<1)")), 0);
+
+		assertEquals(ExpressionBuilder.parseExpression("x==true").compareTo(ExpressionBuilder.parseExpression("x!=false")), 0);
 	}
 
 }

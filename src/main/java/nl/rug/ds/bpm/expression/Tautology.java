@@ -20,16 +20,6 @@ public class Tautology implements AtomicExpression<Boolean> {
 		if (isTrue) return falseTautology;
 		else return trueTautology;
 	}
-
-	@Override
-	public int compareTo(AtomicExpression<Boolean> o) {
-		if (this==o) return 0;
-		// essentially they're not equal, but we need to do a bit of work to ensure transitivity?
-		Integer hashcode = this.hashCode();
-		Integer compareTo = hashcode.compareTo(o.hashCode());
-		if (compareTo==0) throw new RuntimeException("Problematic equality in hashcodes of expressions: "+this+" and "+o);
-		return compareTo;
-	}
 	
 	@Override
 	public String toString() {

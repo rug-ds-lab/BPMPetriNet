@@ -98,28 +98,4 @@ public class AtomicPredicate<T extends Comparable<T>> implements AtomicExpressio
 	public String getOriginalExpression() {
 		return originalExpression;
 	}
-
-	@Override
-	public int compareTo(AtomicExpression<T> other) {
-		if (other instanceof AtomicPredicate) {
-			AtomicPredicate<T> o = (AtomicPredicate<T>) other;
-			int ret = (o.getExpressionType() == type ? 0 : this.type.compareTo(o.getExpressionType()));
-			if (ret == 0) {
-				ret = o.getVariableName().compareTo(variablename);
-				if (ret == 0) {
-					//				ret = (o.accepts(value) ? o.getValue().compareTo(value) : -1);
-					ret = o.getValue().compareTo(value);
-
-				}
-			}
-			return ret;
-		}
-		else {
-			// essentially they're not equal, but we need to do a bit of work to ensure transitivity?
-			Integer hashcode = this.hashCode();
-			Integer compareTo = hashcode.compareTo(other.hashCode());
-			if (compareTo==0) throw new RuntimeException("Problematic equality in hashcodes of expressions: "+this+" and "+other);
-			return compareTo;
-		}
-	}
 }
