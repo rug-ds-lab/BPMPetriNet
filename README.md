@@ -8,6 +8,7 @@ The package provides the following functionality:
 * (Un)Marshalling place/transition nets (from) to [pnml](http://www.pnml.org/) format
 * Unfolding place/transition nets into an event structure
 * Conditional evaluation of guards using expressions
+* Commandline tool that generates place/transition net of given sizes
 
 ### Structure
 The package is structured as followed:
