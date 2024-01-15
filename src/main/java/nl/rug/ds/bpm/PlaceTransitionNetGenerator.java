@@ -161,8 +161,9 @@ public class PlaceTransitionNetGenerator implements VerificationLogListener {
         int w = (width > 0 ? width : 1);
         int d = (depth > 0 ? depth : 10);
         String pre = (prefix == null || prefix.equalsIgnoreCase("p") ? "t" : prefix);
+        String id = pre + "_" + branching + "net_" + w + "x" + d;
 
-        PlaceTransitionNet net = new PlaceTransitionNet(prefix + "_net", prefix + "_net");
+        PlaceTransitionNet net = new PlaceTransitionNet(id, id);
 
         Place initial = net.addPlace("initial", 1);
         Place sink = net.addPlace("sink", "sink");
