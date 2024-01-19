@@ -106,8 +106,11 @@ public class PlaceTransitionNetGenerator implements VerificationLogListener {
     private void generateBatch(String outputPath, int width, int depth, String prefix) throws MalformedNetException {
         for (int i = 1; i <= width; i++) {
             for (int j = 1; j <= depth; j++) {
-                generateSingle("exclnet" + i + "x" + j + ".pnml", outputPath, "exclusive", i, j, prefix);
-                generateSingle("parnet" + i + "x" + j + ".pnml", outputPath, "parallel", i, j, prefix);
+                String ws = (i > 9 ? String.valueOf(i) : "0" + i);
+                String ds = (j > 9 ? String.valueOf(j) : "0" + j);
+
+                generateSingle("exclnet" + ws + "x" + ds + ".pnml", outputPath, "exclusive", i, j, prefix);
+                generateSingle("parnet" + ws + "x" + ds + ".pnml", outputPath, "parallel", i, j, prefix);
             }
         }
     }
@@ -160,8 +163,11 @@ public class PlaceTransitionNetGenerator implements VerificationLogListener {
         boolean parallel = (branching != null && (branching.equalsIgnoreCase("parallel")));
         int w = (width > 0 ? width : 1);
         int d = (depth > 0 ? depth : 10);
+        String ws = (w > 9 ? String.valueOf(w) : "0" + w);
+        String ds = (d > 9 ? String.valueOf(d) : "0" + d);
+
         String pre = (prefix == null || prefix.equalsIgnoreCase("p") ? "t" : prefix);
-        String id = pre + "_" + branching + "net_" + w + "x" + d;
+        String id = pre + "_" + branching + "net_" + ws + "x" + ds;
 
         PlaceTransitionNet net = new PlaceTransitionNet(id, id);
 
