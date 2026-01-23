@@ -1,12 +1,6 @@
 package nl.rug.ds.bpm.petrinet.ptnet;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
@@ -228,18 +222,24 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		return xmlElement;
 	}
 
+	//Node methods
+	private void addNode(Node n) {
+		nodes.put(n.getId(), n);
+
+		Set<Arc> in = new HashSet<>();
+		Set<Arc> out = new HashSet<>();
+		incoming.put(n.getId(), in);
+		outgoing.put(n.getId(), out);
+	}
+
+
 	//Transition methods
 	public void addTransition(Transition t) throws MalformedNetException {
 		if (nodes.containsKey(t.getId()))
 			throw new MalformedNetException("Duplicate node i.d.: " + t.getId() + ".");
 		else {
 			transitions.put(t.getId(), t);
-			nodes.put(t.getId(), t);
-			Set<Arc> in = new HashSet<>();
-			Set<Arc> out = new HashSet<>();
-			incoming.put(t.getId(), in);
-			outgoing.put(t.getId(), out);
-			
+			addNode(t);
 			xmlElement.getTransitions().add((nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.node.transition.Transition) t.getXmlElement());
 		}
 	}
@@ -285,13 +285,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 			throw new MalformedNetException("Duplicate node i.d.: " + p.getId() + ".");
 		else {
 			places.put(p.getId(), p);
-			nodes.put(p.getId(), p);
-			
-			Set<Arc> in = new HashSet<>();
-			Set<Arc> out = new HashSet<>();
-			incoming.put(p.getId(), in);
-			outgoing.put(p.getId(), out);
-			
+			addNode(p);
 			xmlElement.getPlaces().add((nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.node.place.Place) p.getXmlElement());
 		}
 	}
