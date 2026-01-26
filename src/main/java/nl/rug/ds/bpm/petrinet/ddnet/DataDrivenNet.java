@@ -55,7 +55,6 @@ public class DataDrivenNet extends PlaceTransitionNet implements VerifiableDataN
 		} catch (IllegalMarkingException e) {
 			m = new DataMarking();
 			Logger.log(e.getMessage(), LogEvent.ERROR);
-			e.printStackTrace();
 		}
 
 		for (Variable v : getVariables())

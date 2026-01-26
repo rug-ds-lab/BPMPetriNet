@@ -13,12 +13,19 @@ import java.util.*;
  * Created by Nick van Beest 26-Apr-17.
  */
 public class Marking implements ConditionalMarkingI, Comparable<MarkingI> {
+	private int maximumTokensAtPlaces = 3;
+
 	private SortedMap<String, Integer> tokenmap;
 	private HashMap<String, CompositeExpression> conditions;
 	
 	public Marking() {
 		tokenmap = new TreeMap<String, Integer>(new ComparableComparator<String>());
 		conditions = new HashMap<>();
+	}
+
+	public Marking(int maximumTokensAtPlaces) {
+		this();
+		this.maximumTokensAtPlaces = maximumTokensAtPlaces;
 	}
 	
 	public void addTokens(String placeId, int tokens) throws IllegalMarkingException {

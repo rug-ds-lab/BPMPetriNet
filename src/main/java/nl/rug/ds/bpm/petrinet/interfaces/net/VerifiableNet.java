@@ -8,6 +8,7 @@ import java.util.Set;
 
 /**
  * Created by Heerko Groefsema on 14-May-18.
+ * Interface that exposes functionality required for the BPM Verification package
  */
 public interface VerifiableNet {
 

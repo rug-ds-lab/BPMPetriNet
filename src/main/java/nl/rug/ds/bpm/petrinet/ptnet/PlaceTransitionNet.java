@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import nl.rug.ds.bpm.expression.CompositeExpression;
 import nl.rug.ds.bpm.expression.LogicalType;
-import nl.rug.ds.bpm.expression.Tautology;
 import nl.rug.ds.bpm.petrinet.interfaces.element.PlaceI;
 import nl.rug.ds.bpm.petrinet.interfaces.element.TransitionI;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.ConditionalMarkingI;
@@ -30,9 +29,11 @@ import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.log.LogEvent;
 import nl.rug.ds.bpm.util.log.Logger;
-import nl.rug.ds.bpm.util.set.Sets;
+import nl.rug.ds.bpm.util.set.SetOperations;
 
 public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
+	protected int index;
+
 	protected HashMap<String, Node> nodes;
 	protected HashMap<String, Place> places;
 	protected HashMap<String, Transition> transitions;
@@ -49,8 +50,15 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 
 	protected Process process;
 	protected NetContainer xmlElement;
+
+	protected HashMap<Integer, Node> indexToNode;
+	protected HashMap<Node, Integer> nodeToIndex;
+	protected HashMap<Integer, BitSet> prevNodes;
+	protected HashMap<Integer, BitSet> nextNodes;
 	
 	public PlaceTransitionNet() {
+		index = -1;
+
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -64,6 +72,11 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		groups = new HashMap<>();
 		variables = new HashMap<>();
 		roles = new HashMap<>();
+
+		indexToNode = new HashMap<>();
+		nodeToIndex = new HashMap<>();
+		prevNodes = new HashMap<>();
+		nextNodes = new HashMap<>();
 
 		process = new Process();
 		ToolSpecific toolSpecific = new ToolSpecific();
@@ -84,6 +97,8 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	}
 
 	public PlaceTransitionNet(NetContainer xmlElement) throws MalformedNetException {
+		index = -1;
+
 		nodes = new HashMap<>();
 		places = new HashMap<>();
 		transitions = new HashMap<>();
@@ -97,6 +112,11 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		groups = new HashMap<>();
 		variables = new HashMap<>();
 		roles = new HashMap<>();
+
+		indexToNode = new HashMap<>();
+		nodeToIndex = new HashMap<>();
+		prevNodes = new HashMap<>();
+		nextNodes = new HashMap<>();
 
 		this.xmlElement = xmlElement;
 
@@ -193,6 +213,19 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 				throw new MalformedNetException("Duplicate role i.d.: " + role.getId() + ".");
 			roles.put(role.getId(), role);
 		}
+
+		for (Node node: nodes.values()) {
+			indexToNode.put(index++, node);
+			nodeToIndex.put(node, index);
+
+			prevNodes.put(index, new BitSet(nodes.size()));
+			nextNodes.put(index, new BitSet(nodes.size()));
+		}
+
+		for (Arc arc: arcs.values()) {
+			prevNodes.get(nodeToIndex.get(arc.getTarget())).set(nodeToIndex.get(arc.getSource()));
+			nextNodes.get(nodeToIndex.get(arc.getSource())).set(nodeToIndex.get(arc.getTarget()));
+		}
 	}
 
 	//Net methods
@@ -230,6 +263,26 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		Set<Arc> out = new HashSet<>();
 		incoming.put(n.getId(), in);
 		outgoing.put(n.getId(), out);
+
+		indexToNode.put(index++, n);
+		nodeToIndex.put(n, index);
+		prevNodes.put(index, new BitSet());
+		nextNodes.put(index, new BitSet());
+	}
+
+	private void removeNode(Node n) {
+		nodes.remove(n.getId());
+		removeArcs(n);
+
+		if (nodeToIndex.containsKey(n)) {
+			int i = nodeToIndex.get(n);
+
+			nodeToIndex.remove(n);
+			indexToNode.remove(i);
+
+			prevNodes.remove(i);
+			nextNodes.remove(i);
+		}
 	}
 
 
@@ -257,10 +310,8 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	}
 
 	public void removeTransition(Transition t) {
+		removeNode(t);
 		transitions.remove(t.getId());
-		nodes.remove(t.getId());
-
-		removeArcs(t);
 
 		xmlElement.getTransitions().remove(t.getXmlElement());
 		xmlElement.getRefTransitions().remove(t.getXmlElement());
@@ -283,6 +334,8 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	public void addPlace(Place p) throws MalformedNetException {
 		if (nodes.containsKey(p.getId()))
 			throw new MalformedNetException("Duplicate node i.d.: " + p.getId() + ".");
+		else if (p.getTokens() < 0)
+			throw new MalformedNetException("Negative tokens not allowed.");
 		else {
 			places.put(p.getId(), p);
 			addNode(p);
@@ -317,10 +370,8 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	}
 
 	public void removePlace(Place p) {
+		removeNode(p);
 		places.remove(p.getId());
-		nodes.remove(p.getId());
-
-		removeArcs(p);
 
 		xmlElement.getPlaces().remove(p.getXmlElement());
 		xmlElement.getRefPlaces().remove(p.getXmlElement());
@@ -343,11 +394,16 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	public void addArc(Arc a) throws MalformedNetException {
 		if (arcs.containsKey(a.getId()))
 			throw new MalformedNetException("Duplicate arc i.d.: " + a.getId() + ".");
+		else if (a.getWeight() < 0)
+			throw new MalformedNetException("Negative weight not allowed.");
 		else {
 			arcs.put(a.getId(), a);
 			incoming.get(a.getTarget().getId()).add(a);
 			outgoing.get(a.getSource().getId()).add(a);
-			
+
+			prevNodes.get(nodeToIndex.get(a.getTarget())).set(nodeToIndex.get(a.getSource()));
+			nextNodes.get(nodeToIndex.get(a.getSource())).set(nodeToIndex.get(a.getTarget()));
+
 			xmlElement.getArcs().add(a.getXmlElement());
 		}
 	}
@@ -387,6 +443,8 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		arcs.remove(a.getId());
 		incoming.get(a.getTarget().getId()).remove(a);
 		outgoing.get(a.getSource().getId()).remove(a);
+		prevNodes.get(nodeToIndex.get(a.getTarget())).clear(nodeToIndex.get(a.getSource()));
+		nextNodes.get(nodeToIndex.get(a.getSource())).clear(nodeToIndex.get(a.getTarget()));
 		xmlElement.getArcs().remove(a.getXmlElement());
 	}
 
@@ -624,8 +682,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		return oarcs;
 	}
 	
-	public Marking getInitialMarking() {
-		Marking m = new Marking();
+	protected Marking getInitialMarking(Marking m) {
 		try {
 			for (Place p: places.values())
 				if (p.getTokens() > 0)
@@ -633,10 +690,13 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		} catch (IllegalMarkingException e) {
 			m = new Marking();
 			Logger.log(e.getMessage(), LogEvent.ERROR);
-			e.printStackTrace();
 		}
 			
 		return m;
+	}
+
+	public Marking getInitialMarking() {
+		return getInitialMarking(new Marking());
 	}
 
 	public void setInitialMarking(MarkingI marking) throws MalformedNetException {
@@ -774,7 +834,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 
 	public Set<? extends Set<? extends TransitionI>> getParallelEnabledTransitions(MarkingI marking, boolean ignoreGuardConflicts) {
 		Set<? extends TransitionI> enabled = (Set<? extends TransitionI>) getEnabledTransitions(marking);
-		Set<Set<? extends TransitionI>> pow = new HashSet<>(Sets.powerSet(enabled));
+		Set<Set<? extends TransitionI>> pow = new HashSet<>(SetOperations.powerSet(enabled));
 		Set<Set<? extends TransitionI>> ypar = new HashSet<>();
 
 		// for this set of transitions to be a maximum enabled set, it must have

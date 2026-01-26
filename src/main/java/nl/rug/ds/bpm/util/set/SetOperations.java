@@ -9,7 +9,7 @@ import java.util.Set;
  * Created by Nick van Beest on 10 May 2018
  *
  */
-public class Sets {
+public class SetOperations {
 	public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
 	    Set<Set<T>> sets = new HashSet<Set<T>>();
 	    if (originalSet.isEmpty()) {
