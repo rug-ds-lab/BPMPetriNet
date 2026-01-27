@@ -17,8 +17,6 @@ public class OneSafeNet extends PlaceTransitionNet implements DecomposableNet {
     public Arc addArc(String sourceId, String targetId, int weight) throws MalformedNetException {
         if (weight > 1)
             throw new MalformedNetException("Weight over 1 not allowed.");
-        if (!nodes.containsKey(sourceId) || !nodes.containsKey(targetId))
-            return null;
         return super.addArc(sourceId, targetId, weight);
     }
 
@@ -42,7 +40,9 @@ public class OneSafeNet extends PlaceTransitionNet implements DecomposableNet {
     @Override
     public void setInitialMarking(MarkingI marking) throws MalformedNetException {
         if (marking.getMarkedPlaces().size() != 1)
-            throw new MalformedNetException("Not must have exactly one place with a token.");
+            throw new MalformedNetException("Net must have exactly one place with a token.");
+        else if (marking.getTotalTokens() > 1)
+            throw new MalformedNetException("Net must initially not have more than token.");
         else
             super.setInitialMarking(marking);
     }

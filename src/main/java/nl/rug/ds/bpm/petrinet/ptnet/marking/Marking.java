@@ -50,19 +50,26 @@ public class Marking implements ConditionalMarkingI, Comparable<MarkingI> {
 	}
 	
 	public void emptyPlace(String placeId) {
-		if (tokenmap.containsKey(placeId)) tokenmap.remove(placeId);
+        tokenmap.remove(placeId);
 	}
-	
-	public Set<String> getMarkedPlaces() {
-		return (tokenmap.keySet());
-	}
-	
+
 	public Boolean hasTokens(String placeId) {
-		return (tokenmap.containsKey(placeId));
+		return tokenmap.containsKey(placeId);
 	}
-	
+
+	@Override
+	public int getTotalTokens() {
+		return tokenmap.values().stream().mapToInt(Integer::intValue).sum();
+	}
+
+	@Override
 	public int getTokensAtPlace(String placeId) {
-		return (tokenmap.containsKey(placeId) ? tokenmap.get(placeId) : 0);
+		return tokenmap.getOrDefault(placeId, 0);
+	}
+
+	@Override
+	public Set<String> getMarkedPlaces() {
+		return tokenmap.keySet();
 	}
 	
 	public void consumeToken(String placeId) throws IllegalMarkingException {
@@ -143,14 +150,14 @@ public class Marking implements ConditionalMarkingI, Comparable<MarkingI> {
 			placeId = p.next();
 			s = s + "+" + tokenmap.get(placeId) + placeId;
 		}
-		return (s.length() > 0 ? s.substring(1) : "");
+		return (!s.isEmpty() ? s.substring(1) : "");
 	}
-	
+
+	@Override
 	public Marking clone() {
 		Marking marking = new Marking();
 		marking.copyFromMarking(this);
-		HashMap<String, CompositeExpression> c = new HashMap<>();
-		c.putAll(conditions);
+        HashMap<String, CompositeExpression> c = new HashMap<>(conditions);
 		marking.setConditions(c);
 		return marking;
 	}

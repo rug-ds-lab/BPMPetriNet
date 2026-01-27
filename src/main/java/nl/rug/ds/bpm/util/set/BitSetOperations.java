@@ -3,7 +3,7 @@ package nl.rug.ds.bpm.util.set;
 import java.util.BitSet;
 
 /**
- * Static class that implements set operations on BitSets.
+ *  Class that implements static set operations on BitSets.
  */
 public class BitSetOperations {
 
