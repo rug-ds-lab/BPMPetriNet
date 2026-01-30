@@ -19,11 +19,27 @@ public interface DecomposableNet {
     Map<Integer, Node> getIndexedNodes();
 
     /**
+     * Returns the Node that corresponds to the given index.
+     *
+     * @param index the index of the Node.
+     * @return the Node that corresponds to the given index, or null if there exists no corresponding Node.
+     */
+    Node getNodeByIndex(int index);
+
+    /**
      * Returns a map that maps nodes to indexes.
      *
      * @return a map that maps nodes to indexes.
      */
     Map<Node, Integer> getNodeIndex();
+
+    /**
+     * Returns the index of the given Node.
+     *
+     * @param node the Node to obtain the index of.
+     * @return the index of the given Node.
+     */
+    int getIndexOfNode(Node node);
 
     /**
      * Returns a map that maps indexed Nodes to a BitSet that represents the preset of the indexed Node.

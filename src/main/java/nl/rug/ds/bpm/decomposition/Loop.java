@@ -10,14 +10,14 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Loop {
-    private OneSafeNet parent;
+    private final OneSafeNet parent;
 
-    private Set<Node> components;
-    private Set<Node> entries;
-    private Set<Node> exits;
-    private Set<Node> doBody;
+    private final Set<Node> components;
+    private final Set<Node> entries;
+    private final Set<Node> exits;
+    private final Set<Node> doBody;
 
-    private Set<Arc> arcs;
+    private final Set<Arc> arcs;
 
     public Loop(OneSafeNet parent) {
         this.parent = parent;
@@ -114,5 +114,31 @@ public class Loop {
 
     public void addArcs(Set<Arc> arcs) {
         this.arcs.addAll(arcs);
+    }
+
+    public void addPreSet(Node target, BitSet nodeIndexes) {
+        for (Node node : parent.asNodes(nodeIndexes)) {
+            Arc a = parent.getArc(node, target);
+            if (a != null)
+                arcs.add(a);
+        }
+    }
+
+    public void addPreSet(int target, BitSet nodeIndexes) {
+        Node n = parent.getNodeByIndex(target);
+        addPreSet(n, nodeIndexes);
+    }
+
+    public void addPostSet(Node source, BitSet nodeIndexes) {
+        for (Node node : parent.asNodes(nodeIndexes)) {
+            Arc a = parent.getArc(source, node);
+            if (a != null)
+                arcs.add(a);
+        }
+    }
+
+    public void addPostSet(int source, BitSet nodeIndexes) {
+        Node n = parent.getNodeByIndex(source);
+        addPostSet(n, nodeIndexes);
     }
 }
