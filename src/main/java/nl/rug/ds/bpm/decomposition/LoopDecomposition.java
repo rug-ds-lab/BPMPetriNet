@@ -14,22 +14,30 @@ import java.util.stream.Collectors;
 /**
  * Class LoopDecomposition.
  *
- * <p>Decomposes cyclic process models into sets of acyclic process models interacting with signals. You can find
- * more information in the following papers:</p>
+ * <p>Decomposes cyclic (in a graph-sense) nets ({@link OneSafeNet}) into sets of acyclic nets.</p>
  *
- * <cite>Thomas M. Prinz, N. Long Ha, Yongsun Choi:
+ * <code>
+ * Collection<OneSafeNet> (new LoopDecomposition())->decompose(net);
+ * </code>
+ *
+ * <p>You can find more information in the following papers:</p>
+ *
+ * <p><cite>Thomas M. Prinz, N. Long Ha, Yongsun Choi:
  * Transformation of Cyclic Process Models with Inclusive Gateways to Be Executable on State-of-the-Art Engines.
- * ICEIS (2) 2025: 280-291. DOI: <a href="https://doi.org/10.5220/0013386400003929">...</a></cite>
+ * ICEIS (2) 2025: 280-291. DOI: <a href="https://doi.org/10.5220/0013386400003929">...</a></cite></p>
  *
- * <cite>Thomas M. Prinz, Yongsun Choi, N. Long Ha:
+ * <p><cite>Thomas M. Prinz, Yongsun Choi, N. Long Ha:
  * Soundness unknotted: An efficient soundness checking algorithm for arbitrary cyclic process models by loosening loops.
- * Inf. Syst. 128: 102476 (2025). DOI: <a href="https://doi.org/10.1016/j.is.2024.102476">...</a></cite>
+ * Inf. Syst. 128: 102476 (2025). DOI: <a href="https://doi.org/10.1016/j.is.2024.102476">...</a></cite></p>
  *
  * @author Thomas M. Prinz
  * @version 1.0.0
  */
 public class LoopDecomposition {
 
+    /**
+     * For debugging purposes.
+     */
     public static final boolean VERBOSE = false;
 
     /**
@@ -38,19 +46,19 @@ public class LoopDecomposition {
     private final Map<String,OneSafeNet> uniqueLoops = new HashMap<>();
 
     /**
-     * All derived acyclic process models.
+     * All derived acyclic nets.
      */
-    private final Collection<OneSafeNet> acyclicProcesses = new HashSet<>();
+    private final Collection<OneSafeNet> acyclicNets = new HashSet<>();
 
     /**
-     * Decompose all given process models into acyclic, interacting process models.
-     * @param net The process model(s) to decompose.
+     * Decompose the given net into acyclic nets.
+     * @param net The net to decompose.
      * @return Set of acyclic nets.
      */
     public Collection<OneSafeNet> decompose(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
-        this.acyclicProcesses.addAll(this.decomposeNet(net));
+        this.acyclicNets.addAll(this.decomposeNet(net));
 
-        return this.acyclicProcesses;
+        return this.acyclicNets;
     }
 
     /**
@@ -93,6 +101,7 @@ public class LoopDecomposition {
         // Create a copy of the main net.
         OneSafeNet mainNet = this.copyNet(net);
 
+        // Collect the derived nets.
         Set<OneSafeNet> nets = new HashSet<>();
         nets.add(mainNet);
 
@@ -119,7 +128,7 @@ public class LoopDecomposition {
                 createNew = true;
             } else loopNet = this.uniqueLoops.get(loopIdentifier);
 
-            // Create the loop net
+            // Add arcs and some new places and transitions to the loop net.
             //
             // Remove the arcs of the loop from the main net and add them to the loop net.
             //
