@@ -5,6 +5,7 @@ import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <cite>R. E. Tarjan, Depth-first search and linear graph algorithms, SIAM J. Comput. 1 (2) (1972) 146–160.
@@ -14,15 +15,17 @@ public class StronglyConnectedComponents {
 
     private int globalIndex = 0;
 
-    private Stack<Node> stack;
+    private final Stack<Node> stack = new Stack<>();
 
     private int[] index;
 
     private int[] lowLink;
 
-    private Collection<Loop> loops = new HashSet<>();
+    private final Collection<Loop> loops = new HashSet<>();
 
     private final OneSafeNet net;
+
+    private int maxIndex = 0;
 
     /**
      *
@@ -46,9 +49,9 @@ public class StronglyConnectedComponents {
      */
     private void analyze() {
         // Initialize.
-        int nrNodes = this.net.getIndexedNodes().size();
-        this.index = new int[nrNodes];
-        this.lowLink = new int[nrNodes];
+        this.maxIndex = Collections.max(this.net.getNodeIndex().values()) + 1;
+        this.index = new int[maxIndex];
+        this.lowLink = new int[maxIndex];
 
         this.net.getNodeIndex().forEach((key, value) -> {
             this.index[value] = -1;
@@ -87,9 +90,9 @@ public class StronglyConnectedComponents {
         if (this.index[nodeId] == this.lowLink[nodeId]) {
             // A SCC is detected.
             Loop loop = new Loop(this.net);
-            BitSet preset = new BitSet(this.net.getIndexedNodes().size());
-            BitSet postset = new BitSet(this.net.getIndexedNodes().size());
-            BitSet loopNodes = new BitSet(this.net.getIndexedNodes().size());
+            BitSet preset = new BitSet(this.maxIndex);
+            BitSet postset = new BitSet(this.maxIndex);
+            BitSet loopNodes = new BitSet(this.maxIndex);
             int currentId;
             do {
                 Node current = stack.pop();
@@ -113,27 +116,30 @@ public class StronglyConnectedComponents {
 
                 preset.andNot(loopNodes);
                 postset.andNot(loopNodes);
-                BitSet entriesSet = new BitSet(this.net.getIndexedNodes().size());
+
+                BitSet entriesSet = new BitSet(this.maxIndex);
                 for (int p = preset.nextSetBit(0); p >= 0; p = preset.nextSetBit(p + 1)) {
                     BitSet ps = this.net.getPostBitSets().get(p);
                     BitSet tmp = (BitSet) ps.clone();
                     tmp.and(loopNodes);
                     entriesSet.or(tmp);
                 }
-                BitSet exitsSet = new BitSet(this.net.getIndexedNodes().size());
+                BitSet exitsSet = new BitSet(this.maxIndex);
                 for (int p = postset.nextSetBit(0); p >= 0; p = postset.nextSetBit(p + 1)) {
                     BitSet ps = this.net.getPreBitSets().get(p);
                     BitSet tmp = (BitSet) ps.clone();
                     tmp.and(loopNodes);
                     exitsSet.or(tmp);
                 }
+
                 loop.addEntries(entriesSet);
                 loop.addExits(exitsSet);
 
                 // Determine the do-body
-                BitSet doBodySet = new BitSet(this.net.getIndexedNodes().size());
-                BitSet cut = new BitSet(this.net.getIndexedNodes().size());
-                BitSet workingList = new BitSet(this.net.getIndexedNodes().size());
+                BitSet doBodySet = new BitSet(this.maxIndex);
+                BitSet cut = new BitSet(this.maxIndex);
+                BitSet workingList = new BitSet(this.maxIndex);
+                workingList.or(entriesSet);
                 doBodySet.or(entriesSet);
                 for (int ex = exitsSet.nextSetBit(0); ex >= 0; ex = exitsSet.nextSetBit(ex + 1)) {
                     cut.or(this.net.getPostBitSets().get(ex));

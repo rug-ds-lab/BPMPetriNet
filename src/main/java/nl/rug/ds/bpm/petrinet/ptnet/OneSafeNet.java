@@ -5,9 +5,16 @@ import nl.rug.ds.bpm.petrinet.interfaces.net.DecomposableNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
+import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
 public class OneSafeNet extends PlaceTransitionNet implements DecomposableNet {
+
+    public OneSafeNet() {}
+
+    public OneSafeNet(Net net) throws MalformedNetException {
+        super(net);
+    }
 
     @Override
     public Arc addArc(String sourceId, String targetId, int weight) throws MalformedNetException {

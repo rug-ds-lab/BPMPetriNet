@@ -5,6 +5,7 @@ import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
+import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
 import java.util.*;
@@ -27,7 +28,9 @@ import java.util.stream.Collectors;
  * @author Thomas M. Prinz
  * @version 1.0.0
  */
-class LoopDecomposition {
+public class LoopDecomposition {
+
+    public static final boolean VERBOSE = false;
 
     /**
      * Uniquely detected loops.
@@ -44,7 +47,7 @@ class LoopDecomposition {
      * @param net The process model(s) to decompose.
      * @return Set of acyclic nets.
      */
-    public Collection<OneSafeNet> decompose(OneSafeNet net) throws MalformedNetException {
+    public Collection<OneSafeNet> decompose(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
         this.acyclicProcesses.addAll(this.decomposeNet(net));
 
         return this.acyclicProcesses;
@@ -55,7 +58,11 @@ class LoopDecomposition {
      * @param net The net to decompose.
      * @return Set of decomposed nets.
      */
-    private Collection<OneSafeNet> decomposeNet(OneSafeNet net) throws MalformedNetException {
+    private Collection<OneSafeNet> decomposeNet(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
+        if (LoopDecomposition.VERBOSE) {
+            System.out.println("Start to decompose net");
+            System.out.println(net.asDotGraph());
+        }
         // Detect the loops.
         Collection<Loop> loops = (new StronglyConnectedComponents(net)).findLoops();
         Collection<OneSafeNet> fragments = new HashSet<>();
@@ -82,7 +89,7 @@ class LoopDecomposition {
      * @param loops The information about the detected loops.
      * @return Set of decomposed nets.
      */
-    private Collection<OneSafeNet> decomposeLoops(OneSafeNet net, Collection<Loop> loops) throws MalformedNetException {
+    private Collection<OneSafeNet> decomposeLoops(OneSafeNet net, Collection<Loop> loops) throws MalformedNetException, IllegalMarkingException {
         // Create a copy of the main net.
         OneSafeNet mainNet = this.copyNet(net);
 
@@ -112,36 +119,12 @@ class LoopDecomposition {
                 createNew = true;
             } else loopNet = this.uniqueLoops.get(loopIdentifier);
 
-            // The later entries to the loop (after conversion) are those exits being
-            // in the do-body.
-            Set<Node> realEntries = loop.getExits().stream().filter(ex -> loop.getDoBody().contains(ex)).collect(Collectors.toSet());
-            Set<Node> netExits = loop.getExits();
-
-            //
-            // Remove the (non-do-body of the) loop and replace it with a place.
-            //
-
-            // Remove all nodes of the loop being not in its do-body (inclusivey the exits).
-            Set<Node> nonDoBody = loop.getComponents().stream().filter(node -> !loop.getDoBody().contains(node)).collect(Collectors.toSet());
-
-            // Eliminate the arcs and nodes in the non-do-body from the main net.
-            List<Arc> toEliminate = new ArrayList<>();
-            for (Arc arc: mainNet.getArcs()) {
-                if (nonDoBody.contains(arc.getSource()) || nonDoBody.contains(arc.getTarget())) {
-                    toEliminate.add(arc);
-                }
-            }
-            for (Arc arc: toEliminate) mainNet.removeArc(arc);
-            for (Node node: nonDoBody) {
-                if (node instanceof Place) mainNet.removePlace((Place) node);
-                else mainNet.removeTransition((Transition) node);
-            }
-
+            // Create the loop net
             //
             // Remove the arcs of the loop from the main net and add them to the loop net.
             //
             // There are too much arcs in the net and not enough in the loop net.
-            for (Arc arc: toEliminate) {
+            for (Arc arc: mainNet.getArcs()) {
                 Node source = arc.getSource();
                 Node target = arc.getTarget();
 
@@ -155,11 +138,11 @@ class LoopDecomposition {
                         // incoming arcs of the loop exit and replaced with a place to start
                         // and a place to end.
 
-                        // Insert the new starting place
-                        Place start = new Place(UUID.randomUUID().toString());
-                        loopNet.addPlace(start);
-                        // Insert an arc between the new starting place and the target.
-                        loopNet.addArc(new Arc(UUID.randomUUID().toString(), start, target));
+                        // We do not have to insert a start place since the exit is already one.
+                        // TODO: Temporary: Eliminate token
+                        /*Marking init = new Marking();
+                        init.addTokens(target.getId(), 1);
+                        loopNet.setInitialMarking(init);*/
 
                         // Usually, the loop contains the sources of each exit.
                         // However, there is a special case, in which the entry is the exit at the same moment.
@@ -193,6 +176,75 @@ class LoopDecomposition {
                     }
                 }
             }
+
+            // The later entries to the loop (after conversion) are those exits being
+            // in the do-body.
+            List<Node> doBodyExits = loop.getExits().stream().filter(ex -> loop.getDoBody().contains(ex)).toList();
+
+            //
+            // Remove the (non-do-body of the) loop and replace it with a place.
+            //
+
+            // Determine the non-do-body.
+            Set<Node> nonDoBody = loop.getComponents().stream().filter(node -> !loop.getDoBody().contains(node)).collect(Collectors.toSet());
+
+            if (LoopDecomposition.VERBOSE) {
+                System.out.println("loop");
+                System.out.println(loop.getComponents().stream().map(Node::getId).collect(Collectors.toSet()));
+                System.out.println("do-body");
+                System.out.println(loop.getDoBody().stream().map(Node::getId).collect(Collectors.toSet()));
+                System.out.println("non-do-body");
+                System.out.println(nonDoBody.stream().map(Node::getId).collect(Collectors.toSet()));
+            }
+
+            // Handle the loop-exit arcs
+            Set<Node> eliminateNodes = new HashSet<>();
+            Set<Arc> eliminateArcs = new HashSet<>();
+            // We insert a new loop place
+            Place loopPlace = new Place(UUID.randomUUID().toString());
+            loopPlace.setName(loopIdentifier);
+            mainNet.addPlace(loopPlace);
+
+            // We redirect all incoming arcs of do-body exits to this loop place
+            for (Node doBodyExit: doBodyExits) {
+                for (Arc arc: mainNet.getIncoming(doBodyExit)) {
+                    mainNet.addArc(new Arc(arc.getId() + "-c", arc.getSource(), loopPlace));
+                    eliminateArcs.add(arc);
+                }
+            }
+            eliminateNodes.addAll(doBodyExits);
+            for (Node exit: loop.getExits()) {
+                // We redirect all loop-outgoing arcs starting in this point
+                for (Arc arc: mainNet.getOutgoing(exit)) {
+                    if (!loop.getComponents().contains(arc.getTarget())) {
+                        arc.setSource(loopPlace);
+                        mainNet.addArc(new Arc(arc.getId() + "-c", loopPlace, arc.getTarget()));
+                        eliminateArcs.add(arc);
+                    }
+                }
+            }
+
+            // Eliminate the arcs and nodes in the non-do-body from the main net.
+            for (Arc arc: mainNet.getArcs()) {
+                if (nonDoBody.contains(arc.getSource()) || nonDoBody.contains(arc.getTarget())) {
+                    eliminateArcs.add(arc);
+                }
+            }
+            eliminateNodes.addAll(nonDoBody);
+            for (Arc arc: eliminateArcs) mainNet.removeArc(arc);
+            for (Node node: eliminateNodes) {
+                if (node instanceof Place) mainNet.removePlace((Place) node);
+                else mainNet.removeTransition((Transition) node);
+            }
+
+
+
+            if (LoopDecomposition.VERBOSE) {
+                System.out.println("Reduced net");
+                System.out.println(mainNet.asDotGraph());
+                System.out.println("Resulted loop net");
+                System.out.println(loopNet.asDotGraph());
+            }
         }
 
         return nets;
@@ -207,8 +259,12 @@ class LoopDecomposition {
         OneSafeNet copy = new OneSafeNet();
         // We do not have to copy nodes since they do not contain any information (e.g., presets, postsets, etc.)
         for (Node org: net.getNodeIndex().keySet()) {
-            if (org instanceof Place) copy.addPlace((Place) org);
-            else copy.addTransition((Transition) org);
+            if (org instanceof Place) {
+                Place place = (Place) org;
+                //int tokens = place.getTokens();
+                place.setTokens(0);
+                copy.addPlace(place);
+            } else copy.addTransition((Transition) org);
         }
         net.getArcs().forEach(arc -> {
             try {
