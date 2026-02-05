@@ -215,7 +215,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		}
 
 		for (Node node: nodes.values()) {
-			indexToNode.put(index++, node);
+			indexToNode.put(++index, node);
 			nodeToIndex.put(node, index);
 
 			prevNodes.put(index, new BitSet(nodes.size()));
@@ -264,7 +264,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		incoming.put(n.getId(), in);
 		outgoing.put(n.getId(), out);
 
-		indexToNode.put(index++, n);
+		indexToNode.put(++index, n);
 		nodeToIndex.put(n, index);
 		prevNodes.put(index, new BitSet());
 		nextNodes.put(index, new BitSet());
@@ -941,5 +941,31 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 						return true;
 		
 		return false;
+	}
+
+	/**
+	 * Produces a DOT output to easily visualize a net.
+	 * @return The DOT string.
+	 */
+	public String asDotGraph() {
+		Marking init = this.getInitialMarking();
+		String graph = "digraph PNML {" + "\n";
+		for (Node node: this.getIndexedNodes().values()) {
+			String nId = this.slug(node.getId());
+			graph += nId + "[" + (node instanceof Transition ? "shape=\"box\" " : "shape=\"circle\" ") +
+				"label=\"" + node.getId() + " (" + node.getName() + ")" + "\"" + "]" + "\n";
+		}
+		for (Arc arc: this.getArcs()) {
+			String sId = this.slug(arc.getSource().getId());
+			String tId = this.slug(arc.getTarget().getId());
+			graph += sId + "->" + tId + "\n";
+		}
+		graph += "}" + "\n";
+
+		return graph;
+	}
+
+	private String slug(String s) {
+		return "n" + s.replaceAll("-", "");
 	}
 }
