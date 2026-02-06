@@ -7,6 +7,8 @@ import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
+import nl.rug.ds.bpm.util.log.LogEvent;
+import nl.rug.ds.bpm.util.log.Logger;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,8 +70,8 @@ public class LoopDecomposition {
      */
     private Collection<OneSafeNet> decomposeNet(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
         if (LoopDecomposition.VERBOSE) {
-            System.out.println("Start to decompose net");
-            System.out.println(net.asDotGraph());
+            Logger.log("Start to decompose net", LogEvent.INFO);
+            Logger.log(net.asDotGraph(), LogEvent.INFO);
         }
         // Detect the loops.
         Collection<Loop> loops = (new StronglyConnectedComponents(net)).findLoops();
@@ -198,12 +200,12 @@ public class LoopDecomposition {
             Set<Node> nonDoBody = loop.getComponents().stream().filter(node -> !loop.getDoBody().contains(node)).collect(Collectors.toSet());
 
             if (LoopDecomposition.VERBOSE) {
-                System.out.println("loop");
-                System.out.println(loop.getComponents().stream().map(Node::getId).collect(Collectors.toSet()));
-                System.out.println("do-body");
-                System.out.println(loop.getDoBody().stream().map(Node::getId).collect(Collectors.toSet()));
-                System.out.println("non-do-body");
-                System.out.println(nonDoBody.stream().map(Node::getId).collect(Collectors.toSet()));
+                Logger.log("loop", LogEvent.INFO);
+                Logger.log(loop.getComponents().stream().map(Node::getId).collect(Collectors.toSet()).toString(), LogEvent.INFO);
+                Logger.log("do-body", LogEvent.INFO);
+                Logger.log(loop.getDoBody().stream().map(Node::getId).collect(Collectors.toSet()).toString(), LogEvent.INFO);
+                Logger.log("non-do-body", LogEvent.INFO);
+                Logger.log(nonDoBody.stream().map(Node::getId).collect(Collectors.toSet()).toString(), LogEvent.INFO);
             }
 
             // Handle the loop-exit arcs
@@ -249,10 +251,10 @@ public class LoopDecomposition {
 
 
             if (LoopDecomposition.VERBOSE) {
-                System.out.println("Reduced net");
-                System.out.println(mainNet.asDotGraph());
-                System.out.println("Resulted loop net");
-                System.out.println(loopNet.asDotGraph());
+                Logger.log("Reduced net", LogEvent.INFO);
+                Logger.log(mainNet.asDotGraph(), LogEvent.INFO);
+                Logger.log("Resulted loop net", LogEvent.INFO);
+                Logger.log(loopNet.asDotGraph(), LogEvent.INFO);
             }
         }
 
