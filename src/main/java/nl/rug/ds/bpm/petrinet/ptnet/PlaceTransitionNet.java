@@ -215,7 +215,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		}
 
 		for (Node node: nodes.values()) {
-			indexToNode.put(index++, node);
+			indexToNode.put(++index, node);
 			nodeToIndex.put(node, index);
 
 			prevNodes.put(index, new BitSet(nodes.size()));
@@ -264,7 +264,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		incoming.put(n.getId(), in);
 		outgoing.put(n.getId(), out);
 
-		indexToNode.put(index++, n);
+		indexToNode.put(++index, n);
 		nodeToIndex.put(n, index);
 		prevNodes.put(index, new BitSet());
 		nextNodes.put(index, new BitSet());
@@ -457,6 +457,10 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		return arcs.get(id);
 	}
 
+	public Arc getArc(Node source, Node target) {
+		return arcs.get(source.getId() + "-" + target.getId());
+	}
+
 	public Collection<Arc> getArcs() {
 		return arcs.values();
 	}
@@ -614,6 +618,46 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	}
 
 	//Utility methods
+
+	public Map<Integer, Node> getIndexedNodes() {
+		return indexToNode;
+	}
+
+	public Node getNodeByIndex(int index) {
+		return indexToNode.get(index);
+	}
+
+	public Map<Node, Integer> getNodeIndex() {
+		return nodeToIndex;
+	}
+
+	public int getIndexOfNode(Node node) {
+		return nodeToIndex.get(node);
+	}
+
+	public Map<Integer, BitSet> getPreBitSets() {
+		return prevNodes;
+	}
+
+	public Map<Integer, BitSet> getPostBitSets() {
+		return nextNodes;
+	}
+
+	public Set<Integer> asIndexes(BitSet b) {
+		return b.stream().boxed().collect(Collectors.toSet());
+	}
+
+	public Set<Node> asNodes(BitSet b) {
+		Set<Node> nodes = new HashSet<>();
+
+		Iterator<Integer> i = b.stream().iterator();
+		while (i.hasNext()) {
+			nodes.add(indexToNode.get(i.next()));
+		}
+
+		return nodes;
+	}
+
 	public boolean isSink(Place p) {
 		return places.containsKey(p.getId()) && outgoing.get(p.getId()).isEmpty();
 	}
@@ -897,5 +941,36 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 						return true;
 		
 		return false;
+	}
+
+	/**
+	 * Produces a DOT output to easily visualize a net.
+	 * @return The DOT string.
+	 */
+	public String asDotGraph() {
+		String graph = "digraph PNML {" + "\n";
+		for (Node node: this.getIndexedNodes().values()) {
+			String nId = this.slug(node.getId());
+			graph += nId + "[" + (node instanceof Transition ? "shape=\"box\" " : "shape=\"circle\" ") +
+				"label=\"" + (node instanceof Transition && ((Transition) node).isTau() ? "tau" : node.getId() + " (" + node.getName() + ")") + "\""
+					+ "]" + "\n";
+		}
+		for (Arc arc: this.getArcs()) {
+			String sId = this.slug(arc.getSource().getId());
+			String tId = this.slug(arc.getTarget().getId());
+			graph += sId + "->" + tId + "\n";
+		}
+		graph += "}" + "\n";
+
+		return graph;
+	}
+
+	/**
+	 * Removes characters from a string making problems, e.g., in a dot graph.
+	 * @param s The string to remove the characters from.
+	 * @return The cleaned string.
+	 */
+	protected String slug(String s) {
+		return "n" + s.replaceAll("-", "");
 	}
 }

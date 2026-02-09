@@ -3,15 +3,18 @@ package nl.rug.ds.bpm.petrinet.ptnet;
 import nl.rug.ds.bpm.petrinet.interfaces.marking.MarkingI;
 import nl.rug.ds.bpm.petrinet.interfaces.net.DecomposableNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
-import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
+import nl.rug.ds.bpm.pnml.ptnet.jaxb.ptnet.Net;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 public class OneSafeNet extends PlaceTransitionNet implements DecomposableNet {
+
+    public OneSafeNet() {}
+
+    public OneSafeNet(Net net) throws MalformedNetException {
+        super(net);
+    }
 
     @Override
     public Arc addArc(String sourceId, String targetId, int weight) throws MalformedNetException {
@@ -45,42 +48,5 @@ public class OneSafeNet extends PlaceTransitionNet implements DecomposableNet {
             throw new MalformedNetException("Net must initially not have more than token.");
         else
             super.setInitialMarking(marking);
-    }
-
-    @Override
-    public Map<Integer, Node> getIndexedNodes() {
-        return indexToNode;
-    }
-
-    @Override
-    public Map<Node, Integer> getNodeIndex() {
-        return nodeToIndex;
-    }
-
-    @Override
-    public Map<Integer, BitSet> getPreBitSets() {
-        return prevNodes;
-    }
-
-    @Override
-    public Map<Integer, BitSet> getPostBitSets() {
-        return nextNodes;
-    }
-
-    @Override
-    public Set<Integer> asIndexes(BitSet b) {
-        return b.stream().boxed().collect(Collectors.toSet());
-    }
-
-    @Override
-    public Set<Node> asNodes(BitSet b) {
-        Set<Node> nodes = new HashSet<>();
-
-        Iterator<Integer> i = b.stream().iterator();
-        while (i.hasNext()) {
-            nodes.add(indexToNode.get(i.next()));
-        }
-
-        return nodes;
     }
 }
