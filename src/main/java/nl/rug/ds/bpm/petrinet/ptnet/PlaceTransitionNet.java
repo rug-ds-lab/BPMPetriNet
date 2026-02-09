@@ -948,12 +948,12 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	 * @return The DOT string.
 	 */
 	public String asDotGraph() {
-		Marking init = this.getInitialMarking();
 		String graph = "digraph PNML {" + "\n";
 		for (Node node: this.getIndexedNodes().values()) {
 			String nId = this.slug(node.getId());
 			graph += nId + "[" + (node instanceof Transition ? "shape=\"box\" " : "shape=\"circle\" ") +
-				"label=\"" + node.getId() + " (" + node.getName() + ")" + "\"" + "]" + "\n";
+				"label=\"" + (node instanceof Transition && ((Transition) node).isTau() ? "tau" : node.getId() + " (" + node.getName() + ")") + "\""
+					+ "]" + "\n";
 		}
 		for (Arc arc: this.getArcs()) {
 			String sId = this.slug(arc.getSource().getId());
@@ -965,7 +965,12 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		return graph;
 	}
 
-	private String slug(String s) {
+	/**
+	 * Removes characters from a string making problems, e.g., in a dot graph.
+	 * @param s The string to remove the characters from.
+	 * @return The cleaned string.
+	 */
+	protected String slug(String s) {
 		return "n" + s.replaceAll("-", "");
 	}
 }
