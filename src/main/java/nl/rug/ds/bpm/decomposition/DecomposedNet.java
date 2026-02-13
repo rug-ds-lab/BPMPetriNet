@@ -64,6 +64,14 @@ public class DecomposedNet extends OneSafeNet {
         this.loopPlaces.add((Place) arc.getTarget());
     }
 
+    public Map<Place,DecomposedNet> getIterationInstances() {
+        return this.iterationInstances;
+    }
+
+    public Map<Arc,DecomposedNet> getNestedInstances() {
+        return this.nestedInstances;
+    }
+
     public String asDotGraph() {
         return this.asDotGraph(new HashSet<>());
     }
