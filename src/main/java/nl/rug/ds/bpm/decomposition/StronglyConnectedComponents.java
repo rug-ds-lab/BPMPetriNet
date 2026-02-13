@@ -39,14 +39,14 @@ public class StronglyConnectedComponents {
     private int[] index;
     private int[] lowLink;
     private final Collection<Loop> loops = new HashSet<>();
-    private final OneSafeNet net;
+    private final NetTemplate net;
     private int maxIndex = 0;
 
     /**
      * Constructor.
      * @param net The net to search for loops.
      */
-    public StronglyConnectedComponents(OneSafeNet net) {
+    public StronglyConnectedComponents(NetTemplate net) {
         this.net = net;
     }
 
@@ -64,18 +64,18 @@ public class StronglyConnectedComponents {
      */
     private void analyze() {
         // Initialize.
-        this.maxIndex = Collections.max(this.net.getNodeIndex().values()) + 1;
+        this.maxIndex = Collections.max(this.net.getNodeIndex().keySet()) + 1;
         this.index = new int[maxIndex];
         this.lowLink = new int[maxIndex];
 
         this.net.getNodeIndex().forEach((key, value) -> {
-            this.index[value] = -1;
-            this.lowLink[value] = -1;
+            this.index[key] = -1;
+            this.lowLink[key] = -1;
         });
 
         this.net.getNodeIndex().forEach((key, value) -> {
-            if (this.index[value] == -1) {
-                this.stronglyConnected(key, value);
+            if (this.index[key] == -1) {
+                this.stronglyConnected(value, key);
             }
         });
     }
@@ -103,7 +103,7 @@ public class StronglyConnectedComponents {
         }
 
         if (this.index[nodeId] == this.lowLink[nodeId]) {
-            // A SCC is detected.
+            // An SCC is detected.
             Loop loop = new Loop(this.net);
             // We collect all preset and postset nodes of *all* nodes within the loop.
             BitSet preset = new BitSet(this.maxIndex);
@@ -116,8 +116,8 @@ public class StronglyConnectedComponents {
                 loop.addComponent(current);
                 loopNodes.set(currentId);
                 // We store all preset and postset nodes.
-                preset.or(this.net.getPreBitSets().get(currentId));
-                postset.or(this.net.getPostBitSets().get(currentId));
+                preset.or(this.net.getPreSetBitSet(currentId));
+                postset.or(this.net.getPostSetBitSet(currentId));
             } while (currentId != nodeId);
 
             if (loop.getComponents().size() >= 2) {
@@ -137,7 +137,7 @@ public class StronglyConnectedComponents {
                 // Based on those nodes, we find the entries.
                 BitSet entriesSet = new BitSet(this.maxIndex);
                 for (int p = preset.nextSetBit(0); p >= 0; p = preset.nextSetBit(p + 1)) {
-                    BitSet ps = this.net.getPostBitSets().get(p);
+                    BitSet ps = this.net.getPostSetBitSet(p);
                     BitSet tmp = (BitSet) ps.clone();
                     tmp.and(loopNodes);
                     entriesSet.or(tmp);
@@ -150,7 +150,7 @@ public class StronglyConnectedComponents {
                 // Based on those nodes, we find the exits.
                 BitSet exitsSet = new BitSet(this.maxIndex);
                 for (int p = postset.nextSetBit(0); p >= 0; p = postset.nextSetBit(p + 1)) {
-                    BitSet ps = this.net.getPreBitSets().get(p);
+                    BitSet ps = this.net.getPreSetBitSet(p);
                     BitSet tmp = (BitSet) ps.clone();
                     tmp.and(loopNodes);
                     exitsSet.or(tmp);
@@ -167,14 +167,14 @@ public class StronglyConnectedComponents {
                 // ... (3) the nodes where to stop the search.
                 BitSet cut = new BitSet(this.maxIndex);
                 for (int ex = exitsSet.nextSetBit(0); ex >= 0; ex = exitsSet.nextSetBit(ex + 1)) {
-                    cut.or(this.net.getPostBitSets().get(ex));
+                    cut.or(this.net.getPostSetBitSet(ex));
                 }
                 while (!workingList.isEmpty()) {
                     // Take the next to investigate.
                     int current = workingList.nextSetBit(0);
                     workingList.clear(current);
                     // Compute further nodes to visit.
-                    BitSet next = (BitSet) this.net.getPostBitSets().get(current).clone();
+                    BitSet next = (BitSet) this.net.getPostSetBitSet(current).clone();
                     next.andNot(cut);
                     next.andNot(doBodySet);
                     next.andNot(workingList);
