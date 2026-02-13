@@ -5,6 +5,7 @@ import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
+import nl.rug.ds.bpm.petrinet.ptnet.marking.Marking;
 import nl.rug.ds.bpm.util.exception.IllegalMarkingException;
 import nl.rug.ds.bpm.util.exception.MalformedNetException;
 import nl.rug.ds.bpm.util.log.LogEvent;
@@ -45,22 +46,22 @@ public class LoopDecomposition {
     /**
      * Uniquely detected loops.
      */
-    private final Map<String,LoopNet> uniqueLoops = new HashMap<>();
-
-    /**
-     * All derived acyclic nets.
-     */
-    private final Collection<OneSafeNet> acyclicNets = new HashSet<>();
+    private final Map<String,NetTemplate> uniqueLoops = new HashMap<>();
 
     /**
      * Decompose the given net into acyclic nets.
      * @param net The net to decompose.
      * @return Set of acyclic nets.
      */
-    public Collection<OneSafeNet> decompose(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
-        this.acyclicNets.addAll(this.decomposeNet(net));
+    public OneSafeNet decompose(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
+        NetTemplate root = this.decomposeNet(net);
 
-        return this.acyclicNets;
+        Collection<Place> starts = root.getStarts();
+        if (!starts.isEmpty()) {
+            return root.instance(starts.iterator().next());
+        }
+
+        return null;
     }
 
     /**
@@ -68,28 +69,41 @@ public class LoopDecomposition {
      * @param net The net to decompose.
      * @return Set of decomposed nets.
      */
-    private Collection<OneSafeNet> decomposeNet(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
+    private NetTemplate decomposeNet(OneSafeNet net) throws MalformedNetException, IllegalMarkingException {
         if (LoopDecomposition.VERBOSE) {
             Logger.log("Start to decompose net", LogEvent.INFO);
             Logger.log(net.asDotGraph(), LogEvent.INFO);
         }
+        NetTemplate template = NetTemplate.asNetTemplate(net);
+        return this.decomposeNet(template);
+    }
+
+    private NetTemplate decomposeNet(NetTemplate net) {
+        if (LoopDecomposition.VERBOSE) {
+            Logger.log("Start to decompose net", LogEvent.INFO);
+            Logger.log(net.asDotGraph(), LogEvent.INFO);
+        }
+
         // Detect the loops.
         Collection<Loop> loops = (new StronglyConnectedComponents(net)).findLoops();
-        Collection<OneSafeNet> fragments = new HashSet<>();
+        Collection<NetTemplate> fragments;
         if (loops.isEmpty()) {
             // The net is already acyclic and needs no decomposition.
-            fragments.add(net);
-            return fragments;
+            return net;
         } else {
             // Decompose the loops.
             fragments = this.decomposeLoops(net, loops);
             // Since the resulting fragments may still be cyclic, we have to redo the procedure until no loop is
             // left.
-            Collection<OneSafeNet> allFragments = new HashSet<>();
-            for (OneSafeNet fragment: fragments) {
-                allFragments.addAll(this.decomposeNet(fragment));
+            NetTemplate main = null;
+            for (Iterator<NetTemplate> it = fragments.iterator(); it.hasNext(); ) {
+                NetTemplate fragment = it.next();
+                NetTemplate root = this.decomposeNet(fragment);
+                if (fragment.getParent().equals(net)) {
+                    main = root;
+                }
             }
-            return allFragments;
+            return main;
         }
     }
 
@@ -99,12 +113,12 @@ public class LoopDecomposition {
      * @param loops The information about the detected loops.
      * @return Set of decomposed nets.
      */
-    private Collection<OneSafeNet> decomposeLoops(OneSafeNet net, Collection<Loop> loops) throws MalformedNetException, IllegalMarkingException {
-        // Create a copy of the main net.
-        DecomposedNet mainNet = this.copyNet(net);
+    private Collection<NetTemplate> decomposeLoops(NetTemplate net, Collection<Loop> loops) {
+        // Create a template of the main net.
+        NetTemplate mainNet = NetTemplate.asNetTemplate(net);
 
         // Collect the derived nets.
-        Set<OneSafeNet> nets = new HashSet<>();
+        Collection<NetTemplate> nets = new HashSet<>();
         nets.add(mainNet);
 
         // Decompose each loop
@@ -113,20 +127,13 @@ public class LoopDecomposition {
             String loopIdentifier = loop.getExits().stream().map(Node::getId).sorted().collect(Collectors.joining());
             boolean createNew = false;
 
-            LoopNet loopNet;
+            NetTemplate loopNet;
             // Is there already a process model for it?
             if (!this.uniqueLoops.containsKey(loopIdentifier)) {
                 // Create a new process model for the loop.
-                loopNet = new LoopNet(mainNet);
-                loopNet.setId(loopIdentifier);
-                nets.add(loopNet);
+                loopNet = new NetTemplate(mainNet, loopIdentifier, loop, loop.getComponents());
                 this.uniqueLoops.put(loopIdentifier, loopNet);
-
-                // The new net contains each node of the loop.
-                for (Node node: loop.getComponents()) {
-                    if (node instanceof Place) loopNet.addPlace((Place) node);
-                    else loopNet.addTransition((Transition) node);
-                }
+                nets.add(loopNet);
                 createNew = true;
             } else loopNet = this.uniqueLoops.get(loopIdentifier);
 
@@ -150,10 +157,7 @@ public class LoopDecomposition {
                         // and a place to end.
 
                         // We do not have to insert a start place since the exit is already one.
-                        // TODO: Temporary: Eliminate token
-                        /*Marking init = new Marking();
-                        init.addTokens(target.getId(), 1);
-                        loopNet.setInitialMarking(init);*/
+                        loopNet.addStart((Place) target);
 
                         // Usually, the loop contains the sources of each exit.
                         // However, there is a special case, in which the entry is the exit at the same moment.
@@ -161,17 +165,17 @@ public class LoopDecomposition {
                             // Since we broke up the loop at the current arc, we also have to
                             // insert an ending place.
                             Place end = new Place(UUID.randomUUID().toString());
-                            loopNet.addPlace(end);
+                            loopNet.addEnd(end);
 
                             // Connect this ending place with the source.
                             loopNet.addArc(new Arc(UUID.randomUUID().toString(), source, end));
 
                             // Add a relation that the end will be going back to iterated the loop.
-                            loopNet.addIterationLink(end, (Place) target);
+                            loopNet.addIterationArc(end, (Place) target);
                         }
                         // Store relations between the arc and the "starting" place of the loop net.
                         if (loop.getDoBody().contains(source) || !loop.getComponents().contains(source)) {
-                            mainNet.addLinkToPlaceInLoop(arc, (Place) target, loopNet);
+                            mainNet.addDownArc(arc, (Place) target, loopNet);
                         }
                     } else if (loop.getExits().contains(source) && !loop.getComponents().contains(target)) {
                         // b. It is a loop-exit arc (going from an exit to a node outside the loop).
@@ -179,15 +183,15 @@ public class LoopDecomposition {
                         Transition silent = new Transition(UUID.randomUUID().toString());
                         silent.setTau(true);
                         Place end = new Place(UUID.randomUUID().toString());
-                        loopNet.addPlace(end);
-                        loopNet.addTransition(silent);
+                        loopNet.addEnd(end);
+                        loopNet.addNode(silent);
 
                         // Connect the new transition with the loop exit.
                         loopNet.addArc(new Arc(UUID.randomUUID().toString(), source, silent));
                         loopNet.addArc(new Arc(UUID.randomUUID().toString(), silent, end));
 
                         // Store the link between the end and the arc.
-                        loopNet.addLinkFromEndPlaceToParentNetArc(end, arc);
+                        loopNet.addUpArc(end, arc);
 
                         // We do not need the arc in the loop net, so we do not add it.
                     } else {
@@ -225,7 +229,7 @@ public class LoopDecomposition {
             // We insert a new loop place
             Place loopPlace = new Place(UUID.randomUUID().toString());
             loopPlace.setName(loopIdentifier);
-            mainNet.addPlace(loopPlace);
+            mainNet.addNode(loopPlace);
             // Store a link from the place to the corresponding loop net.
             mainNet.addLoopLink(loopPlace, loopNet);
 
@@ -235,7 +239,7 @@ public class LoopDecomposition {
                     Arc redirected = new Arc(arc.getId() + "-c", arc.getSource(), loopPlace);
                     mainNet.addArc(redirected);
                     eliminateArcs.add(arc);
-                    mainNet.replaceLinkToPlaceInLoop(arc, redirected);
+                    mainNet.replaceDownArc(arc, redirected);
                 }
             }
             eliminateNodes.addAll(doBodyExits);
@@ -247,7 +251,7 @@ public class LoopDecomposition {
                         Arc redirected = new Arc(arc.getId() + "-c", loopPlace, arc.getTarget());
                         mainNet.addArc(redirected);
                         eliminateArcs.add(arc);
-                        loopNet.replaceLinkFromEndPlaceToParentNetArc(arc, redirected);
+                        loopNet.replaceUpArc(arc, redirected);
                     }
                 }
             }
@@ -261,11 +265,8 @@ public class LoopDecomposition {
             eliminateNodes.addAll(nonDoBody);
             for (Arc arc: eliminateArcs) mainNet.removeArc(arc);
             for (Node node: eliminateNodes) {
-                if (node instanceof Place) mainNet.removePlace((Place) node);
-                else mainNet.removeTransition((Transition) node);
+                mainNet.removeNode(node);
             }
-
-
 
             if (LoopDecomposition.VERBOSE) {
                 Logger.log("Reduced net", LogEvent.INFO);
@@ -273,34 +274,9 @@ public class LoopDecomposition {
                 Logger.log("Resulted loop net", LogEvent.INFO);
                 Logger.log(loopNet.asDotGraph(), LogEvent.INFO);
             }
+
         }
 
         return nets;
-    }
-
-    /**
-     * Copy the net.
-     * @param net The net to copy.
-     * @return OneSafeNet
-     */
-    private DecomposedNet copyNet(OneSafeNet net) throws MalformedNetException {
-        DecomposedNet copy = new DecomposedNet(net);
-        // We do not have to copy nodes since they do not contain any information (e.g., presets, postsets, etc.)
-        for (Node org: net.getNodeIndex().keySet()) {
-            if (org instanceof Place) {
-                Place place = (Place) org;
-                //int tokens = place.getTokens();
-                place.setTokens(0);
-                copy.addPlace(place);
-            } else copy.addTransition((Transition) org);
-        }
-        net.getArcs().forEach(arc -> {
-            try {
-                copy.addArc(new Arc(arc.getId(), arc.getSource(), arc.getTarget()));
-            } catch (MalformedNetException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        return copy;
     }
 }

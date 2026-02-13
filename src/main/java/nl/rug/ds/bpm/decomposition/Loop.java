@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Loop {
-    private final OneSafeNet parent;
+    private final NetTemplate parent;
 
     private final Set<Node> components;
     private final Set<Node> entries;
@@ -19,7 +19,7 @@ public class Loop {
 
     private final Set<Arc> arcs;
 
-    public Loop(OneSafeNet parent) {
+    public Loop(NetTemplate parent) {
         this.parent = parent;
 
         components = new HashSet<>();
@@ -30,7 +30,7 @@ public class Loop {
         arcs = new HashSet<>();
     }
 
-    public OneSafeNet getParent() {
+    public NetTemplate getParent() {
         return parent;
     }
 
@@ -125,7 +125,7 @@ public class Loop {
     }
 
     public void addPreSet(int target, BitSet nodeIndexes) {
-        Node n = parent.getNodeByIndex(target);
+        Node n = parent.getNodeIndex().get(target);
         addPreSet(n, nodeIndexes);
     }
 
@@ -138,7 +138,7 @@ public class Loop {
     }
 
     public void addPostSet(int source, BitSet nodeIndexes) {
-        Node n = parent.getNodeByIndex(source);
+        Node n = parent.getNodeIndex().get(source);
         addPostSet(n, nodeIndexes);
     }
 }

@@ -64,10 +64,8 @@ public class LoopDecompositionTest {
 			System.out.println(pn.asDotGraph());
 
 			System.out.println("Decomposed nets");
-			Collection<OneSafeNet> acyclic = (new LoopDecomposition()).decompose((OneSafeNet) pn);
-			for (OneSafeNet an: acyclic) {
-				System.out.println(an.asDotGraph());
-			}
+			OneSafeNet root = (new LoopDecomposition()).decompose((OneSafeNet) pn);
+			System.out.println(root.asDotGraph());
 		}
 	}
 }
