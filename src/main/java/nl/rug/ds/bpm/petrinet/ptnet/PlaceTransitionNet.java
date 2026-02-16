@@ -950,14 +950,14 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	public String asDotGraph() {
 		String graph = "digraph PNML {" + "\n";
 		for (Node node: this.getIndexedNodes().values()) {
-			String nId = this.slug(node.getId());
+			String nId = PlaceTransitionNet.slug(node.getId());
 			graph += nId + "[" + (node instanceof Transition ? "shape=\"box\" " : "shape=\"circle\" ") +
 				"label=\"" + (node instanceof Transition && ((Transition) node).isTau() ? "tau" : node.getId() + " (" + node.getName() + ")") + "\""
 					+ "]" + "\n";
 		}
 		for (Arc arc: this.getArcs()) {
-			String sId = this.slug(arc.getSource().getId());
-			String tId = this.slug(arc.getTarget().getId());
+			String sId = PlaceTransitionNet.slug(arc.getSource().getId());
+			String tId = PlaceTransitionNet.slug(arc.getTarget().getId());
 			graph += sId + "->" + tId + "\n";
 		}
 		graph += "}" + "\n";
@@ -970,7 +970,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	 * @param s The string to remove the characters from.
 	 * @return The cleaned string.
 	 */
-	protected String slug(String s) {
+	public static String slug(String s) {
 		return "n" + s.replaceAll("-", "");
 	}
 }

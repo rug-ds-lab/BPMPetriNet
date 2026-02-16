@@ -1,15 +1,13 @@
 package nl.rug.ds.bpm.decomposition;
 
 import nl.rug.ds.bpm.petrinet.ptnet.OneSafeNet;
+import nl.rug.ds.bpm.petrinet.ptnet.PlaceTransitionNet;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Arc;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Node;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Place;
 import nl.rug.ds.bpm.petrinet.ptnet.element.Transition;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class DecomposedNet.
@@ -26,115 +24,67 @@ import java.util.Map;
  */
 public class DecomposedNet extends OneSafeNet {
 
-    /**
-     * The origin net (or parent).
-     */
-    private final OneSafeNet origin;
+    private static int instanceCounter = 0;
 
-    /**
-     * A set of subnets (if available).
-     */
-    private final Collection<OneSafeNet> subNets = new HashSet<>();
+    private final int instance = DecomposedNet.instanceCounter++;
 
-    /**
-     * Links from "loop places" to subnets representing the nets.
-     */
-    private final Map<Place,OneSafeNet> loopLinks = new HashMap<>();
+    private final Place startPlace;
 
-    /**
-     * Links from loop-entry arcs to "start places" of the corresponding loop nets.
-     */
-    private final Map<Arc,Place> arcStarts = new HashMap<>();
+    private final NetTemplate template;
 
-    /**
-     * Links from starting places in loop nets to their loop nets.
-     */
-    private final Map<Place, LoopNet> startLoopNets = new HashMap<>();
+    private final Map<Place,DecomposedNet> iterationInstances = new HashMap<>();
+
+    private final Map<Arc,DecomposedNet> nestedInstances = new HashMap<>();
+
+    private final Collection<Place> loopPlaces = new HashSet<>();
 
     /**
      * Constructor.
-     * @param origin The origin or parent net.
+     * @param template The origin or parent net.
      */
-    public DecomposedNet(OneSafeNet origin) {
-        this.origin = origin;
-    }
-
-    /**
-     * Add a link from a "loop place" to the corresponding loop net.
-     * @param loopNode The place representing the loop net.
-     * @param loopNet The loop net.
-     */
-    public void addLoopLink(Place loopNode, DecomposedNet loopNet) {
-        this.loopLinks.put(loopNode, loopNet);
-        if (!this.subNets.contains(loopNet)) {
-            this.subNets.add(loopNet);
-        }
-    }
-
-    /**
-     * Get the set of direct loop nets of this decomposet net.
-     * @return A set of subnets related to this net.
-     */
-    public Collection<OneSafeNet> getSubNets() {
-        return this.subNets;
-    }
-
-    /**
-     * Get a mapping of all loop links from the "loop places" to the loop nets.
-     * @return The mapping.
-     */
-    public Map<Place,OneSafeNet> getLoopLinks() {
-        return this.loopLinks;
-    }
-
-    /**
-     * Add a link from a (previous) loop-entry arc to a starting place within a loop net.
-     * @param arc The loop-entry arc.
-     * @param place The starting place.
-     */
-    public void addLinkToPlaceInLoop(Arc arc, Place place, LoopNet loopNet) {
-        this.arcStarts.put(arc, place);
-        this.startLoopNets.put(place, loopNet);
-    }
-
-    /**
-     * During loop decomposition, the loop-entry arc may will be replaced.
-     * @param arc The arc to replace.
-     * @param replace The new arc.
-     */
-    public void replaceLinkToPlaceInLoop(Arc arc, Arc replace) {
-        if (this.arcStarts.containsKey(arc)) {
-            Place start = this.arcStarts.get(arc);
-            this.arcStarts.remove(arc);
-            this.arcStarts.put(replace, start);
-        }
-    }
-
-    /**
-     * Get a mapping from the loop-entry arcs to the starting places of loop nets.
-     * @return The mapping.
-     */
-    public Map<Arc,Place> getArcLinksToLoopNetStarts() {
-        return this.arcStarts;
+    public DecomposedNet(Place start, NetTemplate template) {
+        this.startPlace = start;
+        this.template = template;
     }
 
     /**
      * Get the origin / parent.
      * @return The origin / parent.
      */
-    public OneSafeNet getOrigin() {
-        return this.origin;
+    public NetTemplate getTemplate() {
+        return this.template;
+    }
+
+    public void addIterationInstance(Place end, DecomposedNet instance) {
+        this.iterationInstances.put(end, instance);
+    }
+
+    public void addNestedInstance(Arc arc, DecomposedNet instance) {
+        this.nestedInstances.put(arc, instance);
+        this.loopPlaces.add((Place) arc.getTarget());
+    }
+
+    public Map<Place,DecomposedNet> getIterationInstances() {
+        return this.iterationInstances;
+    }
+
+    public Map<Arc,DecomposedNet> getNestedInstances() {
+        return this.nestedInstances;
+    }
+
+    public String asDotGraph() {
+        return this.asDotGraph(new HashSet<>());
     }
 
     /**
      * Produces a DOT output to easily visualize a net.
      * @return The DOT string.
      */
-    public String asDotGraph() {
-        String netId = "DecomposedNet";
-        if (this.getId() != null) {
-            netId = "cluster" + this.slug(this.getId());
-        }
+    public String asDotGraph(Collection<DecomposedNet> processed) {
+        if (processed.contains(this)) return "";
+        processed.add(this);
+
+        String netId = this.getDotNetId(this);
         String graph = "digraph " + netId + " {" + "\n";
         for (Node node: this.getIndexedNodes().values()) {
             graph += this.asDotGraphNode(this, node);
@@ -144,19 +94,31 @@ public class DecomposedNet extends OneSafeNet {
             String tId = this.getDotNodeId(this, arc.getTarget());
             graph += sId + "->" + tId + "\n";
         }
-        // Print subnets
-        for (OneSafeNet subNet: this.subNets) {
-            graph += "\n" + subNet.asDotGraph().replaceAll("digraph", "subgraph") + "\n";
+        // Print nested nets
+        for (Arc arc: this.nestedInstances.keySet()) {
+            DecomposedNet nestedNet = this.nestedInstances.get(arc);
+            Place startingPlace = nestedNet.startPlace;
+            graph += "\n" + nestedNet.asDotGraph(processed).replaceAll("digraph", "subgraph") + "\n";
+            graph += this.getDotNodeId(this, arc.getSource()) + "->" + this.getDotNodeId(nestedNet, startingPlace) + "[style=\"dotted\",label=\"start arc\"]" + "\n";
         }
-        // Print links to subnets.
-        /*for (Place loopPlace: this.loopLinks.keySet()) {
-            OneSafeNet loopNet = this.loopLinks.get(loopPlace);
-            graph += this.getDotNodeId(this, loopPlace) + "->" + this.getDotNetId((DecomposedNet) loopNet) + "[style=\"dashed\",label=\"loop net\"]" + "\n";
-        }*/
-        for (Arc arc: this.arcStarts.keySet()) {
-            Place startingPlace = this.arcStarts.get(arc);
-            graph += this.getDotNodeId(this, arc.getSource()) + "->" + this.getDotNodeId(this.startLoopNets.get(startingPlace), startingPlace) + "[style=\"dotted\",label=\"start arc\"]" + "\n";
+        // Print iterations
+        for (Place end: this.iterationInstances.keySet()) {
+            DecomposedNet nestedNet = this.iterationInstances.get(end);
+            Place startingPlace = nestedNet.startPlace;
+            graph += "\n" + nestedNet.asDotGraph(processed).replaceAll("digraph", "subgraph") + "\n";
+            graph += this.getDotNodeId(this, end) + "->" + this.getDotNodeId(nestedNet, startingPlace) + "[style=\"dotted\",label=\"iteration arc\"]" + "\n";
         }
+        // Print finishes
+        for (Place end: this.template.getUpArcs().keySet()) {
+            if (this.getPlaces().contains(end)) {
+                Arc arc = this.template.getUpArcs().get(end);
+                NetTemplate parentTemplate = (NetTemplate) this.template.getParent();
+                for (DecomposedNet callee : parentTemplate.instances()) {
+                    graph += this.getDotNodeId(this, end) + "->" + this.getDotNodeId(callee, arc.getTarget()) + "[style=\"dotted\",label=\"finish arc\"]" + "\n";
+                }
+            }
+        }
+
         graph += "}" + "\n";
 
         return graph;
@@ -171,8 +133,10 @@ public class DecomposedNet extends OneSafeNet {
     protected String asDotGraphNode(DecomposedNet net, Node node) {
         String nId = this.getDotNodeId(net, node);
         return nId + "[" + (node instanceof Transition ? "shape=\"box\" " :
-                (this.loopLinks.containsKey((Place) node) ? "shape=\"box3d\" " : ("shape=\"circle\" "))) +
+                (this.loopPlaces.contains((Place) node) ? "shape=\"box3d\" " :
+                        (this.template.isEnd(node)) ? "shape=\"octagon\" " : "shape=\"circle\" ")) +
                 "label=\"" + (node instanceof Transition && ((Transition) node).isTau() ? "tau" : node.getId() + " (" + node.getName() + ")") + "\"" +
+                (this.startPlace.equals(node) ? " peripheries=2" : "") +
                 "]" + "\n";
     }
 
@@ -183,7 +147,7 @@ public class DecomposedNet extends OneSafeNet {
      * @return The id.
      */
     protected String getDotNodeId(DecomposedNet net, Node node) {
-        return this.getDotNetId(net) + this.slug(node.getId());
+        return this.getDotNetId(net) + PlaceTransitionNet.slug(node.getId());
     }
 
     /**
@@ -192,9 +156,9 @@ public class DecomposedNet extends OneSafeNet {
      * @return The id of the net.
      */
     private String getDotNetId(DecomposedNet net) {
-        String netId = "DecomposedNet";
+        String netId = "DecomposedNet" + net.instance;
         if (net.getId() != null) {
-            netId = "cluster" + this.slug(net.getId());
+            netId = "cluster" + PlaceTransitionNet.slug(net.getId() + net.instance);
         }
         return netId;
     }
