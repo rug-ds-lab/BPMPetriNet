@@ -943,6 +943,43 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 		return false;
 	}
 
+	/***
+	 * Recursive method that collects the possible sequences of Transition firings of this PlaceTransitionNet.
+	 * Stops when no more Transitions are enabled or a firing of a Transition is repeated.
+	 *
+	 * @param m the Marking from which to start the collection.
+	 * @param path the sequence of Transition firings that lead to m.
+	 * @param executions the sequences collection.
+	 */
+	private void getExecutions(MarkingI m, Collection<TransitionI> path, Collection<Collection<TransitionI>> executions ) {
+		Collection<? extends TransitionI> enabledTransitions = getEnabledTransitions(m);
+
+		if (enabledTransitions.isEmpty())
+			executions.add(path);
+
+		for (TransitionI t: enabledTransitions) {
+			Collection<TransitionI> newPath = new ArrayList<>(path);
+			newPath.add(t);
+
+			if (path.contains(t))
+				executions.add(newPath);
+			else
+				getExecutions(fire(t, m), newPath, executions);
+		}
+	}
+
+	/***
+	 * Returns the possible sequences of Transition firings of this PlaceTransitionNet.
+	 * Stops when no more Transitions are enabled or a firing of a Transition is repeated.
+	 *
+	 * @param m the Marking from which to start the collection.
+	 */
+	public Collection<Collection<TransitionI>> getExecutions(MarkingI m) {
+		ArrayList<Collection<TransitionI>> executions = new ArrayList<>();
+		getExecutions(m, new ArrayList<>(), executions);
+		return executions;
+	}
+
 	/**
 	 * Produces a DOT output to easily visualize a net.
 	 * @return The DOT string.
