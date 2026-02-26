@@ -951,7 +951,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	 * @param path the sequence of Transition firings that lead to m.
 	 * @param executions the sequences collection.
 	 */
-	private void getExecutions(MarkingI m, Collection<TransitionI> path, Collection<Collection<TransitionI>> executions ) {
+	private void getSequencesOfTransitionFirings(MarkingI m, Collection<TransitionI> path, Collection<Collection<TransitionI>> executions ) {
 		Collection<? extends TransitionI> enabledTransitions = getEnabledTransitions(m);
 
 		if (enabledTransitions.isEmpty())
@@ -964,7 +964,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 			if (path.contains(t))
 				executions.add(newPath);
 			else
-				getExecutions(fire(t, m), newPath, executions);
+				getSequencesOfTransitionFirings(fire(t, m), newPath, executions);
 		}
 	}
 
@@ -974,10 +974,18 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	 *
 	 * @param m the Marking from which to start the collection.
 	 */
-	public Collection<Collection<TransitionI>> getExecutions(MarkingI m) {
+	public Collection<Collection<TransitionI>> getSequencesOfTransitionFirings(MarkingI m) {
 		ArrayList<Collection<TransitionI>> executions = new ArrayList<>();
-		getExecutions(m, new ArrayList<>(), executions);
+		getSequencesOfTransitionFirings(m, new ArrayList<>(), executions);
 		return executions;
+	}
+
+	/***
+	 * Returns the possible sequences of Transition firings of this PlaceTransitionNet.
+	 * Stops when no more Transitions are enabled or a firing of a Transition is repeated.
+	 */
+	public Collection<Collection<TransitionI>> getSequencesOfTransitionFirings() {
+		return getSequencesOfTransitionFirings(getInitialMarking());
 	}
 
 	/**
