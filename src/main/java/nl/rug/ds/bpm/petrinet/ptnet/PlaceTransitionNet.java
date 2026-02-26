@@ -985,9 +985,7 @@ public class PlaceTransitionNet implements VerifiableNet, UnfoldableNet {
 	 * Stops when no more Transitions are enabled or a firing of a Transition is repeated.
 	 */
 	public Collection<Collection<TransitionI>> getSequencesOfTransitionFirings() {
-		ArrayList<Collection<TransitionI>> executions = new ArrayList<>();
-		getSequencesOfTransitionFirings(getInitialMarking(), new ArrayList<>(), executions);
-		return executions;
+		return getSequencesOfTransitionFirings(getInitialMarking());
 	}
 
 	/**
