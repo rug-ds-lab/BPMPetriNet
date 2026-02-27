@@ -271,6 +271,10 @@ public class NetTemplate {
         this.loopLinks.put(loopPlace, loopTemplate);
     }
 
+    public NetTemplate getLoopLink(Place loopPlace) {
+        return this.loopLinks.get(loopPlace);
+    }
+
     protected static NetTemplate asNetTemplate(OneSafeNet net) {
         NetTemplate template = new NetTemplate(net, net.getId(), null, net.getIndexedNodes().values());
 

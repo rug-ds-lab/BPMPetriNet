@@ -45,6 +45,7 @@ public class DecomposedNet extends OneSafeNet {
     public DecomposedNet(Place start, NetTemplate template) {
         this.startPlace = start;
         this.template = template;
+        this.setId(template.getId() + "_" + start.getId());
     }
 
     /**
@@ -70,6 +71,10 @@ public class DecomposedNet extends OneSafeNet {
 
     public Map<Arc,DecomposedNet> getNestedInstances() {
         return this.nestedInstances;
+    }
+
+    public Collection<Place> getLoopPlaces() {
+        return this.loopPlaces;
     }
 
     public String asDotGraph() {

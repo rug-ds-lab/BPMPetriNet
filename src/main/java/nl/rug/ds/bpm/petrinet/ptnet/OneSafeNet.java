@@ -27,7 +27,7 @@ public class OneSafeNet extends PlaceTransitionNet implements DecomposableNet {
     public void addPlace(Place p) throws MalformedNetException {
         if (p.getTokens() > 1)
             throw new MalformedNetException("Weight over 1 not allowed.");
-        else if (!getInitialMarking().getMarkedPlaces().isEmpty())
+        else if (p.getTokens() == 1 && !getInitialMarking().getMarkedPlaces().isEmpty())
             throw new MalformedNetException("Only one place with a token allowed.");
         else
             super.addPlace(p);
