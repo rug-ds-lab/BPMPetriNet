@@ -44,6 +44,11 @@ public class LoopDecomposition {
     public static final boolean VERBOSE = false;
 
     /**
+     * A counter for applying shorter ids.
+     */
+    private static int NEW_NODE_COUNTER = 1;
+
+    /**
      * Uniquely detected loops.
      */
     private final Map<String,NetTemplate> uniqueLoops = new HashMap<>();
@@ -164,7 +169,8 @@ public class LoopDecomposition {
                         if (loop.getComponents().contains(source)) {
                             // Since we broke up the loop at the current arc, we also have to
                             // insert an ending place.
-                            Place end = new Place(UUID.randomUUID().toString());
+                            Place end = new Place("ep" + LoopDecomposition.NEW_NODE_COUNTER++);
+                            end.setName(end.getId());
                             loopNet.addEnd(end);
 
                             // Connect this ending place with the source.
@@ -180,9 +186,11 @@ public class LoopDecomposition {
                     } else if (loop.getExits().contains(source) && !loop.getComponents().contains(target)) {
                         // b. It is a loop-exit arc (going from an exit to a node outside the loop).
                         // Thus, we have to insert a new ending silent transition and place.
-                        Transition silent = new Transition(UUID.randomUUID().toString());
+                        Transition silent = new Transition("tt" + LoopDecomposition.NEW_NODE_COUNTER++);
+                        silent.setName(silent.getId());
                         silent.setTau(true);
-                        Place end = new Place(UUID.randomUUID().toString());
+                        Place end = new Place("ep" + LoopDecomposition.NEW_NODE_COUNTER++);
+                        end.setName(end.getId());
                         loopNet.addEnd(end);
                         loopNet.addNode(silent);
 
@@ -227,7 +235,7 @@ public class LoopDecomposition {
             Set<Node> eliminateNodes = new HashSet<>();
             Set<Arc> eliminateArcs = new HashSet<>();
             // We insert a new loop place
-            Place loopPlace = new Place(UUID.randomUUID().toString());
+            Place loopPlace = new Place("lp" + LoopDecomposition.NEW_NODE_COUNTER++);
             loopPlace.setName(loopIdentifier);
             mainNet.addNode(loopPlace);
             // Store a link from the place to the corresponding loop net.
