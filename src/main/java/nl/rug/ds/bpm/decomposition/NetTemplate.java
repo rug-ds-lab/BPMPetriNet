@@ -283,7 +283,10 @@ public class NetTemplate {
         });
 
         net.getPlaces().forEach(place -> {
-            if (place.getTokens() > 0) template.addStart(place);
+            if (place.getTokens() > 0) {
+                place.setTokens(0);
+                template.addStart(place);
+            }
         });
 
         return template;
