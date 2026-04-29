@@ -130,6 +130,14 @@ public class DecomposedNet extends OneSafeNet {
     }
 
     /**
+     * Get the starting place of this net.
+     * @return The starting place.
+     */
+    public Place getStartPlace() {
+        return startPlace;
+    }
+
+    /**
      * Create the dot-graph code for a given node.
      * @param net The related net of the node.
      * @param node The node.
